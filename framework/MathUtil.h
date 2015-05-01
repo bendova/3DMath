@@ -122,6 +122,11 @@ namespace MyCode
 		public:
 			typedef std::array<glm::vec4, POINTS_COUNT> Vertices;
 
+		private:
+			Vertices mVertices;
+
+		public:
+
 			Polygon(std::initializer_list<glm::vec4> vertices)
 				: mVertices{}
 			{
@@ -142,8 +147,46 @@ namespace MyCode
 			static
 			size_t GetPointsCount() { return POINTS_COUNT; }
 
-		private:
-			Vertices mVertices;
+			auto begin() -> decltype(mVertices.begin())
+			{
+				return mVertices.begin();
+			}
+
+			auto end() -> decltype(mVertices.end())
+			{
+				return mVertices.end();
+			}
+
+			auto begin() const -> decltype(mVertices.begin())
+			{
+				return mVertices.begin();
+			}
+
+			auto end() const -> decltype(mVertices.end())
+			{
+				return mVertices.end();
+			}
+			
+			auto rbegin() -> decltype(mVertices.rbegin())
+			{
+				return mVertices.rbegin();
+			}
+
+			auto rend() -> decltype(mVertices.rend())
+			{
+				return mVertices.rend();
+			}
+
+			auto rbegin() const -> decltype(mVertices.rbegin())
+			{
+				return mVertices.rbegin();
+			}
+
+			auto rend() const -> decltype(mVertices.rend())
+			{
+				return mVertices.rend();
+			}
+
 		};
 		typedef Polygon<3> Triangle;
 		typedef Polygon<4> Quadrilateral;

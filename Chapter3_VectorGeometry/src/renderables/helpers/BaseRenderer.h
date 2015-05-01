@@ -24,6 +24,7 @@ namespace MyCode
 		void AddPointToRender(const glm::vec4& worldPoint, const Color& color = Color(1.0f));
 		void ReplaceLastPoint(const glm::vec4& worldPoint);
 
+		GLuint GetVertexArrayObjectID() const { return mVertexArrayObjectID; }
 		const std::vector<ColoredPoint>& GetRenderPoints() const { return mRenderPoints; }
 		const std::vector<glm::vec4>& GetWorldPoints() const { return mWorldPoints; }
 		void ClearPoints() 
@@ -33,7 +34,7 @@ namespace MyCode
 		}
 
 	protected:
-		virtual void DoRender() = 0;
+		virtual void DoRender() {};
 
 	private:
 		void InitVertexBuffer();

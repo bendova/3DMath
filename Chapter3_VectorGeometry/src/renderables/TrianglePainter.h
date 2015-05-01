@@ -6,29 +6,45 @@
 #include <vector>
 #include <memory>
 #include "../framework/MathUtil.h"
-#include "LineRenderer.h"
-#include "TriangleRenderer.h"
+#include "helpers/LineRenderer.h"
+#include "helpers/TriangleRenderer.h"
+#include "helpers/QuadIntersecter.h"
 
 namespace MyCode
 {
 	using namespace MathUtil;
 	class PosColorProgram;
 
-	class LinePainter
+	class TrianglePainter
 	{
 	public:
-		LinePainter(const PosColorProgram& posColorProgram);
-		~LinePainter();
+		TrianglePainter(const PosColorProgram& posColorProgram);
+		~TrianglePainter();
 
 		void Render(const glm::mat4& modelMatrix);
-		void SetCameraToClipMatrixInverse(const glm::mat4& cameraToClipInverse) { mCameraToClipInverse = cameraToClipInverse; }
-		void SetScreenDimensions(const GLint w, const GLint h) { mScreenWidth = w; mScreenHeight = h; }
+		void SetCameraToClipMatrixInverse(const glm::mat4& cameraToClipInverse) 
+		{ 
+			mQuadIntersecter.SetCameraToClipMatrixInverse(cameraToClipInverse); 
+		}
+		void SetScreenDimensions(const GLint w, const GLint h) 
+		{
+			mQuadIntersecter.SetScreenDimensions(w, h);
+		}
 
 		bool OnMouseClick(int button, int state, int x, int y); 
 		bool OnMouseMoved(int x, int y); 
 	private:
+		enum class DrawingState
+		{
+			DRAWED_NOTHING,
+			DRAWED_FIRST_TRIANGLE,
+			DRAWED_INTERSECTION
+		};
+		
 		void ClearLinePoints();
 		
+		void DrawDemoTriangleIntersections();
+
 		void StartLineDrawing(const int screenX, const int screenY);
 		void UpdateLineDrawing(const int screenX, const int screenY);
 		void CheckIfTriangleIsComplete();
@@ -42,21 +58,15 @@ namespace MyCode
 		bool HandleMousePressed(int button, int state, int x, int y);
 		bool HandleMouseReleased(int button, int state, int x, int y);
 
-		static const int VERTEX_BUFFER_MAX_SIZE;
-		static const int VERTEX_COMPONENT_COUNT;
-		static const int COLOR_COMPONENT_COUNT;
 		LineRenderer mLineRenderer;
 		TriangleRenderer mTriangleRenderer;
-		std::vector<ColoredPoint> mLinePoints;
+		TriangleRenderer mDemoRenderer;
 		const PosColorProgram& mPosColorProgram;
-		glm::mat4 mCameraToClipInverse;
-		glm::mat4 mModelToCameraInverse;
-		GLint mScreenWidth;
-		GLint mScreenHeight;
-		glm::vec4 mPlaneNormal;
-		glm::vec4 mPlanePoint;
 
-		std::unique_ptr<Quadrilateral> mQuadrilateral;
+		DrawingState mDrawingState;
+		std::vector<glm::vec4> mTriangleA;
+
+		QuadIntersecter mQuadIntersecter;
 	};
 }
 

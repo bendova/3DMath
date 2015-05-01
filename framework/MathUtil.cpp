@@ -78,32 +78,72 @@ namespace MyCode
 			}
 		}
 
+		std::pair<float, bool> GetSegmentIntersectionFactor(const glm::vec4& a, const glm::vec4& b, const glm::vec4& c, const glm::vec4& d)
+		{
+			bool doesIntersectionPointExist = false;
+			float factorAB = FLT_MAX;
+			const glm::vec3 lineDirectionAB{ b - a };
+			const glm::vec3 lineDirectionCD{ d - c };
+			const glm::vec3 lineDirectionsCross{ glm::cross(lineDirectionAB, lineDirectionCD) };
+			const auto lineDirectionsCrossLength = glm::length(lineDirectionsCross);
+			if (lineDirectionsCrossLength)
+			{
+				const glm::vec3 ca{ a - c };
+				factorAB = -glm::dot(glm::cross(ca, lineDirectionCD), lineDirectionsCross)
+					/ (lineDirectionsCrossLength * lineDirectionsCrossLength);
+				doesIntersectionPointExist = true;
+			}
+			return std::make_pair(factorAB, doesIntersectionPointExist);
+		}
+
+		float IsIntersectionFactorOnSegment(const float factor)
+		{
+			const float minFactor = 0.0f;
+			const float maxFactor = 1.0f;
+			return ((minFactor <= factor) && (factor <= maxFactor));
+		}
+
 		glm::vec4 GetIntersectionPoint(const glm::vec4& a, const glm::vec4& b, const glm::vec4& c, const glm::vec4& d)
 		{
 			glm::vec4 intersectionPoint{ 0.0f, 0.0f, 0.0f, 0.0f };
 
-			const glm::vec3 lineDirection1 { b - a };
-			const glm::vec3 lineDirection2 { d - c };
-			const glm::vec3 lineDirectionsCross{ glm::cross(lineDirection1, lineDirection2) };
-			const auto lineDirectionsCrossLength = glm::length(lineDirectionsCross);
-			if (lineDirectionsCrossLength)
+			const auto factorAB = GetSegmentIntersectionFactor(a, b, c, d);
+			const auto factorCD = GetSegmentIntersectionFactor(c, d, a, b);
+			if (factorAB.second && IsIntersectionFactorOnSegment(factorAB.first) &&
+				factorCD.second && IsIntersectionFactorOnSegment(factorCD.first))
 			{
-				const glm::vec3 ac{ c - a };
-				const float factor = -glm::dot(glm::cross(ac, lineDirection2), lineDirectionsCross) 
-					/ (lineDirectionsCrossLength * lineDirectionsCrossLength);
-
-				intersectionPoint = a + factor * glm::vec4{ lineDirection1, 1.0f };
+				intersectionPoint = a + factorAB.first * (b - a);
 			}
 			return intersectionPoint;
+		}
+
+		float FloorWithPrecision(const float x, const int precision)
+		{
+			const int scale = static_cast<int>(pow(10, precision));
+			
+			double temp = x * scale;
+			temp = temp < 0.0 ? ceil(temp) : floor(temp);
+			temp /= scale;
+			return static_cast<float>(temp);
+		}
+
+		void Floor(glm::vec4& v)
+		{
+			const int precision = 5;
+			v.x = FloorWithPrecision(v.x, precision);
+			v.y = FloorWithPrecision(v.y, precision);
+			v.z = FloorWithPrecision(v.z, precision);
+			v.w = FloorWithPrecision(v.w, precision);
 		}
 
 		glm::vec4 GetProjectionPoint(const glm::vec4& a, const glm::vec4& b, const glm::vec4& c)
 		{
 			glm::vec4 lineDirection = b - a;
 			
-			const auto lineDirectionLength = glm::length(lineDirection);;
+			const float lineDirectionLength = glm::length(lineDirection);
 			glm::vec4 ac = c - a;
-			const auto factor = glm::dot(lineDirection, ac) / (lineDirectionLength * lineDirectionLength);
+			float factor = glm::dot(lineDirection, ac) / (lineDirectionLength * lineDirectionLength);
+			factor = FloorWithPrecision(factor, 6);
 			glm::vec4 projectionPoint = a + factor * lineDirection;
 			return projectionPoint;
 		}
@@ -120,7 +160,7 @@ namespace MyCode
 			const glm::vec4 ap = p - a;
 			const glm::vec4 abNormal = GetNormalToLineFromPoint(a, b, c);
 			const auto res = glm::dot(ap, abNormal);
-			return (res >= -1.0e-5);
+			return (res >= 0.0);
 		}
 
 		bool Contains(Triangle q, const glm::vec4& p)

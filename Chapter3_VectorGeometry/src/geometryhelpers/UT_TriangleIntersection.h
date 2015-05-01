@@ -12,40 +12,46 @@ namespace MyCode
 		~UT_TriangleIntersection();
 
 		bool Run();
-		
-	private:
-		bool TestTriangleVerticesIntersection();
-		bool TriangleOverlapsWithItselfAtVertices();
-		bool TriangleIntersectionIn1Vertice();
-		bool TriangleIntersectionIn2Vertices();
-		bool TriangleIntersectionIn3Vertices();
-		bool TriangleIntersectionIn0Vertices();
-
-		bool TestTriangleAreaIntersection();
-		bool TriangleOverlapsWithItselfInArea();
-		bool TriangleNoIntersectionInArea();
-		bool TriangleIntersectionIn0Area();
-		bool TriangleIntersectionIn1VerticeArea();
-
-		template<typename T, typename U>
-		bool CheckEquals(T actual, U expected, const char* testName, const char* msg = nullptr)
-		{
-			bool equals = (actual == expected);
-			if (!equals)
-			{
-				if (msg)
-				{
-					printf("%s() Failed: %s!\n", testName, msg);
-				}
-				else
-				{
-					printf("%s() Failed!\n", testName);
-				}
-			}
-
-			return equals;
-		}
 	};
+
+	class TriangleAreaIntersectionTest
+	{
+	public:
+		TriangleAreaIntersectionTest();
+		~TriangleAreaIntersectionTest();
+
+		bool Run();
+	private:
+		bool TriangleOverlapsWithItself();
+		bool IntersectionIn_NoArea();
+		bool TriangleIntersectionWithContainedTriangle();
+		bool IntersectionIn_PointArea();
+		bool IntersectionIn_LineArea();
+		bool IntersectionIn_TriangleArea();
+		bool IntersectionIn_RombusArea();
+		bool IntersectionIn_TrapezeArea();
+		bool IntersectionIn_PentagonArea();
+		bool IntersectionIn_HexagonArea();
+	};
+
+	template<typename T, typename U>
+	bool CheckEquals(const T& actual, const U& expected, const char* testName, const char* msg = nullptr)
+	{
+		bool equals = (actual == expected);
+		if (!equals)
+		{
+			if (msg)
+			{
+				printf("%s() Failed: %s!\n", testName, msg);
+			}
+			else
+			{
+				printf("%s() Failed!\n", testName);
+			}
+		}
+
+		return equals;
+	}
 }
 
 #endif //_MY_CODE_UT_TRIANGLE_INTERSECTION_H_

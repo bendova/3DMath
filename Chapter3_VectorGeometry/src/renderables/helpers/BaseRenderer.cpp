@@ -1,5 +1,5 @@
 #include "BaseRenderer.h"
-#include "../programs/PosColorProgram.h"
+#include "../../programs/PosColorProgram.h"
 
 namespace MyCode
 {

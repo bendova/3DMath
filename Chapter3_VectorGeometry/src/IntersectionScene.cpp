@@ -54,7 +54,7 @@ namespace MyCode
 		: mPosColorProgram("PosColor.vert", "PosColor.frag")
 		, dPlaneMesh("LargePlane.xml")
 		, dCubeMesh("UnitCube.xml")
-		, dLinePainter(mPosColorProgram)
+		, dTrianglePainter(mPosColorProgram)
 		, mScreenWidth(0)
 		, mScreenHeight(0)
 		, mCameraToClipMatrix()
@@ -84,6 +84,8 @@ namespace MyCode
 		glDepthRange(0.0f, 1.0f);
 
 		glEnable(GL_LINE_SMOOTH);
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	}
 
 	void IntersectionScene::ConfigureInput()
@@ -99,15 +101,14 @@ namespace MyCode
 
 		glutil::MatrixStack modelToCameraTransform;
 		modelToCameraTransform.ApplyMatrix(gViewPole.CalcMatrix());
-		//modelToCameraTransform.ApplyMatrix(glm::mat4(1.0f));
 
 		glUseProgram(mPosColorProgram.GetProgramID());
 
 		RenderPlane(modelToCameraTransform);
 		RenderCube(modelToCameraTransform);
-		RenderLinePainter(modelToCameraTransform);
+		RenderTrianglePainter(modelToCameraTransform);
 
-		TestPointProjection(modelToCameraTransform.Top());
+		//TestPointProjection(modelToCameraTransform.Top());
 
 		glUseProgram(GL_NONE);
 
@@ -126,7 +127,6 @@ namespace MyCode
 		const float halfScreenHeight = mScreenHeight / 2.0f;
 		const float screenPointX = static_cast<float>((ndcPoint.x * halfScreenWidth) + halfScreenWidth);
 		const float screenPointY = static_cast<float>(halfScreenHeight - (ndcPoint.y * halfScreenHeight));
-
 	}
 
 	void IntersectionScene::RenderPlane(glutil::MatrixStack& modelMatrix)
@@ -148,12 +148,12 @@ namespace MyCode
 		dCubeMesh.Render();
 	}
 
-	void IntersectionScene::RenderLinePainter(glutil::MatrixStack& modelMatrix)
+	void IntersectionScene::RenderTrianglePainter(glutil::MatrixStack& modelMatrix)
 	{
 		glutil::PushStack push(modelMatrix);
 		glUniformMatrix4fv(mPosColorProgram.GetModelToCameraTransformUniform(),
 			1, GL_FALSE, glm::value_ptr(modelMatrix.Top()));
-		dLinePainter.Render(modelMatrix.Top());
+		dTrianglePainter.Render(modelMatrix.Top());
 	}
 
 	void IntersectionScene::Reshape(GLint width, GLint height)
@@ -163,7 +163,7 @@ namespace MyCode
 
 		UpdateCameraToClipMatrix();
 		UploadCameraToClipToOpenGL();
-		UpdateLinePainter();
+		UpdateTrianglePainter();
 	}
 
 	void IntersectionScene::UpdateCameraToClipMatrix()
@@ -181,35 +181,35 @@ namespace MyCode
 			1, GL_FALSE, glm::value_ptr(mCameraToClipMatrix));
 		glUseProgram(GL_NONE);
 	}
-	void IntersectionScene::UpdateLinePainter()
+	void IntersectionScene::UpdateTrianglePainter()
 	{
-		dLinePainter.SetCameraToClipMatrixInverse(glm::inverse(mCameraToClipMatrix));
-		dLinePainter.SetScreenDimensions(mScreenWidth, mScreenHeight);
+		dTrianglePainter.SetCameraToClipMatrixInverse(glm::inverse(mCameraToClipMatrix));
+		dTrianglePainter.SetScreenDimensions(mScreenWidth, mScreenHeight);
 	}
 
 	void IntersectionScene::HandleInput(unsigned char key, int x, int y)
 	{
 		gViewPole.CharPress(key);
-		
-		switch (key)
-		{
-		case ' ':
-			mDrawLinesMode = !mDrawLinesMode;
-			break;
-		}
 	}
 
 	void IntersectionScene::OnMouseClick(int button, int state, int x, int y)
 	{
-		bool isHandled = false;
-		if (mDrawLinesMode)
+		if (button == GLUT_MIDDLE_BUTTON && state == GLUT_DOWN)
 		{
-			isHandled = dLinePainter.OnMouseClick(button, state, x, y);
+			mDrawLinesMode = !mDrawLinesMode;
 		}
-
-		if (isHandled == false)
+		else
 		{
-			Framework::ForwardMouseButton(gViewPole, button, state, x, y);
+			bool isHandled = false;
+			if (mDrawLinesMode)
+			{
+				isHandled = dTrianglePainter.OnMouseClick(button, state, x, y);
+			}
+
+			if (isHandled == false)
+			{
+				Framework::ForwardMouseButton(gViewPole, button, state, x, y);
+			}
 		}
 	}
 	
@@ -218,7 +218,7 @@ namespace MyCode
 		bool isHandled = false;
 		if (mDrawLinesMode)
 		{
-			isHandled = dLinePainter.OnMouseMoved(x, y);
+			isHandled = dTrianglePainter.OnMouseMoved(x, y);
 		}
 
 		if (isHandled == false)

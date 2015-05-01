@@ -1,24 +1,24 @@
 #include <glload/gl_3_3.h>
 #include "GL/freeglut.h"
-#include "IntersectionScene.h"
 #include <memory>
+#include "Scene.h"
 
-std::unique_ptr<MyCode::IntersectionScene> gIntersectionScene;
+std::unique_ptr<MyCode::Scene> gScene;
 
 void init()
 {
-	gIntersectionScene = std::unique_ptr<MyCode::IntersectionScene>(new MyCode::IntersectionScene());
+	gScene = std::unique_ptr<MyCode::Scene>(new MyCode::Scene());
 }
 
 void display()
 {
-	gIntersectionScene->Render();
+	gScene->Render();
 }
 
 void reshape(int w, int h)
 {
 	glViewport(0, 0, static_cast<GLsizei>(w), static_cast<GLsizei>(h));
-	gIntersectionScene->Reshape(static_cast<GLint>(w), static_cast<GLint>(h));
+	gScene->Reshape(static_cast<GLint>(w), static_cast<GLint>(h));
 }
 
 void keyboard(unsigned char key, int x, int y)
@@ -29,7 +29,7 @@ void keyboard(unsigned char key, int x, int y)
 		glutLeaveMainLoop();
 		break;
 	default:
-		gIntersectionScene->HandleInput(key, x, y);
+		gScene->HandleInput(key, x, y);
 		break;
 	}
 }

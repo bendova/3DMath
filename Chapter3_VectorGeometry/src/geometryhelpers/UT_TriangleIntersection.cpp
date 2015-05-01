@@ -14,89 +14,58 @@ namespace MyCode
 
 	bool UT_TriangleIntersection::Run()
 	{
-		bool result = TestTriangleVerticesIntersection()
-			&& TestTriangleAreaIntersection();
+		TriangleAreaIntersectionTest areaTest;
+		bool result = areaTest.Run();
 		
 		return result;
 	}
 
-	bool UT_TriangleIntersection::TestTriangleVerticesIntersection()
+
+	TriangleAreaIntersectionTest::TriangleAreaIntersectionTest()
+	{}
+
+	TriangleAreaIntersectionTest::~TriangleAreaIntersectionTest()
+	{}
+
+	bool TriangleAreaIntersectionTest::Run()
 	{
-		return TriangleOverlapsWithItselfAtVertices()
-			&& TriangleIntersectionIn0Vertices()
-			&& TriangleIntersectionIn1Vertice()
-			&& TriangleIntersectionIn2Vertices()
-			&& TriangleIntersectionIn3Vertices()
+		return TriangleOverlapsWithItself()
+			&& TriangleIntersectionWithContainedTriangle()
+			&& IntersectionIn_NoArea()
+			&& IntersectionIn_PointArea()
+			&& IntersectionIn_LineArea()
+			&& IntersectionIn_TriangleArea()
+			&& IntersectionIn_RombusArea()
+			&& IntersectionIn_TrapezeArea()
+			&& IntersectionIn_PentagonArea()
+			&& IntersectionIn_HexagonArea()
 			;
 	}
 
-	bool UT_TriangleIntersection::TriangleOverlapsWithItselfAtVertices()
-	{
-		Triangle a{ glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), glm::vec4(1.0f, -1.0f, 0.0f, 1.0f), glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f) };
-		const int count = TriangleIntersection::GetInsideVertices(a, a).size();
-
-		return CHECK_EQUALS(count, Triangle::GetPointsCount());
-	}
-
-	bool UT_TriangleIntersection::TriangleIntersectionIn0Vertices()
-	{
-		Triangle a{ glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), glm::vec4(1.0f, -1.0f, 0.0f, 1.0f), glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f) };
-		Triangle b{ glm::vec4(-5.0f, 5.0f, 0.0f, 1.0f), glm::vec4(-4.0f, 5.0f, 0.0f, 1.0f), glm::vec4(-5.0f, 4.0f, 0.0f, 1.0f) };
-
-		const int count = TriangleIntersection::GetInsideVertices(a, b).size();
-
-		return CHECK_EQUALS(count, 0);
-	}
-
-	bool UT_TriangleIntersection::TriangleIntersectionIn1Vertice()
-	{
-		Triangle a{ glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), glm::vec4(1.0f, -1.0f, 0.0f, 1.0f), glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f) };
-		Triangle b{ glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f), glm::vec4(-1.0f, -2.0f, 0.0f, 1.0f), glm::vec4(-2.0f, -1.0f, 0.0f, 1.0f) };
-
-		const int count = TriangleIntersection::GetInsideVertices(a, b).size();
-
-		return CHECK_EQUALS(count, 1);
-	}
-
-	bool UT_TriangleIntersection::TriangleIntersectionIn2Vertices()
-	{
-		Triangle a{ glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), glm::vec4(1.0f, -1.0f, 0.0f, 1.0f), glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f) };
-		Triangle b{ glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f), glm::vec4(-1.0f, 1.0f, 0.0f, 1.0f), glm::vec4(1.0f, 1.0f, 0.0f, 1.0f) };
-
-		const int count = TriangleIntersection::GetInsideVertices(a, b).size();
-
-		return CHECK_EQUALS(count, 2);
-	}
-
-	bool UT_TriangleIntersection::TriangleIntersectionIn3Vertices()
-	{
-		Triangle a{ glm::vec4(3.0f, 3.0f, 0.0f, 1.0f), glm::vec4(3.0f, -3.0f, 0.0f, 1.0f), glm::vec4(-3.0f, -3.0f, 0.0f, 1.0f) };
-		Triangle b{ glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), glm::vec4(1.0f, -1.0f, 0.0f, 1.0f), glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f) };
-
-		const int count = TriangleIntersection::GetInsideVertices(a, b).size();
-
-		return CHECK_EQUALS(count, 3);
-	}
-
-	bool UT_TriangleIntersection::TestTriangleAreaIntersection()
-	{
-		return TriangleOverlapsWithItselfInArea()
-			&& TriangleIntersectionIn0Area()
-			&& TriangleIntersectionIn1VerticeArea();
-	}
-
-	bool UT_TriangleIntersection::TriangleOverlapsWithItselfInArea()
+	bool TriangleAreaIntersectionTest::TriangleOverlapsWithItself()
 	{
 		Triangle a{ glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), glm::vec4(1.0f, -1.0f, 0.0f, 1.0f), glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f) };
 
 		const auto& verticesA = a.GetVertices();
 		const TriangleIntersection::Area expectedArea{ verticesA.begin(), verticesA.end() };
-		const TriangleIntersection::Area& area = TriangleIntersection::GetIntersectionArea(a, a);
+		const TriangleIntersection::Area area = TriangleIntersection::GetIntersectionArea(a, a);
 
 		return CHECK_EQUALS(area, expectedArea);
 	}
 
-	bool UT_TriangleIntersection::TriangleNoIntersectionInArea()
+	bool TriangleAreaIntersectionTest::TriangleIntersectionWithContainedTriangle()
+	{
+		Triangle a{ glm::vec4(0.0f, 3.0f, 0.0f, 1.0f), glm::vec4(3.0f, -3.0f, 0.0f, 1.0f), glm::vec4(-3.0f, -3.0f, 0.0f, 1.0f) };
+		Triangle b{ glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), glm::vec4(1.0f, -1.0f, 0.0f, 1.0f), glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f) };
+
+		const auto& verticesB = b.GetVertices();
+		const TriangleIntersection::Area expectedArea{ verticesB.begin(), verticesB.end() };
+		const TriangleIntersection::Area area = TriangleIntersection::GetIntersectionArea(a, b);
+
+		return CHECK_EQUALS(area, expectedArea);
+	}
+
+	bool TriangleAreaIntersectionTest::IntersectionIn_NoArea()
 	{
 		Triangle a{ glm::vec4(0.0f, 1.0f, 0.0f, 1.0f), glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), glm::vec4(1.0f, 0.0f, 0.0f, 1.0f) };
 		Triangle b{ glm::vec4(0.0f, -1.0f, 0.0f, 1.0f), glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f), glm::vec4(-1.0f, 0.0f, 0.0f, 1.0f) };
@@ -107,25 +76,95 @@ namespace MyCode
 		return CHECK_EQUALS(area, expectedArea);
 	}
 
-	bool UT_TriangleIntersection::TriangleIntersectionIn0Area()
+	bool TriangleAreaIntersectionTest::IntersectionIn_PointArea()
 	{
-		Triangle a{ glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), glm::vec4(1.0f, -1.0f, 0.0f, 1.0f), glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f) };
-		Triangle b{ glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f), glm::vec4(-1.0f, 1.0f, 0.0f, 1.0f), glm::vec4(1.0f, 1.0f, 0.0f, 1.0f) };
+		Triangle a{ glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), glm::vec4(1.0f, 0.0f, 0.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) };
+		Triangle b{ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), glm::vec4(0.0f, -1.0f, 0.0f, 1.0f), glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f) };
 
-		const TriangleIntersection::Area expectedArea{};
+		const TriangleIntersection::Area expectedArea{ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) };
 		const TriangleIntersection::Area& area = TriangleIntersection::GetIntersectionArea(a, b);
 
 		return CHECK_EQUALS(area, expectedArea);
 	}
 
-	bool UT_TriangleIntersection::TriangleIntersectionIn1VerticeArea()
+	bool TriangleAreaIntersectionTest::IntersectionIn_LineArea()
+	{
+		Triangle a{ glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), glm::vec4(1.0f, -1.0f, 0.0f, 1.0f), glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f) };
+		Triangle b{ glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f), glm::vec4(-1.0f, 1.0f, 0.0f, 1.0f), glm::vec4(1.0f, 1.0f, 0.0f, 1.0f) };
+
+		const TriangleIntersection::Area expectedArea{ glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), glm::vec4(-1.0f, -1.0f, 0.0f, 1.0f) };
+		const TriangleIntersection::Area& area = TriangleIntersection::GetIntersectionArea(a, b);
+
+		return CHECK_EQUALS(area, expectedArea);
+	}
+	
+	bool TriangleAreaIntersectionTest::IntersectionIn_TriangleArea()
 	{
 		Triangle a{ glm::vec4(1.0f, 2.0f, 0.0f, 1.0f), glm::vec4(3.0f, 0.0f, 0.0f, 1.0f), glm::vec4(1.0f, -2.0f, 0.0f, 1.0f) };
 		Triangle b{ glm::vec4(0.0f, 2.0f, 0.0f, 1.0f), glm::vec4(2.0f, 0.0f, 0.0f, 1.0f), glm::vec4(0.0f, -2.0f, 0.0f, 1.0f) };
 
-		const TriangleIntersection::Area expectedArea{glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), 
-			glm::vec4(2.0f, 0.0f, 0.0f, 1.0f), glm::vec4(1.0f, -1.0f, 0.0f, 1.0f)};
-		const TriangleIntersection::Area& area = TriangleIntersection::GetIntersectionArea(a, b);
+		const TriangleIntersection::Area expectedArea{ glm::vec4(1.0f, -1.0f, 0.0f, 1.0f), glm::vec4(1.0f, 1.0f, 0.0f, 1.0f),
+			glm::vec4(2.0f, 0.0f, 0.0f, 1.0f)};
+		const TriangleIntersection::Area area = TriangleIntersection::GetIntersectionArea(a, b);
+
+		return CHECK_EQUALS(area, expectedArea);
+	}
+
+	bool TriangleAreaIntersectionTest::IntersectionIn_RombusArea()
+	{
+		Triangle a{ glm::vec4(0.0f, 2.0f, 0.0f, 1.0f), glm::vec4(2.0f, 0.0f, 0.0f, 1.0f), glm::vec4(0.0f, -2.0f, 0.0f, 1.0f) };
+		Triangle b{ glm::vec4(3.0f, 3.0f, 0.0f, 1.0f), glm::vec4(3.0f, -3.0f, 0.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) };
+
+		const TriangleIntersection::Area expectedArea{ glm::vec4(1.0f, 1.0f, 0.0f, 1.0f), glm::vec4(2.0f, 0.0f, 0.0f, 1.0f), 
+			glm::vec4(1.0f, -1.0f, 0.0f, 1.0f), glm::vec4(0.0f, 0.0f, 0.0f, 1.0f) };
+		const TriangleIntersection::Area area = TriangleIntersection::GetIntersectionArea(a, b);
+
+		return CHECK_EQUALS(area, expectedArea);
+	}
+
+	bool TriangleAreaIntersectionTest::IntersectionIn_TrapezeArea()
+	{
+		Triangle a{ glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), glm::vec4(4.0f, 4.0f, 0.0f, 1.0f), glm::vec4(8.0f, 0.0f, 0.0f, 1.0f) };
+		Triangle b{ glm::vec4(2.0f, 1.0f, 0.0f, 1.0f), glm::vec4(6.0f, 1.0f, 0.0f, 1.0f), glm::vec4(4.0f, -1.0f, 0.0f, 1.0f) };
+
+		const TriangleIntersection::Area expectedArea
+		{ 
+			glm::vec4(5.0f, 0.0f, 0.0f, 1.0f), glm::vec4(3.0f, 0.0f, 0.0f, 1.0f), 
+			glm::vec4(2.0f, 1.0f, 0.0f, 1.0f), glm::vec4(6.0f, 1.0f, 0.0f, 1.0f) 
+		};
+		const TriangleIntersection::Area area = TriangleIntersection::GetIntersectionArea(a, b);
+
+		return CHECK_EQUALS(area, expectedArea);
+	}
+
+	bool TriangleAreaIntersectionTest::IntersectionIn_PentagonArea()
+	{
+		Triangle a{ glm::vec4(-3.0f, 5.0f, 0.0f, 1.0f), glm::vec4(2.0f, 0.0f, 0.0f, 1.0f), glm::vec4(-3.0f, -5.0f, 0.0f, 1.0f) };
+		Triangle b{ glm::vec4(1.0f, 3.0f, 0.0f, 1.0f), glm::vec4(1.0f, -3.0f, 0.0f, 1.0f), glm::vec4(-2.0f, 0.0f, 0.0f, 1.0f) };
+
+		const TriangleIntersection::Area expectedArea
+		{
+			glm::vec4(0.0f, 2.0f, 0.0f, 1.0f), glm::vec4(1.0f, 1.0f, 0.0f, 1.0f),
+			glm::vec4(1.0f, -1.0f, 0.0f, 1.0f), glm::vec4(0.0f, -2.0f, 0.0f, 1.0f),
+			glm::vec4(-2.0f, 0.0f, 0.0f, 1.0f)
+		};
+		const TriangleIntersection::Area area = TriangleIntersection::GetIntersectionArea(a, b);
+
+		return CHECK_EQUALS(area, expectedArea);
+	}
+
+	bool TriangleAreaIntersectionTest::IntersectionIn_HexagonArea()
+	{
+		Triangle a{ glm::vec4(-3.0f, 0.0f, 0.0f, 1.0f), glm::vec4(0.0f, 3.0f, 0.0f, 1.0f), glm::vec4(3.0f, 0.0f, 0.0f, 1.0f) };
+		Triangle b{ glm::vec4(-3.0f, 2.0f, 0.0f, 1.0f), glm::vec4(3.0f, 2.0f, 0.0f, 1.0f), glm::vec4(0.0f, -1.0f, 0.0f, 1.0f) };
+
+		const TriangleIntersection::Area expectedArea
+		{   
+			glm::vec4(-2.0f, 1.0f, 0.0f, 1.0f), glm::vec4(-1.0f, 2.0f, 0.0f, 1.0f), 
+			glm::vec4(1.0f, 2.0f, 0.0f, 1.0f), glm::vec4( 2.0f, 1.0f, 0.0f, 1.0f), 
+			glm::vec4( 1.0f, 0.0f, 0.0f, 1.0f), glm::vec4(-1.0f, 0.0f, 0.0f, 1.0f)
+		};
+		const TriangleIntersection::Area area = TriangleIntersection::GetIntersectionArea(a, b);
 
 		return CHECK_EQUALS(area, expectedArea);
 	}
