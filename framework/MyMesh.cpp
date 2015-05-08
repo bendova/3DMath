@@ -323,6 +323,12 @@ namespace MyCode
 		ParseXMLData(data);
 	}
 
+
+	Mesh::Mesh(Mesh&& other)
+		: mMeshFilePath(std::forward<std::string>(other.mMeshFilePath))
+		, mMeshData(std::forward<std::unique_ptr<MeshData>>(other.mMeshData))
+	{}
+
 	Mesh::~Mesh()
 	{
 

@@ -1,7 +1,10 @@
 #include "Scene.h"
 #include "GL/freeglut.h"
 #include "../framework/MousePole.h"
+#include "../framework/MathUtil.h"
+#include "intersection/UT_IntersectionHelper.h"
 #include "glutil/MatrixStack.h"
+#include <algorithm>
 
 namespace MyCode
 {
@@ -49,23 +52,52 @@ namespace MyCode
 		}
 	}
 
+	const float mNearZ = 0.1f;
+	const float mFarZ = 1000.0f;
+
 	Scene* Scene::mInstance = NULL;
 	Scene::Scene()
 		: mPosColorProgram("PosColor.vert", "PosColor.frag")
 		, dPlaneMesh("LargePlane.xml")
-		, dCubeMesh("UnitCube.xml")
 		, mScreenWidth(0)
 		, mScreenHeight(0)
 		, mCameraToClipMatrix()
+		, mCubes()
+		, mIntersectionHelper()
+		, mCubeSideLength(1.0f)
 	{
 		mInstance = this;
+		InitCubes();
+		InitIntersectionHelper();
 		ConfigureOpenGL();
 		ConfigureInput();
 	}
 
-	Scene::~Scene()
+	void Scene::InitCubes()
 	{
+		const int cubesCount = 4;
+		const float startX = -3.0f;
+		const float incX = 2.0f;
+		for (int i = 0; i < cubesCount; ++i)
+		{
+			const float x = startX + i * incX;
+			mCubes.emplace_back("UnitCube.xml", glm::vec3(x, 0.51f, 0.0f), mCubeSideLength, mIntersectionHelper);
+		}
 	}
+
+	void Scene::InitIntersectionHelper()
+	{
+		UT_IntersectionHelper ut;
+		assert(ut.Validate());
+
+		for (auto& cube : mCubes)
+		{
+			mIntersectionHelper.AddControlHelper(&cube.mCubeControl);
+		}
+	}
+
+	Scene::~Scene()
+	{}
 
 	void Scene::ConfigureOpenGL()
 	{
@@ -98,15 +130,12 @@ namespace MyCode
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
 		glutil::MatrixStack modelToCameraTransform;
-		//modelToCameraTransform.ApplyMatrix(gViewPole.CalcMatrix());
+		modelToCameraTransform.ApplyMatrix(gViewPole.CalcMatrix());
 		
-		modelToCameraTransform.SetIdentity();
-		modelToCameraTransform.Translate(glm::vec3(2.0f, -2.0f, -4.0f));
-
 		glUseProgram(mPosColorProgram.GetProgramID());
 
 		RenderPlane(modelToCameraTransform);
-		RenderCube(modelToCameraTransform);
+		RenderCubes(modelToCameraTransform);
 
 		glUseProgram(GL_NONE);
 
@@ -123,14 +152,24 @@ namespace MyCode
 		dPlaneMesh.Render();
 	}
 
-	void Scene::RenderCube(glutil::MatrixStack& modelMatrix)
+	void Scene::RenderCubes(glutil::MatrixStack& modelMatrix)
+	{
+		for (auto& cube: mCubes)
+		{
+			RenderCube(modelMatrix, cube);
+		}
+	}
+
+	void Scene::RenderCube(glutil::MatrixStack& modelMatrix, ControlledCube& cube)
 	{
 		glutil::PushStack push(modelMatrix);
 
-		modelMatrix.Translate(glm::vec3(0.0f, 0.51f, 0.0f));
+		cube.mCubeControl.SetWorldToCameraTransfrom(modelMatrix.Top());
+
+		modelMatrix.Translate(cube.mCubeControl.GetPosition());
 		glUniformMatrix4fv(mPosColorProgram.GetModelToCameraTransformUniform(),
 			1, GL_FALSE, glm::value_ptr(modelMatrix.Top()));
-		dCubeMesh.Render();
+		cube.mCubeMesh.Render();
 	}
 
 	void Scene::Reshape(GLint width, GLint height)
@@ -143,22 +182,29 @@ namespace MyCode
 
 	void Scene::UpdateCameraToClipMatrix()
 	{
-		/*glutil::MatrixStack cameraToClipTransform;
 		const float aspectRatio = static_cast<float>(mScreenWidth) / static_cast<float>(mScreenHeight);
-		cameraToClipTransform.Perspective(45.0f, aspectRatio, 0.1f, 1000.0f);
+		glutil::MatrixStack cameraToClipTransform;
+		cameraToClipTransform.Perspective(45.0f, aspectRatio, mNearZ, mFarZ);
 		
-		mCameraToClipMatrix = cameraToClipTransform.Top();*/
+		mCameraToClipMatrix = cameraToClipTransform.Top();
+		UpdateCubeControls();
 		
-		const float frustumScale = 1.0f;
-		const float zNear = 1.0f;
-		const float zFar = 200.0f;
-		mCameraToClipMatrix[0].x = frustumScale;
-		mCameraToClipMatrix[1].y = frustumScale;
-		mCameraToClipMatrix[2].z = 1.0f;// (zNear + zFar) / (zNear - zFar);
-		mCameraToClipMatrix[2].w = -1.0f;
-		mCameraToClipMatrix[3].z = 0.0f;// (2 * zNear * zFar) / (zNear - zFar);
-
 		UploadCameraToClipToOpenGL();
+	}
+
+	void Scene::UpdateCubeControls()
+	{
+		for (auto& cube : mCubes)
+		{
+			UpdateCubeControl(cube);
+		}
+	}
+
+	void Scene::UpdateCubeControl(ControlledCube& cube)
+	{
+		cube.mCubeControl.SetCameraToClipTransfrom(mCameraToClipMatrix);
+		cube.mCubeControl.SetClipNearZ(mNearZ);
+		cube.mCubeControl.SetScreenDimensions(mScreenWidth, mScreenHeight);
 	}
 
 	void Scene::UploadCameraToClipToOpenGL()
@@ -171,16 +217,73 @@ namespace MyCode
 
 	void Scene::HandleInput(unsigned char key, int x, int y)
 	{
-		gViewPole.CharPress(key);
+		bool isHandled = ForwardKeyboardInputToCubes(key);
+		if (isHandled == false)
+		{
+			gViewPole.CharPress(key);
+		}
 	}
 
 	void Scene::OnMouseClick(int button, int state, int x, int y)
 	{
-		Framework::ForwardMouseButton(gViewPole, button, state, x, y);
+		bool isHandled = ForwardMouseClickToCubes(button, state, x, y);
+		if (isHandled == false)
+		{
+			Framework::ForwardMouseButton(gViewPole, button, state, x, y);
+		}
 	}
 	
 	void Scene::OnMouseMoved(int x, int y)
 	{
-		Framework::ForwardMouseMotion(gViewPole, x, y);
+		bool isHandled = ForwardMouseMoveToCubes(x, y);
+		if (isHandled == false)
+		{
+			Framework::ForwardMouseMotion(gViewPole, x, y);
+		}
+	}
+
+	bool Scene::ForwardKeyboardInputToCubes(unsigned char key)
+	{
+		bool isHandled = false;
+		for (auto& c : mCubes)
+		{
+			isHandled = c.mCubeControl.HandleKeyPress(key);
+			if (isHandled)
+			{
+				break;
+			}
+		}
+
+		return isHandled;
+	}
+
+	bool Scene::ForwardMouseClickToCubes(int button, int state, int x, int y)
+	{
+		bool isHandled = false;
+		for (auto& c: mCubes)
+		{
+			isHandled = c.mCubeControl.HandleMouseClick(button, state, x, y);
+			if (isHandled)
+			{
+				break;
+			}
+		}
+
+		return isHandled;
+	}
+
+	bool Scene::ForwardMouseMoveToCubes(int x, int y)
+	{
+		bool isHandled = false;
+		for (auto& c : mCubes)
+		{
+			isHandled = c.mCubeControl.HandleMouseMoved(x, y);
+			if (isHandled)
+			{
+				break;
+			}
+		}
+
+		return isHandled;
 	}
 }

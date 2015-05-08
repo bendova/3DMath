@@ -1,10 +1,12 @@
-#include <math.h>
+#include <cmath>
 #include "MathUtil.h"
 
 namespace MyCode
 {
 	namespace MathUtil
 	{
+		const float PI = 3.1415926535897932384626433832795f;
+
 		float DegreesToRadians(float angleInDegrees)
 		{
 			return angleInDegrees * PI / 180.0f;
@@ -14,7 +16,7 @@ namespace MyCode
 		float GetFrustumScale(float angleInDegrees)
 		{
 			float halfAngleInRadians = DegreesToRadians(angleInDegrees) / 2.0f;
-			return 1.0f / tan(halfAngleInRadians / 2.0f);
+			return 1.0f / std::tan(halfAngleInRadians);
 		}
 
 		glm::mat4 RotateX(float angleInDegrees)
@@ -127,9 +129,15 @@ namespace MyCode
 			return static_cast<float>(temp);
 		}
 
-		void Floor(glm::vec4& v)
+		void Floor(glm::vec3& v, const int precision)
 		{
-			const int precision = 5;
+			v.x = FloorWithPrecision(v.x, precision);
+			v.y = FloorWithPrecision(v.y, precision);
+			v.z = FloorWithPrecision(v.z, precision);
+		}
+
+		void Floor(glm::vec4& v, const int precision)
+		{
 			v.x = FloorWithPrecision(v.x, precision);
 			v.y = FloorWithPrecision(v.y, precision);
 			v.z = FloorWithPrecision(v.z, precision);

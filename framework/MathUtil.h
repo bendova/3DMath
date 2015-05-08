@@ -10,7 +10,7 @@ namespace MyCode
 {
 	namespace MathUtil
 	{
-		const float PI = 3.14159f;
+		extern const float PI;
 
 		float DegreesToRadians(float angleInDegrees);
 		float GetFrustumScale(float angleInDegrees);
@@ -198,6 +198,9 @@ namespace MyCode
 		bool Contains(Triangle t, const glm::vec4& p);
 		bool Contains(Quadrilateral q, const glm::vec4& p);
 
+		float FloorWithPrecision(const float x, const int precision);
+		void Floor(glm::vec3& v, const int precision = 5);
+		void Floor(glm::vec4& v, const int precision = 5);
 	}
 }
 #endif

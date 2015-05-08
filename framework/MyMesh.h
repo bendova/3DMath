@@ -27,7 +27,11 @@ namespace MyCode
 	{
 	public:
 		Mesh(std::string meshPath);
+		Mesh(const Mesh& other) = delete;
+		Mesh(Mesh&& other);
 		~Mesh();
+
+		Mesh& operator=(const Mesh& other) = delete;
 
 		void Render() const;
 		void Render(const std::string& vaoName) const;
