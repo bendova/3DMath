@@ -2,7 +2,8 @@
 #include "GL/freeglut.h"
 #include "../framework/MousePole.h"
 #include "../framework/MathUtil.h"
-#include "intersection/UT_IntersectionHelper.h"
+#include "intersection/UT_ColisionHelper.h"
+#include "intersection/UT_RectangleColider.h"
 #include "glutil/MatrixStack.h"
 #include <algorithm>
 
@@ -69,9 +70,14 @@ namespace MyCode
 		mInstance = this;
 		InitCubes();
 		InitIntersectionHelper();
+		ValidateSquareColider();
+
 		ConfigureOpenGL();
 		ConfigureInput();
 	}
+
+	Scene::~Scene()
+	{}
 
 	void Scene::InitCubes()
 	{
@@ -87,7 +93,7 @@ namespace MyCode
 
 	void Scene::InitIntersectionHelper()
 	{
-		UT_IntersectionHelper ut;
+		UT_ColisionHelper ut;
 		assert(ut.Validate());
 
 		for (auto& cube : mCubes)
@@ -96,8 +102,11 @@ namespace MyCode
 		}
 	}
 
-	Scene::~Scene()
-	{}
+	void Scene::ValidateSquareColider()
+	{
+		UT_RectangleColider squareColider;
+		assert(squareColider.Validate());
+	}
 
 	void Scene::ConfigureOpenGL()
 	{

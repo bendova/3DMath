@@ -9,7 +9,7 @@
 #include "Scene.h"
 #include "programs/PosColorProgram.h"
 #include "control/ControlHelper.h"
-#include "intersection/IntersectionHelper.h"
+#include "intersection/ColisionHelper.h"
 #include "../framework/MyMesh.h"
 
 namespace glutil
@@ -37,7 +37,7 @@ namespace MyCode
 		struct ControlledCube
 		{
 			ControlledCube(const std::string& mesh, const glm::vec3& position, 
-				const float sideLength, const IntersectionHelper& intersectionHelper)
+				const float sideLength, const ColisionHelper& intersectionHelper)
 				: mCubeMesh(mesh)
 				, mCubeControl(position, sideLength, intersectionHelper)
 			{}
@@ -53,6 +53,7 @@ namespace MyCode
 		
 		void InitCubes();
 		void InitIntersectionHelper();
+		void ValidateSquareColider();
 
 		void RenderPlane(glutil::MatrixStack& modelMatrix);
 		void RenderCubes(glutil::MatrixStack& modelMatrix);
@@ -77,7 +78,7 @@ namespace MyCode
 		GLint mScreenHeight;
 		glm::mat4 mCameraToClipMatrix;
 		std::vector<ControlledCube> mCubes;
-		IntersectionHelper mIntersectionHelper;
+		ColisionHelper mIntersectionHelper;
 		const float mCubeSideLength;
 		static const float zNear;
 		static const float zFar;

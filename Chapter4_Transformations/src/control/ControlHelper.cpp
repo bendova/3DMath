@@ -3,15 +3,15 @@
 #include <cstdio>
 #include <cmath>
 #include "../framework/MathUtil.h"
-#include "../intersection/IntersectionHelper.h"
+#include "../intersection/ColisionHelper.h"
 
 namespace MyCode
 {
 	const float ControlHelper::PICKUP_DELTA_Y = 0.0f;
 
-	ControlHelper::ControlHelper(const glm::vec3& initialPosition, const float sideLength, const IntersectionHelper& intersectionHelper)
+	ControlHelper::ControlHelper(const glm::vec3& initialPosition, const float sideLength, const ColisionHelper& colisionHelper)
 		: mPosition(initialPosition)
-		, mIntersectionHelper(intersectionHelper)
+		, mColisionHelper(colisionHelper)
 		, mViewTransform(1.0f)
 		, mClipToCamera(1.0f)
 		, mCameraToWorld(1.0f)
@@ -100,46 +100,46 @@ namespace MyCode
 	bool ControlHelper::MoveCube(unsigned char key)
 	{
 		bool isHandled = true;
-		const float INC = 1.0f;
-		const float SHIFT_INC = 0.1f * INC;
+		const float DELTA = 1.0f;
+		const float SHIFT_DELTA = 0.1f * DELTA;
 		glm::vec3 positionDelta{ 0.0f, 0.0f, 0.0f };
 		switch (key)
 		{
 		case 'i':
-			positionDelta.z -= INC;
+			positionDelta.z -= DELTA;
 			break;
 		case 'k':
-			positionDelta.z += INC;
+			positionDelta.z += DELTA;
 			break;
 		case 'j':
-			positionDelta.x -= INC;
+			positionDelta.x -= DELTA;
 			break;
 		case 'l':
-			positionDelta.x += INC;
+			positionDelta.x += DELTA;
 			break;
 		case 'o':
-			positionDelta.y -= INC;
+			positionDelta.y -= DELTA;
 			break;
 		case 'u':
-			positionDelta.y += INC;
+			positionDelta.y += DELTA;
 			break;
 		case 'I':
-			positionDelta.z -= SHIFT_INC;
+			positionDelta.z -= SHIFT_DELTA;
 			break;
 		case 'K':
-			positionDelta.z += SHIFT_INC;
+			positionDelta.z += SHIFT_DELTA;
 			break;
 		case 'J':
-			positionDelta.x -= SHIFT_INC;
+			positionDelta.x -= SHIFT_DELTA;
 			break;
 		case 'L':
-			positionDelta.x += SHIFT_INC;
+			positionDelta.x += SHIFT_DELTA;
 			break;
 		case 'O':
-			positionDelta.y -= SHIFT_INC;
+			positionDelta.y -= SHIFT_DELTA;
 			break;
 		case 'U':
-			positionDelta.y += SHIFT_INC;
+			positionDelta.y += SHIFT_DELTA;
 			break;
 		default:
 			isHandled = false;
@@ -236,7 +236,7 @@ namespace MyCode
 	{
 		if (mPosition != position)
 		{
-			mPosition = mIntersectionHelper.GetValidPosition(*this, position);
+			mPosition = mColisionHelper.GetValidPosition(*this, position);
 		}
 	}
 }

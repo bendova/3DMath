@@ -1,24 +1,24 @@
-#include "UT_IntersectionHelper.h"
+#include "UT_ColisionHelper.h"
 #include "../framework/UT_Util.h"
 #include "../framework/MathUtil.h"
 #include <cmath>
 
 namespace MyCode
 {
-	UT_IntersectionHelper::UT_IntersectionHelper()
+	UT_ColisionHelper::UT_ColisionHelper()
 	{}
 
-	UT_IntersectionHelper::~UT_IntersectionHelper()
+	UT_ColisionHelper::~UT_ColisionHelper()
 	{}
 
-	bool UT_IntersectionHelper::Validate()
+	bool UT_ColisionHelper::Validate()
 	{
 		return NoIntersection()
 			&& NearEdgeIntersection()
 			&& FarEdgeIntersection();
 	}
 
-	bool UT_IntersectionHelper::NoIntersection()
+	bool UT_ColisionHelper::NoIntersection()
 	{
 		Setup setup{ glm::vec3{ 0.0f }, glm::vec3{3.0f, 0.0f, 0.0f} };
 
@@ -27,7 +27,7 @@ namespace MyCode
 		return CHECK_EQUALS(target, validTarget);
 	}
 
-	bool UT_IntersectionHelper::NearEdgeIntersection()
+	bool UT_ColisionHelper::NearEdgeIntersection()
 	{
 		Setup setup{ glm::vec3{ 0.0f }, glm::vec3{ 4.0f, 0.0f, 0.0f } };
 
@@ -40,7 +40,7 @@ namespace MyCode
 		return CHECK_EQUALS(expectedValidTarget, validTarget);
 	}
 
-	bool UT_IntersectionHelper::FarEdgeIntersection()
+	bool UT_ColisionHelper::FarEdgeIntersection()
 	{
 		Setup setup{ glm::vec3{ 0.0f }, glm::vec3{ 4.0f, 0.0f, 0.0f } };
 

@@ -1,4 +1,4 @@
-#include "IntersectionHelper.h"
+#include "ColisionHelper.h"
 #include "../control/ControlHelper.h"
 #include "../framework/MathUtil.h"
 #include <cmath>
@@ -6,14 +6,14 @@
 
 namespace MyCode
 {
-	IntersectionHelper::IntersectionHelper()
+	ColisionHelper::ColisionHelper()
 		: mControlHelpers{}
 	{}
 
-	IntersectionHelper::~IntersectionHelper()
+	ColisionHelper::~ColisionHelper()
 	{}
 
-	glm::vec3 IntersectionHelper::GetValidPosition(const ControlHelper& current, glm::vec3 desired) const
+	glm::vec3 ColisionHelper::GetValidPosition(const ControlHelper& current, glm::vec3 desired) const
 	{
 		if (current.GetPosition() != desired)
 		{
@@ -29,7 +29,7 @@ namespace MyCode
 		return desired;
 	}
 
-	glm::vec3 IntersectionHelper::GetPointOnEdge(const ControlHelper& current, const glm::vec3& desired, const ControlHelper& other) const
+	glm::vec3 ColisionHelper::GetPointOnEdge(const ControlHelper& current, const glm::vec3& desired, const ControlHelper& other) const
 	{
 		assert(current.GetPosition() != desired);
 

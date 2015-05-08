@@ -1,17 +1,17 @@
-#ifndef _MY_CODE_UT_INTERSECTION_HELPER_H_
-#define _MY_CODE_UT_INTERSECTION_HELPER_H_
+#ifndef _MY_CODE_UT_COLISION_HELPER_H_
+#define _MY_CODE_UT_COLISION_HELPER_H_
 
 #include <glm/glm.hpp>
-#include "IntersectionHelper.h"
+#include "ColisionHelper.h"
 #include "../control/ControlHelper.h"
 
 namespace MyCode
 {
-	class UT_IntersectionHelper
+	class UT_ColisionHelper
 	{
 	public:
-		UT_IntersectionHelper();
-		~UT_IntersectionHelper();
+		UT_ColisionHelper();
+		~UT_ColisionHelper();
 
 		bool Validate();
 	private:
@@ -28,7 +28,7 @@ namespace MyCode
 			}
 
 			const float mSideLength;
-			IntersectionHelper mIntersecter;
+			ColisionHelper mIntersecter;
 			ControlHelper mControlA;
 			ControlHelper mControlB;
 		};
@@ -40,4 +40,4 @@ namespace MyCode
 }
 
 
-#endif //_MY_CODE_UT_INTERSECTION_HELPER_H_
+#endif //_MY_CODE_UT_COLISION_HELPER_H_

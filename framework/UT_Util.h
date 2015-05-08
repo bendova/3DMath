@@ -7,6 +7,7 @@ namespace MyCode
 {
 #define CHECK_EQUALS(actual, expected) CheckEquals((actual), (expected), __FUNCTION__)
 #define CHECK_EQUALS_MSG(actual, expected, msg) CheckEquals((actual), (expected), __FUNCTION__, (msg))
+#define CHECK_IS_TRUE(expr) CheckIsTrue((expr), #expr, __FUNCTION__)
 
 	template<typename T, typename U>
 	bool CheckEquals(const T& actual, const U& expected, const char* testName, const char* msg = nullptr)
@@ -26,6 +27,8 @@ namespace MyCode
 
 		return equals;
 	}
+
+	bool CheckIsTrue(bool value, const char* expr, const char* testName);
 }
 
 #endif //_MY_CODE_UT_UTIL_H_

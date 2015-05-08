@@ -7,11 +7,11 @@
 namespace MyCode
 {
 	class ControlHelper;
-	class IntersectionHelper
+	class ColisionHelper
 	{
 	public:
-		IntersectionHelper();
-		~IntersectionHelper();
+		ColisionHelper();
+		~ColisionHelper();
 
 		void AddControlHelper(const ControlHelper* control);
 
@@ -23,7 +23,7 @@ namespace MyCode
 		std::vector<const ControlHelper*> mControlHelpers;
 	};
 
-	inline void IntersectionHelper::AddControlHelper(const ControlHelper* control)
+	inline void ColisionHelper::AddControlHelper(const ControlHelper* control)
 	{
 		mControlHelpers.push_back(control);
 	}

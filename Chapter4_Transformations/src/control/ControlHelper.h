@@ -6,12 +6,12 @@
 
 namespace MyCode
 {
-	class IntersectionHelper;
+	class ColisionHelper;
 
 	class ControlHelper
 	{
 	public:
-		ControlHelper(const glm::vec3& initialPosition, const float sideLength, const IntersectionHelper& intersectionHelper);
+		ControlHelper(const glm::vec3& initialPosition, const float sideLength, const ColisionHelper& intersectionHelper);
 		~ControlHelper();
 
 		bool HandleKeyPress(unsigned char key);
@@ -47,7 +47,7 @@ namespace MyCode
 		glm::vec4 GetIntersectionOfLineWithPlane(const glm::vec4& lineA, const glm::vec4& lineB,
 			const glm::vec4& planePoint, const glm::vec4& planeNormal);
 
-		const IntersectionHelper& mIntersectionHelper;
+		const ColisionHelper& mColisionHelper;
 		glm::vec3 mPosition;
 		glm::mat3 mViewTransform;
 		glm::mat4 mClipToCamera;
