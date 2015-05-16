@@ -1,5 +1,5 @@
-#ifndef _SCENE_LIGHTING_PROGRAM_H_
-#define _SCENE_LIGHTING_PROGRAM_H_
+#ifndef _MY_CODE_TRANSFORMATIONS_SCENE_H_
+#define _MY_CODE_TRANSFORMATIONS_SCENE_H_
 
 #include <memory>
 #include <vector>
@@ -9,7 +9,7 @@
 #include "Scene.h"
 #include "programs/PosColorProgram.h"
 #include "control/ControlHelper.h"
-#include "intersection/ColisionHelper.h"
+#include "intersection/RectangleColider.h"
 #include "../framework/MyMesh.h"
 
 namespace glutil
@@ -36,10 +36,9 @@ namespace MyCode
 	private:
 		struct ControlledCube
 		{
-			ControlledCube(const std::string& mesh, const glm::vec3& position, 
-				const float sideLength, const ColisionHelper& intersectionHelper)
+			ControlledCube(const std::string& mesh, const Rectangle& boundingBox, RectangleColider& intersectionHelper)
 				: mCubeMesh(mesh)
-				, mCubeControl(position, sideLength, intersectionHelper)
+				, mCubeControl(boundingBox, intersectionHelper)
 			{}
 
 			ControlledCube(ControlledCube&& other)
@@ -52,8 +51,8 @@ namespace MyCode
 		};
 		
 		void InitCubes();
-		void InitIntersectionHelper();
-		void ValidateSquareColider();
+		void InitRectangleColider();
+		void ValidateRectangleColider();
 
 		void RenderPlane(glutil::MatrixStack& modelMatrix);
 		void RenderCubes(glutil::MatrixStack& modelMatrix);
@@ -78,11 +77,11 @@ namespace MyCode
 		GLint mScreenHeight;
 		glm::mat4 mCameraToClipMatrix;
 		std::vector<ControlledCube> mCubes;
-		ColisionHelper mIntersectionHelper;
+		RectangleColider mColisionionHelper;
 		const float mCubeSideLength;
 		static const float zNear;
 		static const float zFar;
 	};
 }
 
-#endif
+#endif //_MY_CODE_TRANSFORMATIONS_SCENE_H_

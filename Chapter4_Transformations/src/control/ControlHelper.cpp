@@ -3,24 +3,23 @@
 #include <cstdio>
 #include <cmath>
 #include "../framework/MathUtil.h"
-#include "../intersection/ColisionHelper.h"
 
 namespace MyCode
 {
 	const float ControlHelper::PICKUP_DELTA_Y = 0.0f;
 
-	ControlHelper::ControlHelper(const glm::vec3& initialPosition, const float sideLength, const ColisionHelper& colisionHelper)
-		: mPosition(initialPosition)
-		, mColisionHelper(colisionHelper)
+	ControlHelper::ControlHelper(const Rectangle& boundingBox, RectangleColider& intersectionHelper)
+		: mColisionHelper(intersectionHelper)
+		, mBoundingRectangle(boundingBox)
 		, mViewTransform(1.0f)
 		, mClipToCamera(1.0f)
 		, mCameraToWorld(1.0f)
 		, mScreenWidth(1.0f)
 		, mScreenHeight(1.0f)
 		, mClipNearZ(1.0f)
-		, mSideLength(sideLength)
-		, mInitialY(initialPosition.y)
+		, mInitialY(boundingBox.Center().y)
 		, mIsCubePickedUp(false)
+		, mIsCubeSelected(false)
 	{}
 
 	ControlHelper::~ControlHelper()
@@ -29,9 +28,15 @@ namespace MyCode
 	bool ControlHelper::HandleKeyPress(unsigned char key)
 	{
 		bool isHandled = false;
-		if (mIsCubePickedUp)
+		if (mIsCubePickedUp || mIsCubeSelected)
 		{
 			isHandled = MoveCube(key);
+
+			if (key == 'y')
+			{
+				mIsCubeSelected = !mIsCubeSelected;
+				isHandled = true;
+			}
 		}
 		return isHandled;
 	}
@@ -66,7 +71,7 @@ namespace MyCode
 	bool ControlHelper::TryToPickUpCube(const int screenX, const int screenY)
 	{
 		const auto cubePickUpPoint = DetermineCubePickUpPoint(screenX, screenY);
-		const bool canPickUp = IsPointInsideCube(glm::vec3{ cubePickUpPoint });
+		const bool canPickUp = IsPointRoughlyInsideCube(glm::vec3{ cubePickUpPoint });
 		if (canPickUp)
 		{
 			PickUpCube();
@@ -77,14 +82,13 @@ namespace MyCode
 	glm::vec4 ControlHelper::DetermineCubePickUpPoint(const int screenX, const int screenY)
 	{
 		const auto ray = CastRayThroughPoint(screenX, screenY);
-		const glm::vec4 cubeCenter{ mPosition, 1.0f };
-		return MathUtil::GetProjectionPoint(ray.first, ray.second, cubeCenter);
+		const glm::vec4 cubeCenter{ mBoundingRectangle.Center(), 1.0f };
+		return MathUtil::GetProjectionPointOnLine(ray.first, ray.second, cubeCenter);
 	}
 
-	bool ControlHelper::IsPointInsideCube(const glm::vec3& point) const
+	bool ControlHelper::IsPointRoughlyInsideCube(const glm::vec3& point) const
 	{
-		const float distance = glm::length(point - mPosition);
-		//FIXME replace this with a proper object(cube) intersection 
+		const float distance = glm::length(point - mBoundingRectangle.Center());
 		return (distance <= GetRadius());
 	}
 
@@ -147,7 +151,8 @@ namespace MyCode
 		}
 		// Rotate positionDelta so that the movement
 		// is in the view direction.
-		UpdatePosition(mViewTransform * positionDelta);
+		//UpdatePosition(mViewTransform * positionDelta);
+		UpdatePosition(positionDelta);
 
 		return isHandled;
 	}
@@ -163,7 +168,7 @@ namespace MyCode
 
 	glm::vec4 ControlHelper::DetermineNewCubeCenter(const int screenX, const int screenY)
 	{
-		const glm::vec4 cubeCenter{ mPosition, 1.0f };
+		const glm::vec4 cubeCenter{ mBoundingRectangle.Center(), 1.0f };
 		const glm::vec4 cubePlaneNormal{0.0f, 1.0f, 0.0f, 1.0f};
 
 		const auto ray = CastRayThroughPoint(screenX, screenY);
@@ -223,20 +228,20 @@ namespace MyCode
 		if (mIsCubePickedUp)
 		{
 			mIsCubePickedUp = false;
-			SetPosition(glm::vec3{ mPosition.x, mInitialY, mPosition.z });
+			SetPosition(glm::vec3{ mBoundingRectangle.Center().x, mInitialY, mBoundingRectangle.Center().z });
 		}
 	}
 
 	void ControlHelper::UpdatePosition(const glm::vec3& delta)
 	{
-		SetPosition(mPosition + delta);
+		SetPosition(mBoundingRectangle.Center() + delta);
 	}
 
 	void ControlHelper::SetPosition(const glm::vec3& position)
 	{
-		if (mPosition != position)
+		if (mBoundingRectangle.Center() != position)
 		{
-			mPosition = mColisionHelper.GetValidPosition(*this, position);
+			mBoundingRectangle.SetCenter(mColisionHelper.GetPositionThatAvoidCollisions(mBoundingRectangle, position));
 		}
 	}
 }

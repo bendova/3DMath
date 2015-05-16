@@ -62,7 +62,7 @@ namespace MyCode
 		{
 			const int sideStartIndex = i;
 			const int sideEndIndex = (i + 1) % VERTICES_COUNT;
-			const auto point = MathUtil::GetIntersectionPoint(vertices[sideStartIndex], vertices[sideEndIndex], segmentStart, segmentEnd);
+			const auto point = MathUtil::GetIntersectionPointBetweenSegments(vertices[sideStartIndex], vertices[sideEndIndex], segmentStart, segmentEnd);
 			if (point.w != 0.0f)
 			{
 				intersectionPoints.push_back(point);

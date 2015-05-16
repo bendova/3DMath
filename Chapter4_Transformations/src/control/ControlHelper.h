@@ -3,15 +3,14 @@
 
 #include <glm/glm.hpp>
 #include <utility>
+#include "../intersection/RectangleColider.h"
 
 namespace MyCode
 {
-	class ColisionHelper;
-
 	class ControlHelper
 	{
 	public:
-		ControlHelper(const glm::vec3& initialPosition, const float sideLength, const ColisionHelper& intersectionHelper);
+		ControlHelper(const Rectangle& boundingRectangle, RectangleColider& intersectionHelper);
 		~ControlHelper();
 
 		bool HandleKeyPress(unsigned char key);
@@ -25,10 +24,11 @@ namespace MyCode
 		void SetWorldToCameraTransfrom(const glm::mat4& worldToCamera);
 		void SetViewTransform(const glm::mat3& viewTransform);
 		
+		const Rectangle& GetBoundingBox() const;
 		const glm::vec3& GetPosition() const;
 		const float GetRadius() const;
 
-		bool IsPointInsideCube(const glm::vec3& pickUpPoint) const;
+		bool IsPointRoughlyInsideCube(const glm::vec3& pickUpPoint) const;
 	private:
 		bool TryToPickUpCube(const int screenX, const int screenY);
 		void PickUpCube();
@@ -47,8 +47,8 @@ namespace MyCode
 		glm::vec4 GetIntersectionOfLineWithPlane(const glm::vec4& lineA, const glm::vec4& lineB,
 			const glm::vec4& planePoint, const glm::vec4& planeNormal);
 
-		const ColisionHelper& mColisionHelper;
-		glm::vec3 mPosition;
+		RectangleColider& mColisionHelper;
+		Rectangle mBoundingRectangle;
 		glm::mat3 mViewTransform;
 		glm::mat4 mClipToCamera;
 		glm::mat4 mCameraToWorld;
@@ -58,6 +58,7 @@ namespace MyCode
 		float mSideLength;
 		const float mInitialY;
 		bool mIsCubePickedUp;
+		bool mIsCubeSelected;
 
 		static const float PICKUP_DELTA_Y;
 	};
@@ -92,13 +93,18 @@ namespace MyCode
 		mViewTransform[2].x = -viewTransform[2].x;
 		mViewTransform[2].z = viewTransform[2].z;
 	}
+	inline const Rectangle& ControlHelper::GetBoundingBox() const
+	{
+		return mBoundingRectangle;
+	}
 	inline const glm::vec3& ControlHelper::GetPosition() const
 	{ 
-		return mPosition; 
+		return mBoundingRectangle.Center(); 
 	}
 	inline const float ControlHelper::GetRadius() const
 	{
-		return mSideLength * std::sqrt(2.0f) / 2.0f;
+		const float sideLength = glm::length(mBoundingRectangle.OffsetToA());
+		return sideLength * std::sqrt(2.0f) / 2.0f;
 	}
 }
 

@@ -35,8 +35,7 @@ namespace MyCode
 
 		const auto& currentCenter = current.GetPosition();
 		const auto& otherCenter = other.GetPosition();
-		const glm::vec3 projection{ MathUtil::GetProjectionPoint
-			(glm::vec4{ currentCenter, 1.0f }, glm::vec4{ desired, 1.0f }, glm::vec4{ otherCenter, 1.0f }) };
+		const glm::vec3 projection{ MathUtil::GetProjectionPointOnLine(currentCenter, desired, otherCenter) };
 		
 		const float minDistanceBetweenCenters = current.GetRadius() + other.GetRadius();
 		const float distanceFromOtherCenterToProjection = glm::length(otherCenter - projection);

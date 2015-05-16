@@ -2,7 +2,6 @@
 #include "GL/freeglut.h"
 #include "../framework/MousePole.h"
 #include "../framework/MathUtil.h"
-#include "intersection/UT_ColisionHelper.h"
 #include "intersection/UT_RectangleColider.h"
 #include "glutil/MatrixStack.h"
 #include <algorithm>
@@ -64,13 +63,12 @@ namespace MyCode
 		, mScreenHeight(0)
 		, mCameraToClipMatrix()
 		, mCubes()
-		, mIntersectionHelper()
+		, mColisionionHelper()
 		, mCubeSideLength(1.0f)
 	{
 		mInstance = this;
 		InitCubes();
-		InitIntersectionHelper();
-		ValidateSquareColider();
+		InitRectangleColider();
 
 		ConfigureOpenGL();
 		ConfigureInput();
@@ -84,25 +82,39 @@ namespace MyCode
 		const int cubesCount = 4;
 		const float startX = -3.0f;
 		const float incX = 2.0f;
-		for (int i = 0; i < cubesCount; ++i)
+
+		const glm::vec3 vectorToA{ -0.5f, 0.0f, 0.5f };
+		const glm::vec3 vectorToB{ 0.5f, 0.0f, 0.5f };
+		const glm::vec3 vectorToC{ 0.5f, 0.0f, -0.5f };
+		const glm::vec3 vectorToD{ -0.5f, 0.0f, -0.5f };
+
+		/*for (int i = 0; i < cubesCount; ++i)
 		{
 			const float x = startX + i * incX;
-			mCubes.emplace_back("UnitCube.xml", glm::vec3(x, 0.51f, 0.0f), mCubeSideLength, mIntersectionHelper);
-		}
+			const glm::vec3 center{ x, 0.51f, 0.0f };
+			const Rectangle boundingRectangle{ center, vectorToA, vectorToB, vectorToC, vectorToD };
+			mCubes.emplace_back("UnitCube.xml", boundingRectangle, mColisionionHelper);
+		}*/
+
+		const glm::vec3 center1{ 0.0f, 0.51f, 0.0f };
+		const Rectangle boundingRectangle1{ center1, vectorToA, vectorToB, vectorToC, vectorToD };
+		mCubes.emplace_back("UnitCube.xml", boundingRectangle1, mColisionionHelper);
+
+		const glm::vec3 center2{ -2.0f, 0.51f, 0.0f };
+		const Rectangle boundingRectangle2{ center2, vectorToA, vectorToB, vectorToC, vectorToD };
+		mCubes.emplace_back("UnitCube.xml", boundingRectangle2, mColisionionHelper);
 	}
 
-	void Scene::InitIntersectionHelper()
+	void Scene::InitRectangleColider()
 	{
-		UT_ColisionHelper ut;
-		assert(ut.Validate());
-
-		for (auto& cube : mCubes)
+		ValidateRectangleColider();
+		for (const auto& cube: mCubes)
 		{
-			mIntersectionHelper.AddControlHelper(&cube.mCubeControl);
+			mColisionionHelper.AddRectangle(cube.mCubeControl.GetBoundingBox());
 		}
 	}
 
-	void Scene::ValidateSquareColider()
+	void Scene::ValidateRectangleColider()
 	{
 		UT_RectangleColider squareColider;
 		assert(squareColider.Validate());
@@ -156,6 +168,7 @@ namespace MyCode
 	{
 		glutil::PushStack push(modelMatrix);
 
+		modelMatrix.Scale(glm::vec3{ 1.0f / 2.0f, 0.0f, 1.0f / 2.0f });
 		glUniformMatrix4fv(mPosColorProgram.GetModelToCameraTransformUniform(),
 			1, GL_FALSE, glm::value_ptr(modelMatrix.Top()));
 		dPlaneMesh.Render();

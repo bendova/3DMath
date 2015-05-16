@@ -80,22 +80,11 @@ namespace MyCode
 			}
 		}
 
-		std::pair<float, bool> GetSegmentIntersectionFactor(const glm::vec4& a, const glm::vec4& b, const glm::vec4& c, const glm::vec4& d)
+		float IsIntersectionFactorOnSegmentStrictly(const float factor)
 		{
-			bool doesIntersectionPointExist = false;
-			float factorAB = FLT_MAX;
-			const glm::vec3 lineDirectionAB{ b - a };
-			const glm::vec3 lineDirectionCD{ d - c };
-			const glm::vec3 lineDirectionsCross{ glm::cross(lineDirectionAB, lineDirectionCD) };
-			const auto lineDirectionsCrossLength = glm::length(lineDirectionsCross);
-			if (lineDirectionsCrossLength)
-			{
-				const glm::vec3 ca{ a - c };
-				factorAB = -glm::dot(glm::cross(ca, lineDirectionCD), lineDirectionsCross)
-					/ (lineDirectionsCrossLength * lineDirectionsCrossLength);
-				doesIntersectionPointExist = true;
-			}
-			return std::make_pair(factorAB, doesIntersectionPointExist);
+			const float minFactor = 0.0f;
+			const float maxFactor = 1.0f;
+			return ((minFactor < factor) && (factor < maxFactor));
 		}
 
 		float IsIntersectionFactorOnSegment(const float factor)
@@ -105,24 +94,20 @@ namespace MyCode
 			return ((minFactor <= factor) && (factor <= maxFactor));
 		}
 
-		glm::vec4 GetIntersectionPoint(const glm::vec4& a, const glm::vec4& b, const glm::vec4& c, const glm::vec4& d)
-		{
-			glm::vec4 intersectionPoint{ 0.0f, 0.0f, 0.0f, 0.0f };
-
-			const auto factorAB = GetSegmentIntersectionFactor(a, b, c, d);
-			const auto factorCD = GetSegmentIntersectionFactor(c, d, a, b);
-			if (factorAB.second && IsIntersectionFactorOnSegment(factorAB.first) &&
-				factorCD.second && IsIntersectionFactorOnSegment(factorCD.first))
-			{
-				intersectionPoint = a + factorAB.first * (b - a);
-			}
-			return intersectionPoint;
-		}
-
 		float FloorWithPrecision(const float x, const int precision)
 		{
 			const int scale = static_cast<int>(pow(10, precision));
 			
+			double temp = x * scale;
+			temp = temp < 0.0 ? ceil(temp) : floor(temp);
+			temp /= scale;
+			return static_cast<float>(temp);
+		}
+
+		double FloorWithPrecision(const double x, const int precision)
+		{
+			const int scale = static_cast<int>(pow(10, precision));
+
 			double temp = x * scale;
 			temp = temp < 0.0 ? ceil(temp) : floor(temp);
 			temp /= scale;
@@ -144,54 +129,125 @@ namespace MyCode
 			v.w = FloorWithPrecision(v.w, precision);
 		}
 
-		glm::vec4 GetProjectionPoint(const glm::vec4& a, const glm::vec4& b, const glm::vec4& c)
+		float GetDistanceFromPointToLine(const glm::vec3& p, const glm::vec3& a, const glm::vec3& b)
 		{
-			glm::vec4 lineDirection = b - a;
-			
+			glm::vec3 lineDirection = b - a;
+
 			const float lineDirectionLength = glm::length(lineDirection);
-			glm::vec4 ac = c - a;
-			float factor = glm::dot(lineDirection, ac) / (lineDirectionLength * lineDirectionLength);
-			factor = FloorWithPrecision(factor, 6);
-			glm::vec4 projectionPoint = a + factor * lineDirection;
-			return projectionPoint;
+			glm::vec3 ap = p - a;
+			float shadowLength = glm::dot(lineDirection, ap) / lineDirectionLength;
+			shadowLength = FloorWithPrecision(shadowLength, 6);
+			const float apLength = length(ap);
+			float distanceToLine = sqrt(apLength * apLength - shadowLength * shadowLength);
+			distanceToLine = FloorWithPrecision(distanceToLine, 6);
+			return distanceToLine;
 		}
 
 		glm::vec4 GetNormalToLineFromPoint(const glm::vec4& a, const glm::vec4& b, const glm::vec4& c)
 		{
-			glm::vec4 projectionPoint = GetProjectionPoint(a, b, c);
+			glm::vec4 projectionPoint = GetProjectionPointOnLine(a, b, c);
 			glm::vec4 lineNormal = c - projectionPoint;
 			return lineNormal;
 		}
 
-		bool IsPointInsideOfSide(const glm::vec4& a, const glm::vec4& b, const glm::vec4& c, const glm::vec4& p)
+		float GetDotBetweenPointAndLine(const glm::vec4& a, const glm::vec4& b, const glm::vec4& c, const glm::vec4& p)
 		{
 			const glm::vec4 ap = p - a;
 			const glm::vec4 abNormal = GetNormalToLineFromPoint(a, b, c);
 			const auto res = glm::dot(ap, abNormal);
-			return (res >= 0.0);
+			return res;
 		}
 
-		bool Contains(Triangle q, const glm::vec4& p)
+		bool IsPointInsideOfSide(const glm::vec4& a, const glm::vec4& b, const glm::vec4& c, const glm::vec4& p)
+		{
+			return (GetDotBetweenPointAndLine(a, b, c, p) >= 0.0);
+		}
+
+		bool IsPointInsideOfSideStrictly(const glm::vec4& a, const glm::vec4& b, const glm::vec4& c, const glm::vec4& p)
+		{
+			return (GetDotBetweenPointAndLine(a, b, c, p) > 0.0);
+		}
+
+		bool IsPointInPlane(const glm::vec4& planePointA, const glm::vec4& planePointB,
+			const glm::vec4& planePointC, const glm::vec4& point)
+		{
+			return IsPointInPlane( glm::vec3{ planePointA }, glm::vec3{ planePointB }, glm::vec3{ planePointC }, glm::vec3{ point } );
+		}
+
+		bool IsPointInPlane(const glm::vec3& planePointA, const glm::vec3& planePointB, const glm::vec3& planePointC, const glm::vec3& point)
+		{
+			const glm::vec3 ab = planePointB - planePointA;
+			const glm::vec3 ac = planePointC - planePointA;
+			const glm::vec3 planeNormal = glm::cross(ab, ac);
+			const glm::vec3 ap = point - planePointA;
+			const bool isInPlane = (glm::dot(planeNormal, ap) == 0);
+			return isInPlane;
+		}
+
+		bool Contains(const Triangle& q, const glm::vec4& p)
 		{
 			const auto& a = q[0];
 			const auto& b = q[1];
 			const auto& c = q[2];
 
-			bool result = IsPointInsideOfSide(a, b, c, p) && IsPointInsideOfSide(b, c, a, p) &&
+			bool result = IsPointInPlane(a, b, c, p) && IsPointInsideOfSide(a, b, c, p) && IsPointInsideOfSide(b, c, a, p) &&
 				IsPointInsideOfSide(c, a, b, p);
 			return result;
 		}
-
-		bool Contains(Quadrilateral q, const glm::vec4& p)
+		
+		bool Contains(const Quadrilateral& q, const glm::vec4& p)
 		{
 			const auto& a = q[0];
 			const auto& b = q[1];
 			const auto& c = q[2];
 			const auto& d = q[3];
 
-			bool result = IsPointInsideOfSide(a, b, d, p) && IsPointInsideOfSide(b, c, a, p) &&
+			bool result = IsPointInPlane(a, b, c, p) && IsPointInsideOfSide(a, b, d, p) && IsPointInsideOfSide(b, c, a, p) &&
 				IsPointInsideOfSide(c, d, b, p) && IsPointInsideOfSide(d, a, c, p);
 			return result;
+		}
+
+		bool ContainsStrictly(const Triangle& q, const glm::vec4& p)
+		{
+			const auto& a = q[0];
+			const auto& b = q[1];
+			const auto& c = q[2];
+
+			bool result = IsPointInPlane(a, b, c, p) && IsPointInsideOfSideStrictly(a, b, c, p) 
+				&& IsPointInsideOfSideStrictly(b, c, a, p) && IsPointInsideOfSideStrictly(c, a, b, p);
+			return result;
+		}
+
+		bool ContainsStrictly(const Quadrilateral& q, const glm::vec4& p)
+		{
+			const auto& a = q[0];
+			const auto& b = q[1];
+			const auto& c = q[2];
+			const auto& d = q[3];
+
+			bool result = IsPointInPlane(a, b, c, p) && IsPointInsideOfSideStrictly(a, b, d, p) && IsPointInsideOfSideStrictly(b, c, a, p) &&
+				IsPointInsideOfSideStrictly(c, d, b, p) && IsPointInsideOfSideStrictly(d, a, c, p);
+			return result;
+		}
+
+		bool DoLineSegmentsIntersectStrictly(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, const glm::vec3& d)
+		{
+			bool doTheyIntersect = false;
+
+			const auto factorAB = GetSegmentIntersectionFactor(a, b, c, d);
+			const auto factorCD = GetSegmentIntersectionFactor(c, d, a, b);
+			if (factorAB.second && IsIntersectionFactorOnSegmentStrictly(factorAB.first) &&
+				factorCD.second && IsIntersectionFactorOnSegmentStrictly(factorCD.first))
+			{
+				doTheyIntersect = true;
+			}
+			return doTheyIntersect;
+		}
+
+		bool DoLineSegmentsIntersectStrictly(const glm::vec4& a, const glm::vec4& b, const glm::vec4& c, const glm::vec4& d)
+		{
+			const glm::vec4 intersectionPoint = GetIntersectionPointBetweenSegmentsStrictly(a, b, c, d);
+			return (intersectionPoint.w != 0);
 		}
 	}
 }
