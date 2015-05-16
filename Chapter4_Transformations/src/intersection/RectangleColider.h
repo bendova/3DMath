@@ -11,9 +11,9 @@ namespace MyCode
 
 	namespace PolygonCollision
 	{
-		bool DoPolygonsOverlap(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b);
+		bool DoPolygonsIntersect(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b);
 		
-		bool CheckPolygonIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2);
+		bool DoPolygonProjectionsIntersect(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2);
 
 		std::pair<glm::vec3, glm::vec3> ProjectPolygonToAxis(const std::vector<glm::vec3>& polygon,
 			const glm::vec3& axisPointA, const glm::vec3& axisPointB);

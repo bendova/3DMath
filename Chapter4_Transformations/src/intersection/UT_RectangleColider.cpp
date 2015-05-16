@@ -39,7 +39,7 @@ namespace MyCode
 			glm::vec3{  3.0f, 0.0f,  1.0f }, glm::vec3{  5.0f, 0.0f, 1.0f },
 			glm::vec3{  5.0f, 0.0f, -1.0f }, glm::vec3{  3.0f, 0.0f, -1.0f } };
 		
-		const bool collision = PolygonCollision::DoPolygonsOverlap(rectangle1, rectangle2);
+		const bool collision = PolygonCollision::DoPolygonsIntersect(rectangle1, rectangle2);
 		const bool collisionExpected = false;
 
 		return CHECK_EQUALS(collision, collisionExpected);
@@ -54,7 +54,7 @@ namespace MyCode
 			glm::vec3{ 1.0f, 0.0f, 1.0f }, glm::vec3{ 1.0f, 0.0f, 2.0f },
 			glm::vec3{ 2.0f, 0.0f, 2.0f }, glm::vec3{ 2.0f, 0.0f, 1.0f } };
 
-		const bool collision = PolygonCollision::DoPolygonsOverlap(rectangle1, rectangle2);
+		const bool collision = PolygonCollision::DoPolygonsIntersect(rectangle1, rectangle2);
 		const bool collisionExpected = false;
 
 		return CHECK_EQUALS(collision, collisionExpected);
@@ -69,7 +69,7 @@ namespace MyCode
 			glm::vec3{ 1.0f, 0.0f, 1.0f }, glm::vec3{ 2.0f, 0.0f, 1.0f },
 			glm::vec3{ 2.0f, 0.0f, -1.0f }, glm::vec3{ 1.0f, 0.0f, -1.0f } };
 		
-		const bool collision = PolygonCollision::DoPolygonsOverlap(rectangle1, rectangle2);
+		const bool collision = PolygonCollision::DoPolygonsIntersect(rectangle1, rectangle2);
 		const bool collisionExpected = false;
 
 		return CHECK_EQUALS(collision, collisionExpected);
@@ -84,7 +84,7 @@ namespace MyCode
 			glm::vec3{ 0.0f, 0.0f,  0.0f }, glm::vec3{ 2.0f, 0.0f,  0.0f },
 			glm::vec3{ 2.0f, 0.0f, -2.0f }, glm::vec3{ 0.0f, 0.0f, -2.0f } };
 
-		const bool collision = PolygonCollision::DoPolygonsOverlap(rectangle1, rectangle2);
+		const bool collision = PolygonCollision::DoPolygonsIntersect(rectangle1, rectangle2);
 		const bool collisionExpected = true;
 
 		return CHECK_EQUALS(collision, collisionExpected);
@@ -99,7 +99,7 @@ namespace MyCode
 			glm::vec3{ 0.0f, 0.0f, 1.0f }, glm::vec3{ 1.0f, 0.0f, 1.0f },
 			glm::vec3{ 1.0f, 0.0f, -1.0f }, glm::vec3{ 0.0f, 0.0f, -1.0f } };
 
-		const bool collision = PolygonCollision::DoPolygonsOverlap(rectangle1, rectangle2);
+		const bool collision = PolygonCollision::DoPolygonsIntersect(rectangle1, rectangle2);
 		const bool collisionExpected = true;
 
 		return CHECK_EQUALS(collision, collisionExpected);
@@ -115,7 +115,7 @@ namespace MyCode
 			glm::vec3{ -2.0f, 0.0f, 2.0f }, glm::vec3{ 2.0f, 0.0f, 2.0f },
 			glm::vec3{ 2.0f, 0.0f, -2.0f }, glm::vec3{ -2.0f, 0.0f, -2.0f } };
 
-		const bool collision = PolygonCollision::DoPolygonsOverlap(rectangle1, rectangle2);
+		const bool collision = PolygonCollision::DoPolygonsIntersect(rectangle1, rectangle2);
 		const bool collisionExpected = true;
 
 		return CHECK_EQUALS(collision, collisionExpected);
@@ -130,7 +130,7 @@ namespace MyCode
 			glm::vec3{ 3.0f, 0.0f, 0.0f }, glm::vec3{ 4.0f, 0.0f, 0.0f },
 			glm::vec3{ 4.0f, 0.0f, -1.0f }, glm::vec3{ 3.0f, 0.0f, -1.0f } };
 
-		const bool collision = PolygonCollision::DoPolygonsOverlap(rectangle1, rectangle2);
+		const bool collision = PolygonCollision::DoPolygonsIntersect(rectangle1, rectangle2);
 		const bool collisionExpected = false;
 
 		return CHECK_EQUALS(collision, collisionExpected);
@@ -145,7 +145,7 @@ namespace MyCode
 			glm::vec3{ 1.0f, 0.0f, 0.0f }, glm::vec3{ 4.0f, 0.0f, 0.0f },
 			glm::vec3{ 4.0f, 0.0f, -1.0f }, glm::vec3{ 1.0f, 0.0f, -1.0f } };
 
-		const bool collision = PolygonCollision::DoPolygonsOverlap(rectangle1, rectangle2);
+		const bool collision = PolygonCollision::DoPolygonsIntersect(rectangle1, rectangle2);
 		const bool collisionExpected = true;
 
 		return CHECK_EQUALS(collision, collisionExpected);
