@@ -25,7 +25,9 @@ namespace MyCode
 			&& TouchingOnOneSide()
 			&& CollisionInOnePoint()
 			&& CollisionOnOneSide()
-			&& CompleteOverlap();
+			&& CompleteOverlap()
+			&& NoCollisionOfRotatedRectangles()
+			&& CollisionOfRotatedRectangles();
 	}
 
 	bool UT_RectangleColider::RectangleCollisionTest::NoCollision()
@@ -79,8 +81,8 @@ namespace MyCode
 			glm::vec3{ -1.0f, 0.0f, 1.0f }, glm::vec3{ 1.0f, 0.0f, 1.0f },
 			glm::vec3{ 1.0f, 0.0f, -1.0f }, glm::vec3{ -1.0f, 0.0f, -1.0f } };
 		const std::vector<glm::vec3> rectangle2{
-			glm::vec3{ 0.0f, 0.0f,  0.0f }, glm::vec3{ 1.0f, 0.0f,  0.0f },
-			glm::vec3{ 1.0f, 0.0f, -1.0f }, glm::vec3{ 0.0f, 0.0f, -1.0f } };
+			glm::vec3{ 0.0f, 0.0f,  0.0f }, glm::vec3{ 2.0f, 0.0f,  0.0f },
+			glm::vec3{ 2.0f, 0.0f, -2.0f }, glm::vec3{ 0.0f, 0.0f, -2.0f } };
 
 		const bool collision = PolygonCollision::DoPolygonsOverlap(rectangle1, rectangle2);
 		const bool collisionExpected = true;
@@ -112,6 +114,36 @@ namespace MyCode
 		const std::vector<glm::vec3> rectangle2{
 			glm::vec3{ -2.0f, 0.0f, 2.0f }, glm::vec3{ 2.0f, 0.0f, 2.0f },
 			glm::vec3{ 2.0f, 0.0f, -2.0f }, glm::vec3{ -2.0f, 0.0f, -2.0f } };
+
+		const bool collision = PolygonCollision::DoPolygonsOverlap(rectangle1, rectangle2);
+		const bool collisionExpected = true;
+
+		return CHECK_EQUALS(collision, collisionExpected);
+	}
+
+	bool UT_RectangleColider::RectangleCollisionTest::NoCollisionOfRotatedRectangles()
+	{
+		const std::vector<glm::vec3> rectangle1{
+			glm::vec3{ 1.0f, 0.0f, 0.0f }, glm::vec3{ 4.0f, 0.0f, -3.0f },
+			glm::vec3{ 3.0f, 0.0f, -4.0f }, glm::vec3{ -1.0f, 0.0f, 0.0f } };
+		const std::vector<glm::vec3> rectangle2{
+			glm::vec3{ 3.0f, 0.0f, 0.0f }, glm::vec3{ 4.0f, 0.0f, 0.0f },
+			glm::vec3{ 4.0f, 0.0f, -1.0f }, glm::vec3{ 3.0f, 0.0f, -1.0f } };
+
+		const bool collision = PolygonCollision::DoPolygonsOverlap(rectangle1, rectangle2);
+		const bool collisionExpected = false;
+
+		return CHECK_EQUALS(collision, collisionExpected);
+	}
+
+	bool UT_RectangleColider::RectangleCollisionTest::CollisionOfRotatedRectangles()
+	{
+		const std::vector<glm::vec3> rectangle1{
+			glm::vec3{ 1.0f, 0.0f, 0.0f }, glm::vec3{ 4.0f, 0.0f, -3.0f },
+			glm::vec3{ 3.0f, 0.0f, -4.0f }, glm::vec3{ -1.0f, 0.0f, 0.0f } };
+		const std::vector<glm::vec3> rectangle2{
+			glm::vec3{ 1.0f, 0.0f, 0.0f }, glm::vec3{ 4.0f, 0.0f, 0.0f },
+			glm::vec3{ 4.0f, 0.0f, -1.0f }, glm::vec3{ 1.0f, 0.0f, -1.0f } };
 
 		const bool collision = PolygonCollision::DoPolygonsOverlap(rectangle1, rectangle2);
 		const bool collisionExpected = true;
@@ -294,15 +326,13 @@ namespace MyCode
 
 	bool UT_RectangleColider::ProjectionToAxesTest::Run()
 	{
-		return ProjectTriangle()
-			&& ProjectSquare()
-			&& ProjectRectangle()
+		return ProjectRightTriangle()
+			&& ProjectObtuseTriangle()
 			&& ProjectTrapeze()
-			&& ProjectPentagon()
-			&& ProjectHexagon();
+			&& ProjectPentagon();
 	}
 
-	bool UT_RectangleColider::ProjectionToAxesTest::ProjectTriangle()
+	bool UT_RectangleColider::ProjectionToAxesTest::ProjectRightTriangle()
 	{
 		const glm::vec3 a{ -1.0f, 0.0f, 1.0f };
 		const glm::vec3 b{ 1.0f, 0.0f, 1.0f };
@@ -310,145 +340,110 @@ namespace MyCode
 		const std::vector<glm::vec3> triangle{ a, b, c };
 
 		using namespace PolygonCollision;
-		const auto projectionToX = ProjectPolygonToAxisX(triangle);
-		const auto projectionToY = ProjectPolygonToAxisY(triangle);
-		const auto projectionToZ = ProjectPolygonToAxisZ(triangle);
+		const auto projectionToAB = ProjectPolygonToAxis(triangle, a, b);
+		const auto projectionToBC = ProjectPolygonToAxis(triangle, b, c);
+		const auto projectionToCA = ProjectPolygonToAxis(triangle, c, a);
 
-		const std::pair<glm::vec3, glm::vec3> expectedProjectionToX{ glm::vec3{ -1.0f, 0.0f, 0.0f }, glm::vec3{1.0f, 0.0f, 0.0f} };
-		const bool isCorrectProjectionToX = CHECK_EQUALS(projectionToX, expectedProjectionToX);
+		const double errorMargin = 1e-6;
+		const std::pair<glm::vec3, glm::vec3> expectedProjAB{ a, b };
+		const bool isValidProjAB = CHECK_IS_TRUE(AreSegmentsEqualWithinMargin(projectionToAB, expectedProjAB, errorMargin));
 
-		const std::pair<glm::vec3, glm::vec3> expectedProjectionToY{ glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ 0.0f, 0.0f, 0.0f } };
-		const bool isCorrectProjectionToY = CHECK_EQUALS(projectionToY, expectedProjectionToY);
+		const std::pair<glm::vec3, glm::vec3> expectedProjBC{ b, c };
+		const bool isValidProjBC = CHECK_IS_TRUE(AreSegmentsEqualWithinMargin(projectionToBC, expectedProjBC, errorMargin));
 
-		const std::pair<glm::vec3, glm::vec3> expectedProjectionToZ{ glm::vec3{ 0.0f, 0.0f, -1.0f }, glm::vec3{ 0.0f, 0.0f, 1.0f } };
-		const bool isCorrectProjectionToZ = CHECK_EQUALS(projectionToZ, expectedProjectionToZ);
+		const std::pair<glm::vec3, glm::vec3> expectedProjCA{ c, a };
+		const bool isValidProjCA = CHECK_IS_TRUE(AreSegmentsEqualWithinMargin(projectionToCA, expectedProjCA, errorMargin));
 
-		return (isCorrectProjectionToX && isCorrectProjectionToY && isCorrectProjectionToZ);
+		return (isValidProjAB && isValidProjBC && isValidProjCA);
 	}
 
-	bool UT_RectangleColider::ProjectionToAxesTest::ProjectSquare()
+	bool UT_RectangleColider::ProjectionToAxesTest::ProjectObtuseTriangle()
 	{
-		const glm::vec3 a{ -1.0f, -1.0f,  1.0f };
-		const glm::vec3 b{  1.0f, -1.0f,  1.0f };
-		const glm::vec3 c{  1.0f,  1.0f, -1.0f };
-		const glm::vec3 d{ -1.0f,  1.0f, -1.0f };
-		const std::vector<glm::vec3> square{ a, b, c, d };
+		const glm::vec3 a{ -1.0f, 0.0f, 1.0f };
+		const glm::vec3 b{ 1.0f, 0.0f, 1.0f };
+		const glm::vec3 c{ 2.0f, 0.0f, -1.0f };
+		const std::vector<glm::vec3> triangle{ a, b, c };
 
 		using namespace PolygonCollision;
-		const auto projectionToX = ProjectPolygonToAxisX(square);
-		const auto projectionToY = ProjectPolygonToAxisY(square);
-		const auto projectionToZ = ProjectPolygonToAxisZ(square);
+		const auto projectionToAB = ProjectPolygonToAxis(triangle, a, b);
+		const auto projectionToBC = ProjectPolygonToAxis(triangle, b, c);
+		const auto projectionToCA = ProjectPolygonToAxis(triangle, c, a);
 
-		const std::pair<glm::vec3, glm::vec3> expectedProjectionToX{ glm::vec3{ -1.0f, 0.0f, 0.0f }, glm::vec3{ 1.0f, 0.0f, 0.0f } };
-		const bool isCorrectProjectionToX = CHECK_EQUALS(projectionToX, expectedProjectionToX);
+		const double errorMargin = 1e-6;
+		const std::pair<glm::vec3, glm::vec3> expectedProjAB{ a, glm::vec3{2.0, 0.0f, 1.0f} };
+		const bool isValidProjAB = CHECK_IS_TRUE(AreSegmentsEqualWithinMargin(projectionToAB, expectedProjAB, errorMargin));
 
-		const std::pair<glm::vec3, glm::vec3> expectedProjectionToY{ glm::vec3{ 0.0f, -1.0f, 0.0f }, glm::vec3{ 0.0f, 1.0f, 0.0f } };
-		const bool isCorrectProjectionToY = CHECK_EQUALS(projectionToY, expectedProjectionToY);
+		const std::pair<glm::vec3, glm::vec3> expectedProjBC{ glm::vec3{0.6f, 0.0f, 1.8f}, c };
+		const bool isValidProjBC = CHECK_IS_TRUE(AreSegmentsEqualWithinMargin(projectionToBC, expectedProjBC, errorMargin));
 
-		const std::pair<glm::vec3, glm::vec3> expectedProjectionToZ{ glm::vec3{ 0.0f, 0.0f, -1.0f }, glm::vec3{ 0.0f, 0.0f, 1.0f } };
-		const bool isCorrectProjectionToZ = CHECK_EQUALS(projectionToZ, expectedProjectionToZ);
+		const std::pair<glm::vec3, glm::vec3> expectedProjCA{ c, a };
+		const bool isValidProjCA = CHECK_IS_TRUE(AreSegmentsEqualWithinMargin(projectionToCA, expectedProjCA, errorMargin));
 
-		return (isCorrectProjectionToX && isCorrectProjectionToY && isCorrectProjectionToZ);
+		return (isValidProjAB && isValidProjBC && isValidProjCA);
 	}
 
-	bool UT_RectangleColider::ProjectionToAxesTest::ProjectRectangle()
-	{
-		const glm::vec3 a{ -2.0f, -1.0f, 1.0f };
-		const glm::vec3 b{  2.0f, -1.0f, 1.0f };
-		const glm::vec3 c{  2.0f, 1.0f, -1.0f };
-		const glm::vec3 d{ -2.0f, 1.0f, -1.0f };
-		const std::vector<glm::vec3> rectangle{ a, b, c, d };
-
-		using namespace PolygonCollision;
-		const auto projectionToX = ProjectPolygonToAxisX(rectangle);
-		const auto projectionToY = ProjectPolygonToAxisY(rectangle);
-		const auto projectionToZ = ProjectPolygonToAxisZ(rectangle);
-
-		const std::pair<glm::vec3, glm::vec3> expectedProjectionToX{ glm::vec3{ -2.0f, 0.0f, 0.0f }, glm::vec3{ 2.0f, 0.0f, 0.0f } };
-		const bool isCorrectProjectionToX = CHECK_EQUALS(projectionToX, expectedProjectionToX);
-
-		const std::pair<glm::vec3, glm::vec3> expectedProjectionToY{ glm::vec3{ 0.0f, -1.0f, 0.0f }, glm::vec3{ 0.0f, 1.0f, 0.0f } };
-		const bool isCorrectProjectionToY = CHECK_EQUALS(projectionToY, expectedProjectionToY);
-
-		const std::pair<glm::vec3, glm::vec3> expectedProjectionToZ{ glm::vec3{ 0.0f, 0.0f, -1.0f }, glm::vec3{ 0.0f, 0.0f, 1.0f } };
-		const bool isCorrectProjectionToZ = CHECK_EQUALS(projectionToZ, expectedProjectionToZ);
-
-		return (isCorrectProjectionToX && isCorrectProjectionToY && isCorrectProjectionToZ);
-	}
 	bool UT_RectangleColider::ProjectionToAxesTest::ProjectTrapeze()
 	{
-		const glm::vec3 a{ -2.0f, -1.0f, 1.0f };
-		const glm::vec3 b{  2.0f, -1.0f, 1.0f };
-		const glm::vec3 c{  1.0f, 1.0f, -1.0f };
-		const glm::vec3 d{ -1.0f, 1.0f, -1.0f };
+		const glm::vec3 a{ 0.0f, 0.0f,  0.0f };
+		const glm::vec3 b{ 3.0f, 0.0f,  0.0f };
+		const glm::vec3 c{ 2.0f, 0.0f, -1.0f };
+		const glm::vec3 d{ 1.0f, 0.0f, -1.0f };
 		const std::vector<glm::vec3> trapeze{ a, b, c, d };
 
 		using namespace PolygonCollision;
-		const auto projectionToX = ProjectPolygonToAxisX(trapeze);
-		const auto projectionToY = ProjectPolygonToAxisY(trapeze);
-		const auto projectionToZ = ProjectPolygonToAxisZ(trapeze);
+		const auto projectionToAB = ProjectPolygonToAxis(trapeze, a, b);
+		const auto projectionToBC = ProjectPolygonToAxis(trapeze, b, c);
+		const auto projectionToCD = ProjectPolygonToAxis(trapeze, c, d);
+		const auto projectionToDA = ProjectPolygonToAxis(trapeze, d, a);
 
-		const std::pair<glm::vec3, glm::vec3> expectedProjectionToX{ glm::vec3{ -2.0f, 0.0f, 0.0f }, glm::vec3{ 2.0f, 0.0f, 0.0f } };
-		const bool isCorrectProjectionToX = CHECK_EQUALS(projectionToX, expectedProjectionToX);
+		const double errorMargin = 1e-6;
+		const std::pair<glm::vec3, glm::vec3> expectedProjAB{ a, b };
+		const bool isValidProjAB = CHECK_IS_TRUE(AreSegmentsEqualWithinMargin(projectionToAB, expectedProjAB, errorMargin));
 
-		const std::pair<glm::vec3, glm::vec3> expectedProjectionToY{ glm::vec3{ 0.0f, -1.0f, 0.0f }, glm::vec3{ 0.0f, 1.0f, 0.0f } };
-		const bool isCorrectProjectionToY = CHECK_EQUALS(projectionToY, expectedProjectionToY);
+		const std::pair<glm::vec3, glm::vec3> expectedProjBC{ b, glm::vec3{1.5f, 0.0f, -1.5f} };
+		const bool isValidProjBC = CHECK_IS_TRUE(AreSegmentsEqualWithinMargin(projectionToBC, expectedProjBC, errorMargin));
 
-		const std::pair<glm::vec3, glm::vec3> expectedProjectionToZ{ glm::vec3{ 0.0f, 0.0f, -1.0f }, glm::vec3{ 0.0f, 0.0f, 1.0f } };
-		const bool isCorrectProjectionToZ = CHECK_EQUALS(projectionToZ, expectedProjectionToZ);
+		const std::pair<glm::vec3, glm::vec3> expectedProjCD{ glm::vec3{ 3.0f, 0.0f, -1.0f }, glm::vec3{ 0.0f, 0.0f, -1.0f } };
+		const bool isValidProjCD = CHECK_IS_TRUE(AreSegmentsEqualWithinMargin(projectionToCD, expectedProjCD, errorMargin));
 
-		return (isCorrectProjectionToX && isCorrectProjectionToY && isCorrectProjectionToZ);
+		const std::pair<glm::vec3, glm::vec3> expectedProjDA{ glm::vec3{ 1.5f, 0.0f, -1.5f }, glm::vec3{ 0.0f, 0.0f, 0.0f } };
+		const bool isValidProjDA = CHECK_IS_TRUE(AreSegmentsEqualWithinMargin(projectionToDA, expectedProjDA, errorMargin));
+
+		return (isValidProjAB && isValidProjBC && isValidProjCD && isValidProjDA);
 	}
 	bool UT_RectangleColider::ProjectionToAxesTest::ProjectPentagon()
 	{
-		const glm::vec3 a{ -2.0f, 1.0f,  1.0f };
-		const glm::vec3 b{  2.0f, 1.0f,  1.0f };
-		const glm::vec3 c{  2.0f, 2.0f, -1.0f };
-		const glm::vec3 d{  1.0f, 3.0f, -2.0f };
-		const glm::vec3 e{ -2.0f, 2.0f, -1.0f };
+		const glm::vec3 a{  1.0f, 0.0f,  0.0f };
+		const glm::vec3 b{  2.0f, 0.0f, -1.0f };
+		const glm::vec3 c{  2.0f, 0.0f, -2.0f };
+		const glm::vec3 d{  0.0f, 0.0f, -2.0f };
+		const glm::vec3 e{  0.0f, 0.0f, -1.0f };
 		const std::vector<glm::vec3> pentagon{ a, b, c, d, e };
 
 		using namespace PolygonCollision;
-		const auto projectionToX = ProjectPolygonToAxisX(pentagon);
-		const auto projectionToY = ProjectPolygonToAxisY(pentagon);
-		const auto projectionToZ = ProjectPolygonToAxisZ(pentagon);
+		const auto projectionToAB = ProjectPolygonToAxis(pentagon, a, b);
+		const auto projectionToBC = ProjectPolygonToAxis(pentagon, b, c);
+		const auto projectionToCD = ProjectPolygonToAxis(pentagon, c, d);
+		const auto projectionToDE = ProjectPolygonToAxis(pentagon, d, e);
+		const auto projectionToEA = ProjectPolygonToAxis(pentagon, e, a);
+		
+		const double errorMargin = 1e-6;
+		const std::pair<glm::vec3, glm::vec3> expectedProjToAB{ a, glm::vec3{ 2.5f, 0.0f, -1.5f } };
+		const bool isValidProjAB = CHECK_IS_TRUE(AreSegmentsEqualWithinMargin(projectionToAB, expectedProjToAB, errorMargin));
 
-		const std::pair<glm::vec3, glm::vec3> expectedProjectionToX{ glm::vec3{ -2.0f, 0.0f, 0.0f }, glm::vec3{ 2.0f, 0.0f, 0.0f } };
-		const bool isCorrectProjectionToX = CHECK_EQUALS(projectionToX, expectedProjectionToX);
+		const std::pair<glm::vec3, glm::vec3> expectedProjToBC{ glm::vec3{ 2.0f, 0.0f, 0.0f }, c };
+		const bool isValidProjBC = CHECK_IS_TRUE(AreSegmentsEqualWithinMargin(projectionToBC, expectedProjToBC, errorMargin));
 
-		const std::pair<glm::vec3, glm::vec3> expectedProjectionToY{ glm::vec3{ 0.0f, 1.0f, 0.0f }, glm::vec3{ 0.0f, 3.0f, 0.0f } };
-		const bool isCorrectProjectionToY = CHECK_EQUALS(projectionToY, expectedProjectionToY);
+		const std::pair<glm::vec3, glm::vec3> expectedProjCD{ c, d };
+		const bool isValidProjCD = CHECK_IS_TRUE(AreSegmentsEqualWithinMargin(projectionToCD, expectedProjCD, errorMargin));
 
-		const std::pair<glm::vec3, glm::vec3> expectedProjectionToZ{ glm::vec3{ 0.0f, 0.0f, -2.0f }, glm::vec3{ 0.0f, 0.0f, 1.0f } };
-		const bool isCorrectProjectionToZ = CHECK_EQUALS(projectionToZ, expectedProjectionToZ);
+		const std::pair<glm::vec3, glm::vec3> expectedProjDE{ d, glm::vec3{ 0.0f, 0.0f, 0.0f } };
+		const bool isValidProjDE = CHECK_IS_TRUE(AreSegmentsEqualWithinMargin(expectedProjDE, expectedProjDE, errorMargin));
 
-		return (isCorrectProjectionToX && isCorrectProjectionToY && isCorrectProjectionToZ);
-	}
-	bool UT_RectangleColider::ProjectionToAxesTest::ProjectHexagon()
-	{
-		const glm::vec3 a{ -1.0f, 1.0f,  1.0f };
-		const glm::vec3 b{  1.0f, 1.0f,  1.0f };
-		const glm::vec3 c{  2.0f, 2.0f, -1.0f };
-		const glm::vec3 d{  1.0f, 3.0f, -2.0f };
-		const glm::vec3 e{ -1.0f, 3.0f, -2.0f };
-		const glm::vec3 f{ -2.0f, 2.0f, -1.0f };
-		const std::vector<glm::vec3> hexagon{ a, b, c, d, e, f };
+		const std::pair<glm::vec3, glm::vec3> expectedProjEA{ glm::vec3{ -0.5f, 0.0f, -1.5f }, a };
+		const bool isValidProjEA = CHECK_IS_TRUE(AreSegmentsEqualWithinMargin(expectedProjEA, expectedProjEA, errorMargin));
 
-		using namespace PolygonCollision;
-		const auto projectionToX = ProjectPolygonToAxisX(hexagon);
-		const auto projectionToY = ProjectPolygonToAxisY(hexagon);
-		const auto projectionToZ = ProjectPolygonToAxisZ(hexagon);
-
-		const std::pair<glm::vec3, glm::vec3> expectedProjectionToX{ glm::vec3{ -2.0f, 0.0f, 0.0f }, glm::vec3{ 2.0f, 0.0f, 0.0f } };
-		const bool isCorrectProjectionToX = CHECK_EQUALS(projectionToX, expectedProjectionToX);
-
-		const std::pair<glm::vec3, glm::vec3> expectedProjectionToY{ glm::vec3{ 0.0f, 1.0f, 0.0f }, glm::vec3{ 0.0f, 3.0f, 0.0f } };
-		const bool isCorrectProjectionToY = CHECK_EQUALS(projectionToY, expectedProjectionToY);
-
-		const std::pair<glm::vec3, glm::vec3> expectedProjectionToZ{ glm::vec3{ 0.0f, 0.0f, -2.0f }, glm::vec3{ 0.0f, 0.0f, 1.0f } };
-		const bool isCorrectProjectionToZ = CHECK_EQUALS(projectionToZ, expectedProjectionToZ);
-
-		return (isCorrectProjectionToX && isCorrectProjectionToY && isCorrectProjectionToZ);
+		return (isValidProjAB && isValidProjBC && isValidProjCD && isValidProjDE && isValidProjEA);
 	}
 
 	bool UT_RectangleColider::ValidPositionTest::Run()
@@ -541,7 +536,7 @@ namespace MyCode
 		const glm::vec3 expectedTargetOfR1{ -1.0f, 0.0f, -1.0f };
 
 		const double errorMargin = 1e-6;
-		return CHECK_IS_TRUE(AreVectorsEqualWithMargin(returnedTarget, expectedTargetOfR1, errorMargin));
+		return CHECK_IS_TRUE(AreVectorsEqualWithinMargin(returnedTarget, expectedTargetOfR1, errorMargin));
 	}
 
 	bool UT_RectangleColider::ValidPositionTest::ValidPositionForCrossIntersection()
@@ -566,7 +561,14 @@ namespace MyCode
 		return CHECK_EQUALS(returnedTarget, expectedTargetOfR1);
 	}
 
-	bool AreVectorsEqualWithMargin(const glm::vec3& a, const glm::vec3& b, const double margin)
+	bool AreSegmentsEqualWithinMargin(const std::pair<glm::vec3, glm::vec3>& ab, const std::pair<glm::vec3, glm::vec3>& cd, 
+		const double margin)
+	{
+		return (AreVectorsEqualWithinMargin(ab.first, cd.first, margin) 
+			&& AreVectorsEqualWithinMargin(ab.second, cd.second, margin));
+	}
+
+	bool AreVectorsEqualWithinMargin(const glm::vec3& a, const glm::vec3& b, const double margin)
 	{
 		return ((std::abs(a.x - b.x) <= margin)
 			&& (std::abs(a.y - b.y) <= margin)

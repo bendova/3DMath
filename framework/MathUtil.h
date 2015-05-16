@@ -1,7 +1,7 @@
 #ifndef _MATH_UTIL_
 #define _MATH_UTIL_
 
-#include <math.h>
+#include <cmath>
 #include <glm/glm.hpp>
 #include <array>
 #include <initializer_list>
@@ -194,12 +194,11 @@ namespace MyCode
 		template<typename T>
 		T GetProjectionPointOnLine(const T& linePointA, const T& linePointB, const T& pointToProject)
 		{
-			T lineDirection = linePointB - linePointA;
-			
+			const T lineDirection = linePointB - linePointA;
 			const T::value_type lineDirectionLength = glm::length(lineDirection);
-			T ac = pointToProject - linePointA;
-			const T::value_type factor = glm::dot(lineDirection, ac) / (lineDirectionLength * lineDirectionLength);
-			T projectionPoint = linePointA + factor * lineDirection;
+			const T vectorFromLineToPoint = pointToProject - linePointA;
+			const T::value_type factor = glm::dot(lineDirection, vectorFromLineToPoint) / (lineDirectionLength * lineDirectionLength);
+			const T projectionPoint = linePointA + factor * lineDirection;
 			return projectionPoint;
 		}
 

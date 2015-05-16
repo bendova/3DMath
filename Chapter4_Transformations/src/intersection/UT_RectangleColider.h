@@ -49,6 +49,8 @@ namespace MyCode
 			bool CollisionInOnePoint();
 			bool CollisionOnOneSide();
 			bool CompleteOverlap();
+			bool CollisionOfRotatedRectangles();
+			bool NoCollisionOfRotatedRectangles();
 		};
 
 		class ForwardPointsTest
@@ -82,12 +84,10 @@ namespace MyCode
 		public:
 			bool Run();
 		private:
-			bool ProjectTriangle();
-			bool ProjectSquare();
-			bool ProjectRectangle();
+			bool ProjectRightTriangle();
+			bool ProjectObtuseTriangle();
 			bool ProjectTrapeze();
 			bool ProjectPentagon();
-			bool ProjectHexagon();
 		};
 
 		class ValidPositionTest
@@ -107,7 +107,9 @@ namespace MyCode
 		};
 	};
 
-	bool AreVectorsEqualWithMargin(const glm::vec3& a, const glm::vec3& b, const double margin);
+	bool AreSegmentsEqualWithinMargin(const std::pair<glm::vec3, glm::vec3>& ab, const std::pair<glm::vec3, glm::vec3>& cd,
+		const double margin);
+	bool AreVectorsEqualWithinMargin(const glm::vec3& a, const glm::vec3& b, const double margin);
 }
 
 

@@ -11,13 +11,15 @@ namespace MyCode
 
 	namespace PolygonCollision
 	{
-		bool DoPolygonsOverlap(const std::vector<glm::vec3>& target, const std::vector<glm::vec3>& obstacle);
+		bool DoPolygonsOverlap(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b);
 		
-		bool DoLineSegmentsOverlap(const float a, const float b, const float c, const float d);
+		bool CheckPolygonIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2);
 
-		std::pair<glm::vec3, glm::vec3> ProjectPolygonToAxisX(const std::vector<glm::vec3>& polygon);
-		std::pair<glm::vec3, glm::vec3> ProjectPolygonToAxisY(const std::vector<glm::vec3>& polygon);
-		std::pair<glm::vec3, glm::vec3> ProjectPolygonToAxisZ(const std::vector<glm::vec3>& polygon);
+		std::pair<glm::vec3, glm::vec3> ProjectPolygonToAxis(const std::vector<glm::vec3>& polygon,
+			const glm::vec3& axisPointA, const glm::vec3& axisPointB);
+
+		bool DoColinearLineSegmentsIntersect(const glm::vec3& a, const glm::vec3& b,
+			const glm::vec3& c, const glm::vec3& d);
 
 		std::pair<glm::vec3, glm::vec3> GetNearestPoints(const Rectangle& r1, const glm::vec3& targetCenter);
 		glm::vec3 GetEdgeIntersectionPoint(const glm::vec3& a, const glm::vec3& b,
