@@ -17,38 +17,41 @@ namespace MyCode
 			glm::vec3 mPointOfCollision;
 		};
 
-		bool DoPolygonsIntersect(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b);
+		namespace PolygonIntersection
+		{
+			bool DoPolygonsIntersect(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b);
+			bool DoPolygonProjectionsIntersect(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2);
+			std::pair<glm::vec3, glm::vec3> ProjectPolygonToAxis(const std::vector<glm::vec3>& polygon,
+				const glm::vec3& axisPointA, const glm::vec3& axisPointB);
+			bool DoColinearLineSegmentsIntersect(const glm::vec3& a, const glm::vec3& b,
+				const glm::vec3& c, const glm::vec3& d);
+		}
 		
-		bool DoPolygonProjectionsIntersect(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2);
+		namespace TravelPathBounding
+		{
+			bool DoesTravelPathCollide(const Rectangle& rectangle, const glm::vec3& targetCenter, const Rectangle& obstacle);
+			std::vector<glm::vec3> GetTravelPathBounding(const Rectangle& rectangle, const glm::vec3& targetCenter);
+			std::vector<int> GetSortedIndicesByDistanceFromPoint(const std::vector<glm::vec3>& vertices,
+				const glm::vec3& targetPoint);
+			bool IsBoundingPathRectangle(const std::vector<glm::vec3>& vertices, const glm::vec3& directionVector);
+			std::vector<glm::vec3> GetBoundingPathAsRectangle(std::vector<glm::vec3> vertices,
+				const std::vector<int> indices, const glm::vec3& directionVector);
+			std::vector<glm::vec3> GetBoundingPathAsHexagon(const std::vector<glm::vec3>& vertices,
+				const std::vector<int>& indices, const glm::vec3& directionVector);
+		}
 
-		std::pair<glm::vec3, glm::vec3> ProjectPolygonToAxis(const std::vector<glm::vec3>& polygon,
-			const glm::vec3& axisPointA, const glm::vec3& axisPointB);
-
-		bool DoColinearLineSegmentsIntersect(const glm::vec3& a, const glm::vec3& b,
-			const glm::vec3& c, const glm::vec3& d);
-
-		std::vector<glm::vec3> GetNearestPoints(const Rectangle& r1, const glm::vec3& targetPoint, const glm::vec3& otherCenter);
-		std::vector<Collision> GetCollisions(const std::vector<glm::vec3>& forwardsR1, const std::vector<glm::vec3>& forwardsR2,
-			const glm::vec3& directionVector);
-		std::pair<Collision, bool> GetCollision(const std::vector<glm::vec3>& forwardsR1, const std::vector<glm::vec3>& forwardsR2,
-			const glm::vec3& currentCenter, const glm::vec3& targetCenter);
-		std::pair<glm::vec3, bool> GetClosestIntersectionPoint(const glm::vec3& a, const glm::vec3& b, const std::vector<glm::vec3>& lineSegments);
-		glm::vec3 GetCenterThatAvoidCollision(const glm::vec3& currentCenter, const glm::vec3& targetCenter,
-			const Collision& collision);
-		
-		std::vector<int> GetSortedIndicesByDistanceFromPoint(const std::vector<glm::vec3>& vertices,
-			const glm::vec3& targetPoint);
-
-		bool DoesTravelPathCollide(const Rectangle& rectangle, const glm::vec3& targetCenter, const Rectangle& obstacle);
-
-		std::vector<glm::vec3> GetTravelPathBounding(const Rectangle& rectangle, const glm::vec3& targetCenter);
-		bool IsBoundingPathRectangle(const std::vector<glm::vec3>& vertices, const glm::vec3& directionVector);
-		std::vector<glm::vec3> GetBoundingPathAsRectangle(std::vector<glm::vec3> vertices,
-			const std::vector<int> indices, const glm::vec3& directionVector);
-		std::vector<glm::vec3> GetBoundingPathAsHexagon(const std::vector<glm::vec3>& vertices,
-			const std::vector<int>& indices, const glm::vec3& directionVector);
-
-		glm::vec3 GetPositionOnNearEdge(const Rectangle& a, const glm::vec3& targetCenter, const Rectangle& b);
+		namespace CollisionAvoidance
+		{
+			glm::vec3 GetPositionOnNearEdge(const Rectangle& a, const glm::vec3& targetCenter, const Rectangle& b);
+			std::vector<glm::vec3> GetNearestPoints(const Rectangle& r1, const glm::vec3& targetPoint, const glm::vec3& otherCenter);
+			std::vector<Collision> GetCollisions(const std::vector<glm::vec3>& forwardsR1, const std::vector<glm::vec3>& forwardsR2,
+				const glm::vec3& directionVector);
+			std::pair<Collision, bool> GetCollision(const std::vector<glm::vec3>& forwardsR1, const std::vector<glm::vec3>& forwardsR2,
+				const glm::vec3& currentCenter, const glm::vec3& targetCenter);
+			std::pair<glm::vec3, bool> GetClosestIntersectionPoint(const glm::vec3& a, const glm::vec3& b, const std::vector<glm::vec3>& lineSegments);
+			glm::vec3 GetCenterThatAvoidCollision(const glm::vec3& currentCenter, const glm::vec3& targetCenter,
+				const Collision& collision);
+		}
 	}
 
 	class RectangleColider
