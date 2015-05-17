@@ -53,17 +53,6 @@ namespace MyCode
 			bool NoCollisionOfRotatedRectangles();
 		};
 
-		class ForwardPointsTest
-		{
-		public:
-			bool Run();
-		private:
-			bool ForwardPointsForMovingLeft();
-			bool ForwardPointsForMovingRight();
-			bool ForwardPointsForMovingForward();
-			bool ForwardPointsForMovingBackward();
-		};
-
 		class BoundingPathTest
 		{
 		public:
@@ -104,6 +93,8 @@ namespace MyCode
 			bool ValidPositionForDiagonalPathIntersection();
 			bool ValidPositionForCrossIntersection();
 			bool ValidPositionForCrossIntersection2();
+			bool ValidPositionForCrossIntersection3();
+			bool ValidPositionForCrossIntersection4();
 		};
 	};
 

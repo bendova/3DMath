@@ -247,6 +247,22 @@ namespace MyCode
 		}
 
 		template<typename T>
+		std::pair<T, bool> GetLineSegmentsIntersection(const T& a, const T& b, const T& c, const T& d)
+		{
+			std::pair<T, bool> intersection{ T{ 0.0f }, false };
+
+			const auto factorAB = GetSegmentIntersectionFactor(a, b, c, d);
+			const auto factorCD = GetSegmentIntersectionFactor(c, d, a, b);
+			if (factorAB.second && IsIntersectionFactorOnSegment(factorAB.first) &&
+				factorCD.second && IsIntersectionFactorOnSegment(factorCD.first))
+			{
+				intersection.first = a + factorAB.first * (b - a);
+				intersection.second = true;
+			}
+			return intersection;
+		}
+
+		template<typename T>
 		T GetIntersectionPointBetweenLines(const T& a, const T& b, const T& c, const T& d)
 		{
 			T intersectionPoint{ 0.0f };

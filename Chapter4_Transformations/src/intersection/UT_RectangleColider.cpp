@@ -6,14 +6,12 @@ namespace MyCode
 	bool UT_RectangleColider::Validate()
 	{
 		RectangleCollisionTest collisionTest;
-		ForwardPointsTest forwardPointsTest;
 		BoundingPathTest boundingPathTest;
 		ProjectionToAxesTest projectionToAxesTest;
 		ValidPositionTest validPositionTest;
 
 		return projectionToAxesTest.Run()
 			&& collisionTest.Run()
-			&& forwardPointsTest.Run()
 			&& boundingPathTest.Run()
 			&& validPositionTest.Run();
 	}
@@ -149,62 +147,6 @@ namespace MyCode
 		const bool collisionExpected = true;
 
 		return CHECK_EQUALS(collision, collisionExpected);
-	}
-
-	bool UT_RectangleColider::ForwardPointsTest::Run()
-	{
-		return ForwardPointsForMovingLeft()
-			&& ForwardPointsForMovingRight()
-			&& ForwardPointsForMovingForward()
-			&& ForwardPointsForMovingBackward();
-	}
-
-	bool UT_RectangleColider::ForwardPointsTest::ForwardPointsForMovingLeft()
-	{
-		Setup setup{ glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ 0.5f, 0.0f, 0.0f } };
-
-		const auto& rectangle = setup.mRectangle1;
-		const glm::vec3 moveLeft{ -1.0f, 0.0f, 0.0f };
-		const auto forwardPoints = PolygonCollision::GetNearestPoints(rectangle, moveLeft);
-		const std::pair<glm::vec3, glm::vec3> expectedPoints{ rectangle.A(), rectangle.D() };
-
-		return CHECK_EQUALS(forwardPoints, expectedPoints);
-	}
-
-	bool UT_RectangleColider::ForwardPointsTest::ForwardPointsForMovingRight()
-	{
-		Setup setup{ glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ 0.5f, 0.0f, 0.0f } };
-
-		const auto& rectangle = setup.mRectangle1;
-		const glm::vec3 moveRight{ 1.0f, 0.0f, 0.0f };
-		const auto forwardPoints = PolygonCollision::GetNearestPoints(rectangle, moveRight);
-		const std::pair<glm::vec3, glm::vec3> expectedPoints{ rectangle.B(), rectangle.C() };
-
-		return CHECK_EQUALS(forwardPoints, expectedPoints);
-	}
-
-	bool UT_RectangleColider::ForwardPointsTest::ForwardPointsForMovingForward()
-	{
-		Setup setup{ glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ 0.5f, 0.0f, 0.0f } };
-
-		const auto& rectangle = setup.mRectangle1;
-		const glm::vec3 moveForward{ 0.0f, 0.0f, -1.0f };
-		const auto forwardPoints = PolygonCollision::GetNearestPoints(rectangle, moveForward);
-		const std::pair<glm::vec3, glm::vec3> expectedPoints{ rectangle.C(), rectangle.D() };
-
-		return CHECK_EQUALS(forwardPoints, expectedPoints);
-	}
-
-	bool UT_RectangleColider::ForwardPointsTest::ForwardPointsForMovingBackward()
-	{
-		Setup setup{ glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ 0.5f, 0.0f, 0.0f } };
-
-		const auto& rectangle = setup.mRectangle1;
-		const glm::vec3 moveBackward{ 0.0f, 0.0f, 1.0f };
-		const auto forwardPoints = PolygonCollision::GetNearestPoints(rectangle, moveBackward);
-		const std::pair<glm::vec3, glm::vec3> expectedPoints{ rectangle.A(), rectangle.B() };
-
-		return CHECK_EQUALS(forwardPoints, expectedPoints);
 	}
 
 	bool UT_RectangleColider::BoundingPathTest::Run()
@@ -455,7 +397,9 @@ namespace MyCode
 			&& ValidPositionForEdgeIntersection()
 			&& ValidPositionForCornerIntersection()
 			&& ValidPositionForCrossIntersection()
-			&& ValidPositionForCrossIntersection2();
+			&& ValidPositionForCrossIntersection2()
+			&& ValidPositionForCrossIntersection3()
+			&& ValidPositionForCrossIntersection4();
 	}
 
 	bool UT_RectangleColider::ValidPositionTest::ValidPositionForNoCollision()
@@ -555,6 +499,28 @@ namespace MyCode
 		Setup setup{ glm::vec3{ -0.8f, 0.0f, -1.0f }, glm::vec3{ 0.0f, 0.0f, 0.0f } };
 
 		const glm::vec3 targetOfR1{ 0.2f, 0.0f, -0.45f };
+		const glm::vec3 returnedTarget = setup.mColider.GetPositionThatAvoidCollisions(setup.mRectangle1, targetOfR1);
+		const glm::vec3 expectedTargetOfR1{ setup.mRectangle1.Center() };
+
+		return CHECK_EQUALS(returnedTarget, expectedTargetOfR1);
+	}
+
+	bool UT_RectangleColider::ValidPositionTest::ValidPositionForCrossIntersection3()
+	{
+		Setup setup{ glm::vec3{ -1.0f, 0.0f, -0.5f }, glm::vec3{ 0.0f, 0.0f, 0.0f } };
+
+		const glm::vec3 targetOfR1{ -0.5f, 0.0f, 0.5f };
+		const glm::vec3 returnedTarget = setup.mColider.GetPositionThatAvoidCollisions(setup.mRectangle1, targetOfR1);
+		const glm::vec3 expectedTargetOfR1{ setup.mRectangle1.Center() };
+
+		return CHECK_EQUALS(returnedTarget, expectedTargetOfR1);
+	}
+
+	bool UT_RectangleColider::ValidPositionTest::ValidPositionForCrossIntersection4()
+	{
+		Setup setup{ glm::vec3{ -0.45448f, 0.51f, -1.0f }, glm::vec3{ 0.0f, 0.51f, 0.0f } };
+
+		const glm::vec3 targetOfR1{ -0.261818f, 0.51f, -0.788323f };
 		const glm::vec3 returnedTarget = setup.mColider.GetPositionThatAvoidCollisions(setup.mRectangle1, targetOfR1);
 		const glm::vec3 expectedTargetOfR1{ setup.mRectangle1.Center() };
 

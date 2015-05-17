@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cfloat>
+#include <map>
 
 namespace MyCode
 {
@@ -40,11 +41,9 @@ namespace MyCode
 
 	void CollisionSanityCheck(const Rectangle& target, const glm::vec3& newTargetCenter, const Rectangle& obstacle)
 	{
-		const float targetCircumscribedCircleRadius = glm::length(target.A() - target.B()) / 2.0f;
-		const float obstacleCircumscribedCircleRadius = glm::length(obstacle.A() - obstacle.B()) / 2.0f;
-
-		const float minDistanceBetweenCenters = targetCircumscribedCircleRadius + obstacleCircumscribedCircleRadius;
-		const float currentDistanceBetweenCenters = glm::length(obstacle.Center() - target.Center());
+		const float targetInscribedCircleRadius = glm::length(target.A() - target.B()) / 2.0f;
+		const float obstacleInscribedCircleRadius = glm::length(obstacle.A() - obstacle.B()) / 2.0f;
+		const float minDistanceBetweenCenters = targetInscribedCircleRadius + obstacleInscribedCircleRadius;
 		const float targetDistanceBetweenCenters = glm::length(obstacle.Center() - newTargetCenter);
 		if (targetDistanceBetweenCenters < minDistanceBetweenCenters)
 		{
@@ -215,41 +214,128 @@ namespace MyCode
 
 		glm::vec3 GetPositionOnNearEdge(const Rectangle& r1, const glm::vec3& targetCenter, const Rectangle& r2)
 		{
+			const std::vector<glm::vec3> forwardPointsOfR1 = GetNearestPoints(r1, targetCenter, r2.Center());
+			const std::vector<glm::vec3> forwardPointsOfR2 = GetNearestPoints(r2, r1.Center(), r1.Center());
+			
 			const auto& currentCenter = r1.Center();
+			const std::pair<Collision, bool> collision = GetCollision(forwardPointsOfR1, forwardPointsOfR2, currentCenter, targetCenter);
+			glm::vec3 validCenter = targetCenter;
+			if (collision.second)
+			{ 
+				validCenter = GetCenterThatAvoidCollision(currentCenter, targetCenter, collision.first);
+			}
+			return validCenter;
+		}
+
+		glm::vec3 GetCenterThatAvoidCollision(const glm::vec3& currentCenter, const glm::vec3& targetCenter, 
+			const Collision& collision)
+		{
 			const glm::vec3 directionVector = targetCenter - currentCenter;
-			std::pair<glm::vec3, glm::vec3> forwardPointsOfR1{ GetNearestPoints(r1, targetCenter) };
-			forwardPointsOfR1.first += directionVector;
-			forwardPointsOfR1.second += directionVector;
-			std::pair<glm::vec3, glm::vec3> verticesOfR2NearestToR1{ GetNearestPoints(r2, currentCenter) };
-
-			const glm::vec3 edgeIntersectionPoint = GetEdgeIntersectionPoint(forwardPointsOfR1.first, forwardPointsOfR1.second,
-				verticesOfR2NearestToR1.first, verticesOfR2NearestToR1.second, directionVector);
-
-			std::vector<glm::vec3> possibleCollisionPoints{ verticesOfR2NearestToR1.first, verticesOfR2NearestToR1.second, edgeIntersectionPoint };
-			SortPointsByDistanceFromPoint(possibleCollisionPoints, currentCenter);
-
-			const glm::vec3 closestPointToLineOfMotion = GetClosestPointToLine(
-					{ possibleCollisionPoints[0], possibleCollisionPoints[1] },
-					currentCenter, targetCenter);
-
-			const glm::vec3 forwardPointsVector = forwardPointsOfR1.second - forwardPointsOfR1.first;
-			const glm::vec3 p = MathUtil::GetIntersectionPointBetweenLines(currentCenter, targetCenter, 
-				closestPointToLineOfMotion, closestPointToLineOfMotion + forwardPointsVector);
-			const glm::vec3 m = MathUtil::GetIntersectionPointBetweenLines(currentCenter, targetCenter,
-				forwardPointsOfR1.first, forwardPointsOfR1.second);
-			const float delta = glm::length(m - p);
+			const auto delta = glm::length(directionVector - (collision.mCollidingVertex - collision.mPointOfCollision));
 			const float directionVectorLength = glm::length(directionVector);
 			const float factor = (directionVectorLength - delta) / directionVectorLength;
 			const glm::vec3 returnCenter = currentCenter + factor * directionVector;
-
 			return returnCenter;
 		}
 
-		std::pair<glm::vec3, glm::vec3> GetNearestPoints(const Rectangle& r1, const glm::vec3& targetPoint)
+		std::vector<glm::vec3> GetNearestPoints(const Rectangle& r1, const glm::vec3& targetPoint, const glm::vec3& otherCenter)
 		{
 			std::vector<glm::vec3> vertices{ r1.A(), r1.B(), r1.C(), r1.D() };
-			SortPointsByDistanceFromPoint(vertices, targetPoint);
-			return std::pair<glm::vec3, glm::vec3>(vertices[0], vertices[1]);
+			std::sort(vertices.begin(), vertices.end(),
+				[&targetPoint, &otherCenter](const glm::vec3& a, const glm::vec3& b)
+			{
+				const auto distanceFromA_ToTarget = glm::length(a - targetPoint);
+				const auto distanceFromB = glm::length(b - targetPoint);
+				if (distanceFromA_ToTarget == distanceFromB)
+				{
+					const auto distanceFromA_ToOther = glm::length(a - otherCenter);
+					const auto distanceFromB_ToOther = glm::length(b - otherCenter);
+
+					return distanceFromA_ToOther < distanceFromB_ToOther;
+				}
+				else
+				{
+					return distanceFromA_ToTarget < distanceFromB;
+				}
+			});
+			vertices.pop_back();
+			return vertices;
+		}
+
+		std::pair<Collision, bool> GetCollision(const std::vector<glm::vec3>& forwardsR1, const std::vector<glm::vec3>& forwardsR2,
+			const glm::vec3& currentCenter, const glm::vec3& targetCenter)
+		{
+			const auto directionVector = targetCenter - currentCenter;
+			std::vector<Collision> collisions = GetCollisions(forwardsR1, forwardsR2, directionVector);
+			const auto collisionsR2R1 = GetCollisions(forwardsR2, forwardsR1, -directionVector);
+			collisions.insert(collisions.end(), collisionsR2R1.begin(), collisionsR2R1.end());
+			
+			std::pair<Collision, bool> result{ Collision{ glm::vec3{ 0.0f }, glm::vec3{ 0.0f } }, false };
+			if (collisions.empty() == false)
+			{
+				std::sort(collisions.begin(), collisions.end(),
+					[&targetCenter](const Collision& a, const Collision& b)
+				{
+					const auto collisionDistanceA = glm::length(a.mCollidingVertex - a.mPointOfCollision);
+					const auto collisionDistanceB = glm::length(b.mCollidingVertex - b.mPointOfCollision);
+					if (collisionDistanceA == collisionDistanceB)
+					{
+						const auto distanceToTargetA = glm::length(a.mCollidingVertex - targetCenter);
+						const auto distanceToTargetB = glm::length(b.mCollidingVertex - targetCenter);
+						return distanceToTargetA < distanceToTargetB;
+					}
+					else
+					{
+						return collisionDistanceA < collisionDistanceB;
+					}
+				});
+
+				result.first = collisions[0];
+				result.second = true;
+			}
+			return result;
+		}
+
+		std::vector<Collision> GetCollisions(const std::vector<glm::vec3>& forwardsR1, const std::vector<glm::vec3>& forwardsR2,
+			const glm::vec3& directionVector)
+		{
+			std::vector<Collision> collisions;
+			for (const auto& vertex: forwardsR1)
+			{
+				const auto closestIntersection = GetClosestIntersectionPoint(vertex, vertex + directionVector, forwardsR2);
+				if (closestIntersection.second)
+				{
+					Collision collision;
+					collision.mCollidingVertex = vertex;
+					collision.mPointOfCollision = closestIntersection.first;
+					collisions.push_back(collision);
+				}
+			}
+			return collisions;
+		}
+
+		std::pair<glm::vec3, bool> GetClosestIntersectionPoint(const glm::vec3& a, const glm::vec3& b, const std::vector<glm::vec3>& lineSegments)
+		{
+			std::pair<glm::vec3, bool> result{ glm::vec3{ FLT_MAX, FLT_MAX, FLT_MAX }, false };
+
+			const auto lineSegmentPoints = lineSegments.size();
+			for (size_t i = 0; i < lineSegmentPoints; ++i)
+			{
+				const auto& c = lineSegments[i];
+				const auto& d = lineSegments[(i+1) % lineSegmentPoints];
+				const auto intersection = MathUtil::GetLineSegmentsIntersection(a, b, c, d);
+				if (intersection.second)
+				{
+					result.second = true;
+					const auto distanceToA = glm::length(intersection.first - a);
+					const auto currentMinDistanceToA = glm::length(result.first - a);
+					if (distanceToA < currentMinDistanceToA)
+					{
+						result.first = intersection.first;
+					}
+				}
+			}
+			return result;
 		}
 
 		std::vector<int> GetSortedIndicesByDistanceFromPoint(const std::vector<glm::vec3>& vertices,
@@ -262,49 +348,6 @@ namespace MyCode
 				return glm::length(vertices[i] - targetPoint) < glm::length(vertices[j] - targetPoint);
 			});
 			return indices;
-		}
-
-		void SortPointsByDistanceFromPoint(std::vector<glm::vec3>& vertices, const glm::vec3& targetPoint)
-		{
-			std::sort(vertices.begin(), vertices.end(),
-				[&targetPoint](const glm::vec3& a, const glm::vec3& b)
-			{
-				return glm::length(a - targetPoint) < glm::length(b - targetPoint);
-			});
-		}
-
-		glm::vec3 GetEdgeIntersectionPoint(const glm::vec3& a, const glm::vec3& b,
-			const glm::vec3& c, const glm::vec3& d, const glm::vec3& directionVector)
-		{
-			const glm::vec3 av = a + directionVector;
-			const glm::vec3 bv = b + directionVector;
-			const glm::vec3 ax{ MathUtil::GetIntersectionPointBetweenLines(a, av, c, d) };
-			const glm::vec3 bx{ MathUtil::GetIntersectionPointBetweenLines(b, bv, c, d) };
-
-			const glm::vec3 x = glm::length(ax - a) > glm::length(bx - b) ? ax : bx;
-			return x;
-		}
-
-		glm::vec3 GetClosestPointToLine(std::vector<glm::vec3> points, const glm::vec3& a, const glm::vec3& b)
-		{
-			std::sort(points.begin(), points.end(),
-				[&a, &b](const glm::vec3& p1, const glm::vec3& p2)
-			{
-				return MathUtil::GetDistanceFromPointToLine(p1, a, b) < MathUtil::GetDistanceFromPointToLine(p2, a, b);
-			}
-			);
-			return points[0];
-		}
-
-		glm::vec3 GetClosestPointToPoint(std::vector<glm::vec3> points, const glm::vec3& a)
-		{
-			std::sort(points.begin(), points.end(),
-				[&a](const glm::vec3& p1, const glm::vec3& p2)
-			{
-				return glm::length(p1 - a)  < glm::length(p2 - a);
-			}
-			);
-			return points[0];
 		}
 	}
 }

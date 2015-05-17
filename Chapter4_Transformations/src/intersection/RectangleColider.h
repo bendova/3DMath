@@ -11,6 +11,12 @@ namespace MyCode
 
 	namespace PolygonCollision
 	{
+		struct Collision
+		{
+			glm::vec3 mCollidingVertex;
+			glm::vec3 mPointOfCollision;
+		};
+
 		bool DoPolygonsIntersect(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b);
 		
 		bool DoPolygonProjectionsIntersect(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2);
@@ -21,12 +27,15 @@ namespace MyCode
 		bool DoColinearLineSegmentsIntersect(const glm::vec3& a, const glm::vec3& b,
 			const glm::vec3& c, const glm::vec3& d);
 
-		std::pair<glm::vec3, glm::vec3> GetNearestPoints(const Rectangle& r1, const glm::vec3& targetCenter);
-		glm::vec3 GetEdgeIntersectionPoint(const glm::vec3& a, const glm::vec3& b,
-			const glm::vec3& c, const glm::vec3& d, const glm::vec3& directionVector);
-		glm::vec3 GetClosestPointToLine(std::vector<glm::vec3> points, const glm::vec3& a, const glm::vec3& b);
-		glm::vec3 GetClosestPointToPoint(std::vector<glm::vec3> points, const glm::vec3& a);
-		void SortPointsByDistanceFromPoint(std::vector<glm::vec3>& vertices, const glm::vec3& targetPoint);
+		std::vector<glm::vec3> GetNearestPoints(const Rectangle& r1, const glm::vec3& targetPoint, const glm::vec3& otherCenter);
+		std::vector<Collision> GetCollisions(const std::vector<glm::vec3>& forwardsR1, const std::vector<glm::vec3>& forwardsR2,
+			const glm::vec3& directionVector);
+		std::pair<Collision, bool> GetCollision(const std::vector<glm::vec3>& forwardsR1, const std::vector<glm::vec3>& forwardsR2,
+			const glm::vec3& currentCenter, const glm::vec3& targetCenter);
+		std::pair<glm::vec3, bool> GetClosestIntersectionPoint(const glm::vec3& a, const glm::vec3& b, const std::vector<glm::vec3>& lineSegments);
+		glm::vec3 GetCenterThatAvoidCollision(const glm::vec3& currentCenter, const glm::vec3& targetCenter,
+			const Collision& collision);
+		
 		std::vector<int> GetSortedIndicesByDistanceFromPoint(const std::vector<glm::vec3>& vertices,
 			const glm::vec3& targetPoint);
 
