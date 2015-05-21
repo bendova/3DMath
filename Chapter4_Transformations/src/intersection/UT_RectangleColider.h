@@ -2,6 +2,7 @@
 #define _MY_CODE_UT_SQUARE_COLIDER_H_
 
 #include <glm/glm.hpp>
+#include <initializer_list>
 #include "RectangleColider.h"
 
 namespace MyCode
@@ -11,30 +12,49 @@ namespace MyCode
 	public:
 		bool Validate();
 	private:
-		struct Setup
+		class Setup
 		{
-			Setup(const glm::vec3& c1, const glm::vec3& c2)
-				: mCenterR1{ c1 }
-				, mCenterR2{ c2 }
-				, mVectorToA{ -0.5f, 0.0f,  0.5f }
-				, mVectorToB{  0.5f, 0.0f,  0.5f }
-				, mVectorToC{  0.5f, 0.0f, -0.5f }
-				, mVectorToD{ -0.5f, 0.0f, -0.5f }
-				, mRectangle1{ mCenterR1, mVectorToA, mVectorToB, mVectorToC, mVectorToD }
-				, mRectangle2{ mCenterR2, mVectorToA, mVectorToB, mVectorToC, mVectorToD }
+		public:
+			Setup(const std::initializer_list<glm::vec3> centers)
+				: mRectangles()
+				, mColider()
 			{
-				mColider.AddRectangle(mRectangle1);
-				mColider.AddRectangle(mRectangle2);
+				BuildRectangles(centers);
+				AddRectanglesToCollider();
 			}
 
-			const glm::vec3 mCenterR1;
-			const glm::vec3 mCenterR2;
-			const glm::vec3 mVectorToA;
-			const glm::vec3 mVectorToB;
-			const glm::vec3 mVectorToC;
-			const glm::vec3 mVectorToD;
-			Rectangle mRectangle1;
-			Rectangle mRectangle2;
+			const RectangleColider& Collider() { return mColider; }
+			const std::vector<Rectangle>& Rectangles() { return mRectangles; }
+
+			const Rectangle& operator[](int index)
+			{
+				return mRectangles[index];
+			}
+
+		private:
+			
+			void BuildRectangles(const std::initializer_list<glm::vec3> centers)
+			{
+				const glm::vec3 vectorToA{ -0.5f, 0.0f, 0.5f };
+				const glm::vec3 vectorToB{ 0.5f, 0.0f, 0.5f };
+				const glm::vec3 vectorToC{ 0.5f, 0.0f, -0.5f };
+				const glm::vec3 vectorToD{ -0.5f, 0.0f, -0.5f };
+
+				for (const auto& center : centers)
+				{
+					mRectangles.emplace_back(center, vectorToA, vectorToB, vectorToC, vectorToD);
+				}
+			}
+
+			void AddRectanglesToCollider()
+			{
+				for (const auto& rectangle : mRectangles)
+				{
+					mColider.AddRectangle(rectangle);
+				}
+			}
+
+			std::vector<Rectangle> mRectangles;
 			RectangleColider mColider;
 		};
 
@@ -77,6 +97,10 @@ namespace MyCode
 			bool ProjectObtuseTriangle();
 			bool ProjectTrapeze();
 			bool ProjectPentagon();
+
+			std::pair<glm::vec3, glm::vec3> ProjectPointsToAxis(const std::vector<glm::vec3>& points, const glm::vec3& lineA, const glm::vec3& lineB);
+			std::pair<glm::vec3, glm::vec3> GetPointsOnLine(std::pair<float, float> factors,
+				const glm::vec3& lineA, const glm::vec3& lineB);
 		};
 
 		class ValidPositionTest
@@ -84,17 +108,39 @@ namespace MyCode
 		public:
 			bool Run();
 		private:
-			bool ValidPositionForNoCollision();
-			bool ValidPositionForNearEdgeIntersection();
-			bool ValidPositionForFarEdgeIntersection();
-			bool ValidPositionForPathIntersection();
-			bool ValidPositionForEdgeIntersection();
-			bool ValidPositionForCornerIntersection();
-			bool ValidPositionForDiagonalPathIntersection();
-			bool ValidPositionForCrossIntersection();
-			bool ValidPositionForCrossIntersection2();
-			bool ValidPositionForCrossIntersection3();
-			bool ValidPositionForCrossIntersection4();
+			bool NoCollision();
+			bool NearEdgeIntersection();
+			bool FarEdgeIntersection();
+			bool PathIntersection();
+			bool EdgeIntersection();
+			bool CornerIntersection();
+			bool DiagonalPathIntersection();
+			bool CrossIntersection();
+			bool CrossIntersection2();
+			bool CrossIntersection3();
+			bool CrossIntersection4();
+			bool CrossIntersection5();
+			bool CrossIntersection6();
+			bool CrossIntersection7();
+		};
+
+		class MultipleObjectsAvoidanceTest
+		{
+		public:
+			bool Run();
+		private:
+			bool AvoidTwoObjects();
+		};
+
+		class SteppingOutOfCollisionTest
+		{
+		public:
+			bool Run();
+		private:
+			bool DetectingInitialCollision();
+			bool StepOutOfCollision();
+			bool StepOutOfCollision2();
+			bool StepOutOfCollision3();
 		};
 	};
 

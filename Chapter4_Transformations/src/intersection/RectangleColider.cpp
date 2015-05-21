@@ -17,28 +17,80 @@ namespace MyCode
 	{
 		using namespace PolygonCollision;
 
-		for (const Rectangle* const r : mRectangles)
+		bool wasCollisionFound = false;
+		std::vector<const Rectangle*> sortedRectangles = SortByDistanceFromPoint(mRectangles, rectangle.Center());
+		for (const Rectangle* const r : sortedRectangles)
 		{
-			const Rectangle& other = *r;
-			if (&rectangle != &other)
+			const Rectangle& obstacle = *r;
+			if (&rectangle != &obstacle)
 			{
-				const bool doesTravelPathCollide = TravelPathBounding::DoesTravelPathCollide(rectangle, targetCenter, other);
+				const bool doesTravelPathCollide = TravelPathBounding::DoesTravelPathCollide(rectangle, targetCenter, obstacle);
 				if (doesTravelPathCollide)
 				{
-					Log("Starting from center = [%f, %f, %f]\n", rectangle.Center().x, rectangle.Center().y, rectangle.Center().z);
-					Log("The desired targetCenter = [%f, %f, %f]\n", targetCenter.x, targetCenter.y, targetCenter.z);
-					Log("Collides with rectangle from = [%f, %f, %f]\n", other.Center().x, other.Center().y, other.Center().z);
-					
-					targetCenter = CollisionAvoidance::GetPositionOnNearEdge(rectangle, targetCenter, other);
-
-					Log("Valid targetCenter = [%f, %f, %f]\n", targetCenter.x, targetCenter.y, targetCenter.z);
-					Log("\n");
-
-					CollisionSanityCheck(rectangle, targetCenter, other);
+					wasCollisionFound = true;
+					targetCenter = GetValidCenter(rectangle, obstacle, targetCenter);
+					CollisionSanityCheck(rectangle, targetCenter, obstacle);
 				}
 			}
 		}
+
+		if (wasCollisionFound == false)
+		{
+			Log("Starting from center = [%f, %f, %f]\n", rectangle.Center().x, rectangle.Center().y, rectangle.Center().z);
+			Log("No collision was found for targetCenter = [%f, %f, %f]\n", targetCenter.x, targetCenter.y, targetCenter.z);
+		}
+
 		return targetCenter;
+	}
+
+	std::vector<const Rectangle*> SortByDistanceFromPoint(std::vector<const Rectangle*> rectangles, const glm::vec3& point)
+	{
+		std::sort(rectangles.begin(), rectangles.end(),
+			[&point](const Rectangle* a, const Rectangle* b)
+		{
+			const auto distanceFromA_toPoint = glm::length(point - a->Center());
+			const auto distanceFromB_toPoint = glm::length(point - b->Center());
+			return distanceFromA_toPoint < distanceFromB_toPoint;
+		});
+
+		return rectangles;
+	}
+
+	glm::vec3 GetValidCenter(const Rectangle& rectangle, const Rectangle& obstacle, const glm::vec3& targetCenter)
+	{
+		Log("GetValidCenter() rectangle.Center() = [%f, %f, %f]\n", rectangle.Center().x, rectangle.Center().y, rectangle.Center().z);
+		Log("GetValidCenter() targetCenter = [%f, %f, %f]\n", targetCenter.x, targetCenter.y, targetCenter.z);
+		Log("GetValidCenter() obstacle.Center() = [%f, %f, %f]\n", obstacle.Center().x, obstacle.Center().y, obstacle.Center().z);
+
+		using namespace PolygonCollision;
+		using namespace CollisionAvoidance;
+
+		const std::vector<glm::vec3> verticesOfR1{ rectangle.A(), rectangle.B(), rectangle.C(), rectangle.D() };
+		const std::vector<glm::vec3> verticesOfR2{ obstacle.A(), obstacle.B(), obstacle.C(), obstacle.D() };
+		const glm::vec3& currentCenter{ rectangle.Center() };
+
+		glm::vec3 validCenter{ targetCenter };
+		if (PolygonIntersection::DoPolygonsIntersect(verticesOfR1, verticesOfR2))
+		{
+			const glm::vec3 directionVector{ targetCenter - currentCenter };
+			const glm::vec3 centersVector{ currentCenter - obstacle.Center() };
+			const bool isTargetDirectionCorrect = (glm::dot(directionVector, centersVector) > 0.0f);
+			if (isTargetDirectionCorrect == false)
+			{
+				const glm::vec3 inverseTarget = currentCenter - directionVector;
+				validCenter = GetPositionOnNearEdge(verticesOfR1, currentCenter,
+					inverseTarget, verticesOfR2, CollisionAvoider::Avoidance::INSIDE_OUT);
+			}
+		}
+		else
+		{
+			validCenter = GetPositionOnNearEdge(verticesOfR1, currentCenter,
+				targetCenter, verticesOfR2, CollisionAvoider::Avoidance::OUTSIDE_IN);
+		}
+
+		Log("GetValidCenter() validCenter = [%f, %f, %f]\n\n", validCenter.x, validCenter.y, validCenter.z);
+
+		return validCenter;
 	}
 
 	void CollisionSanityCheck(const Rectangle& target, const glm::vec3& newTargetCenter, const Rectangle& obstacle)
@@ -47,9 +99,14 @@ namespace MyCode
 		const float obstacleInscribedCircleRadius = glm::length(obstacle.A() - obstacle.B()) / 2.0f;
 		const float minDistanceBetweenCenters = targetInscribedCircleRadius + obstacleInscribedCircleRadius;
 		const float targetDistanceBetweenCenters = glm::length(obstacle.Center() - newTargetCenter);
-		if (targetDistanceBetweenCenters < minDistanceBetweenCenters)
+
+		Log("CollisionSanityCheck() targetDistanceBetweenCenters = [%f]\n", targetDistanceBetweenCenters);
+
+		const double errorMargin = -1e-6;
+		const double delta = targetDistanceBetweenCenters - minDistanceBetweenCenters;
+		if ((delta < 0) && (delta < errorMargin))
 		{
-			Log("Invalid targetCenter = [%f, %f, %f]\n", newTargetCenter.x, newTargetCenter.y, newTargetCenter.z);
+			Log("CollisionSanityCheck() Invalid targetCenter = [%f, %f, %f]\n", newTargetCenter.x, newTargetCenter.y, newTargetCenter.z);
 		}
 	}
 
@@ -94,25 +151,25 @@ namespace MyCode
 				return true;
 			}
 
-			bool DoColinearLineSegmentsIntersect(const glm::vec3& a, const glm::vec3& b,
-				const glm::vec3& c, const glm::vec3& d)
+			bool DoColinearLineSegmentsIntersect(const float& factorA, const float& factorB,
+				const float& factorC, const float& factorD)
 			{
-				bool doTheyIntersect = (a == c && b == d);
-				if (!doTheyIntersect)
-				{
-					const auto abLength = glm::length(b - a);
-					const auto cdLength = glm::length(d - c);
-					const auto acLength = glm::length(c - a);
-					doTheyIntersect = (abLength > acLength || cdLength > acLength);
-				}
+				const bool doTheyIntersect = DoSegmentsIntersect(factorA, factorB, factorC, factorD)
+					|| DoSegmentsIntersect(factorC, factorD, factorA, factorB);
 				return (doTheyIntersect);
 			}
 
-			std::pair<glm::vec3, glm::vec3> ProjectPolygonToAxis(const std::vector<glm::vec3>& polygon,
+			bool DoSegmentsIntersect(const float& factorA, const float& factorB,
+				const float& factorC, const float& factorD)
+			{
+				return !((factorC >= factorB) || (factorA >= factorD));
+			}
+
+			std::pair<float, float> ProjectPolygonToAxis(const std::vector<glm::vec3>& polygon,
 				const glm::vec3& axisPointA, const glm::vec3& axisPointB)
 			{
 				float leftEdgeFactor = FLT_MAX;
-				float rightEdgeFactor = FLT_MIN;
+				float rightEdgeFactor = -FLT_MAX;
 
 				const glm::vec3 lineDirection = axisPointB - axisPointA;
 				const glm::vec3::value_type lineDirectionLengthSquared = glm::dot(lineDirection, lineDirection);
@@ -131,10 +188,7 @@ namespace MyCode
 					}
 				}
 
-				const glm::vec3 projectionLeftEdge{ axisPointA + leftEdgeFactor * lineDirection };
-				const glm::vec3 projectionRightEdge{ axisPointA + rightEdgeFactor * lineDirection };
-
-				return std::make_pair(projectionLeftEdge, projectionRightEdge);
+				return std::make_pair(leftEdgeFactor, rightEdgeFactor);
 			}
 		}
 
@@ -235,100 +289,95 @@ namespace MyCode
 
 		namespace CollisionAvoidance
 		{
-			glm::vec3 GetPositionOnNearEdge(const Rectangle& r1, const glm::vec3& targetCenter, const Rectangle& r2)
+			glm::vec3 GetPositionOnNearEdge(const std::vector<glm::vec3>& verticesOfR1, const glm::vec3& currentCenter,
+				const glm::vec3& targetCenter, const std::vector<glm::vec3> verticesOfR2, const CollisionAvoider::Avoidance avoidance)
 			{
-				const std::vector<glm::vec3> forwardPointsOfR1 = GetNearestPoints(r1, targetCenter, r2.Center());
-				const std::vector<glm::vec3> forwardPointsOfR2 = GetNearestPoints(r2, r1.Center(), r1.Center());
-
-				const auto& currentCenter = r1.Center();
-				const std::pair<Collision, bool> collision = GetCollision(forwardPointsOfR1, forwardPointsOfR2, currentCenter, targetCenter);
-				glm::vec3 validCenter = targetCenter;
-				if (collision.second)
-				{
-					validCenter = GetCenterThatAvoidCollision(currentCenter, targetCenter, collision.first);
-				}
+				CollisionAvoider avoider{ verticesOfR1, verticesOfR2, currentCenter, targetCenter, avoidance };
+				glm::vec3 validCenter = avoider.GetValidCenter();
 				return validCenter;
 			}
 
-			std::vector<glm::vec3> GetNearestPoints(const Rectangle& r1, const glm::vec3& targetPoint, const glm::vec3& biasPoint)
+			CollisionAvoider::CollisionAvoider(const std::vector<glm::vec3>& verticesR1, const std::vector<glm::vec3>& verticesR2,
+				const glm::vec3& currentCenter, const glm::vec3& targetCenter, const Avoidance avoidance)
+				: mVerticesR1(verticesR1)
+				, mVerticesR2(verticesR2)
+				, mCurrentCenter(currentCenter)
+				, mTargetCenter(targetCenter)
+				, mDirectionVector(targetCenter - currentCenter)
+				, mValidCenter(0.0f)
+				, mAvoidance(avoidance)
 			{
-				std::vector<glm::vec3> vertices{ r1.A(), r1.B(), r1.C(), r1.D() };
-				std::sort(vertices.begin(), vertices.end(),
-					[&targetPoint, &biasPoint](const glm::vec3& a, const glm::vec3& b)
-				{
-					const auto distanceFromA_ToTarget = glm::length(a - targetPoint);
-					const auto distanceFromB = glm::length(b - targetPoint);
-					if (distanceFromA_ToTarget == distanceFromB)
-					{
-						const auto distanceFromA_ToOther = glm::length(a - biasPoint);
-						const auto distanceFromB_ToOther = glm::length(b - biasPoint);
-
-						return distanceFromA_ToOther < distanceFromB_ToOther;
-					}
-					else
-					{
-						return distanceFromA_ToTarget < distanceFromB;
-					}
-				});
-				vertices.pop_back();
-				return vertices;
+				DetermineValidCenter();
 			}
 
-			std::pair<Collision, bool> GetCollision(const std::vector<glm::vec3>& forwardsR1, const std::vector<glm::vec3>& forwardsR2,
-				const glm::vec3& currentCenter, const glm::vec3& targetCenter)
+			void CollisionAvoider::DetermineValidCenter()
 			{
-				const auto directionVector = targetCenter - currentCenter;
-				std::vector<Collision> collisions = GetCollisions(forwardsR1, forwardsR2, directionVector);
-				const auto collisionsR2R1 = GetCollisions(forwardsR2, forwardsR1, -directionVector);
-				collisions.insert(collisions.end(), collisionsR2R1.begin(), collisionsR2R1.end());
+				std::pair<Collision, bool> collisionPair = GetNearEdgeCollision();
+				if (collisionPair.second)
+				{
+					mValidCenter = GetCenterThatAvoidsCollision(mCurrentCenter, collisionPair.first);
+				}
+				else
+				{
+					mValidCenter = mCurrentCenter;
+				}
+			}
 
-				std::pair<Collision, bool> result{ Collision{ glm::vec3{ 0.0f }, glm::vec3{ 0.0f } }, false };
+			std::pair<Collision, bool> CollisionAvoider::GetNearEdgeCollision()
+			{
+				std::vector<Collision> collisions{ GetCollisionsFromBothPolygons() };
+				std::pair<Collision, bool> nearEdgeCollision{ Collision{ glm::vec3{ 0.0f }, glm::vec3{ 0.0f } }, false };
 				if (collisions.empty() == false)
 				{
-					std::sort(collisions.begin(), collisions.end(),
-						[&targetCenter](const Collision& a, const Collision& b)
-					{
-						const auto collisionDistanceA = glm::length(a.mCollidingVertex - a.mPointOfCollision);
-						const auto collisionDistanceB = glm::length(b.mCollidingVertex - b.mPointOfCollision);
-						if (collisionDistanceA == collisionDistanceB)
-						{
-							const auto distanceToTargetA = glm::length(a.mCollidingVertex - targetCenter);
-							const auto distanceToTargetB = glm::length(b.mCollidingVertex - targetCenter);
-							return distanceToTargetA < distanceToTargetB;
-						}
-						else
-						{
-							return collisionDistanceA < collisionDistanceB;
-						}
-					});
-
-					result.first = collisions[0];
-					result.second = true;
+					SortAscending(collisions, mTargetCenter);
+					nearEdgeCollision.first = (mAvoidance == Avoidance::OUTSIDE_IN) ? collisions.front() : collisions.back();
+					nearEdgeCollision.second = true;
 				}
-				return result;
+				else
+				{
+					Log("CollisionAvoidance::GetCollision() No collision was actually found!\n This should NOT happen.\n");
+				}
+				return nearEdgeCollision;
 			}
 
-			std::vector<Collision> GetCollisions(const std::vector<glm::vec3>& forwardsR1, const std::vector<glm::vec3>& forwardsR2,
-				const glm::vec3& directionVector)
+			std::vector<Collision> CollisionAvoider::GetCollisionsFromBothPolygons()
+			{
+				std::vector<Collision> collisions{ GetCollisions(mVerticesR1, mVerticesR2, mDirectionVector) };
+				std::vector<Collision> collisionsR2R1 = GetCollisions(mVerticesR2, mVerticesR1, -mDirectionVector);
+				for (auto& collision : collisionsR2R1)
+				{
+					std::swap(collision.mPointOfCollision, collision.mCollidingVertex);
+				}
+				collisions.insert(collisions.end(), collisionsR2R1.begin(), collisionsR2R1.end());
+				return collisions;
+			}
+
+			std::vector<Collision> CollisionAvoider::GetCollisions(const std::vector<glm::vec3>& verticesR1, 
+				const std::vector<glm::vec3>& verticesR2,
+				const glm::vec3& directionVector) const
 			{
 				std::vector<Collision> collisions;
-				for (const auto& vertex : forwardsR1)
+				for (const auto& vertex : verticesR1)
 				{
-					const auto closestIntersection = GetClosestIntersectionPoint(vertex, vertex + directionVector, forwardsR2);
-					if (closestIntersection.second)
+					const auto intersection = (mAvoidance == Avoidance::OUTSIDE_IN) 
+						? GetClosestIntersectionPoint(vertex, vertex + directionVector, verticesR2)
+						: GetFarthestIntersectionPoint(vertex, vertex + directionVector, verticesR2);
+					if (intersection.second)
 					{
 						Collision collision;
 						collision.mCollidingVertex = vertex;
-						collision.mPointOfCollision = closestIntersection.first;
+						collision.mPointOfCollision = intersection.first;
 						collisions.push_back(collision);
 					}
 				}
 				return collisions;
 			}
 
-			std::pair<glm::vec3, bool> GetClosestIntersectionPoint(const glm::vec3& a, const glm::vec3& b, const std::vector<glm::vec3>& lineSegments)
+			std::pair<glm::vec3, bool> CollisionAvoider::GetClosestIntersectionPoint(const glm::vec3& a, const glm::vec3& b,
+				const std::vector<glm::vec3>& lineSegments) const
 			{
 				std::pair<glm::vec3, bool> result{ glm::vec3{ FLT_MAX, FLT_MAX, FLT_MAX }, false };
+				float currentMinDistanceToA = FLT_MAX;
 
 				const auto lineSegmentPoints = lineSegments.size();
 				for (size_t i = 0; i < lineSegmentPoints; ++i)
@@ -340,9 +389,9 @@ namespace MyCode
 					{
 						result.second = true;
 						const auto distanceToA = glm::length(intersection.first - a);
-						const auto currentMinDistanceToA = glm::length(result.first - a);
 						if (distanceToA < currentMinDistanceToA)
 						{
+							currentMinDistanceToA = distanceToA;
 							result.first = intersection.first;
 						}
 					}
@@ -350,14 +399,56 @@ namespace MyCode
 				return result;
 			}
 
-			glm::vec3 GetCenterThatAvoidCollision(const glm::vec3& currentCenter, const glm::vec3& targetCenter,
-				const Collision& collision)
+			std::pair<glm::vec3, bool> CollisionAvoider::GetFarthestIntersectionPoint(const glm::vec3& a, const glm::vec3& b,
+				const std::vector<glm::vec3>& lineSegments) const
 			{
-				const glm::vec3 directionVector = targetCenter - currentCenter;
-				const auto delta = glm::length(directionVector - (collision.mCollidingVertex - collision.mPointOfCollision));
-				const float directionVectorLength = glm::length(directionVector);
-				const float factor = (directionVectorLength - delta) / directionVectorLength;
-				const glm::vec3 returnCenter = currentCenter + factor * directionVector;
+				std::pair<glm::vec3, bool> result{ a, false };
+				float currentMaxDistanceToA = 0.0f;
+
+				const auto lineSegmentPoints = lineSegments.size();
+				for (size_t i = 0; i < lineSegmentPoints; ++i)
+				{
+					const auto& c = lineSegments[i];
+					const auto& d = lineSegments[(i + 1) % lineSegmentPoints];
+					const auto intersection = MathUtil::GetLineSegmentsIntersection(a, b, c, d);
+					if (intersection.second)
+					{
+						result.second = true;
+						const auto distanceToA = glm::length(intersection.first - a);
+						if (distanceToA > currentMaxDistanceToA)
+						{
+							currentMaxDistanceToA = distanceToA;
+							result.first = intersection.first;
+						}
+					}
+				}
+				return result;
+			}
+
+			void CollisionAvoider::SortAscending(std::vector<Collision>& collisions, const glm::vec3& biasPoint) const
+			{
+				std::sort(collisions.begin(), collisions.end(),
+					[&biasPoint](const Collision& a, const Collision& b)
+				{
+					const auto collisionDistanceA = glm::length(a.mCollidingVertex - a.mPointOfCollision);
+					const auto collisionDistanceB = glm::length(b.mCollidingVertex - b.mPointOfCollision);
+					if (collisionDistanceA == collisionDistanceB)
+					{
+						const auto distanceToTargetA = glm::length(a.mCollidingVertex - biasPoint);
+						const auto distanceToTargetB = glm::length(b.mCollidingVertex - biasPoint);
+						return distanceToTargetA < distanceToTargetB;
+					}
+					else
+					{
+						return collisionDistanceA < collisionDistanceB;
+					}
+				});
+			}
+
+			glm::vec3 CollisionAvoider::GetCenterThatAvoidsCollision(const glm::vec3& currentCenter, const Collision& collision) const
+			{
+				const glm::vec3 vectorToNearEdgePoint = collision.mPointOfCollision - collision.mCollidingVertex;
+				const glm::vec3 returnCenter = currentCenter + vectorToNearEdgePoint;
 				return returnCenter;
 			}
 		 }

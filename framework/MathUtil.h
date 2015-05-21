@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <array>
 #include <initializer_list>
+#include <vector>
 
 namespace MyCode
 {
@@ -263,17 +264,18 @@ namespace MyCode
 		}
 
 		template<typename T>
-		T GetIntersectionPointBetweenLines(const T& a, const T& b, const T& c, const T& d)
+		std::pair<T, bool> GetIntersectionPointBetweenLines(const T& a, const T& b, const T& c, const T& d)
 		{
-			T intersectionPoint{ 0.0f };
+			std::pair<T, bool> intersection{ T{ 0.0f }, false };
 
 			const auto factorAB = GetSegmentIntersectionFactor(a, b, c, d);
 			const auto factorCD = GetSegmentIntersectionFactor(c, d, a, b);
 			if (factorAB.second && factorCD.second)
 			{
-				intersectionPoint = a + factorAB.first * (b - a);
+				intersection.first = a + factorAB.first * (b - a);
+				intersection.second = true;
 			}
-			return intersectionPoint;
+			return intersection;
 		}
 
 		template<typename T>
@@ -324,7 +326,7 @@ namespace MyCode
 
 
 		bool IsPointInPlane(const glm::vec3& planePointA, const glm::vec3& planePointB, const glm::vec3& planePointC, const glm::vec3& point);
-		bool IsPointInPlane(const glm::vec4& planePointA, const glm::vec4& planePointB, const glm::vec3& planePointC, const glm::vec3& point);
+		bool IsPointInPlane(const glm::vec4& planePointA, const glm::vec4& planePointB, const glm::vec4& planePointC, const glm::vec4& point);
 
 		float GetDistanceFromPointToLine(const glm::vec3& p, const glm::vec3& a, const glm::vec3& b);
 		glm::vec4 GetNormalToLineFromPoint(const glm::vec4& a, const glm::vec4& b, const glm::vec4& c);
@@ -335,6 +337,8 @@ namespace MyCode
 		bool IsPointInsideOfSideStrictly(const glm::vec4& a, const glm::vec4& b, const glm::vec4& c, const glm::vec4& p);
 		bool ContainsStrictly(const Triangle& t, const glm::vec4& p);
 		bool ContainsStrictly(const Quadrilateral& q, const glm::vec4& p);
+
+		bool IsPointInsidePolygon(const std::vector<glm::vec4>& polygon, const glm::vec4& point);
 
 		float FloorWithPrecision(const float x, const int precision);
 		double FloorWithPrecision(const double x, const int precision);

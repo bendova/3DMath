@@ -171,10 +171,12 @@ namespace MyCode
 		bool IsPointInPlane(const glm::vec4& planePointA, const glm::vec4& planePointB,
 			const glm::vec4& planePointC, const glm::vec4& point)
 		{
-			return IsPointInPlane( glm::vec3{ planePointA }, glm::vec3{ planePointB }, glm::vec3{ planePointC }, glm::vec3{ point } );
+			return IsPointInPlane( glm::vec3{ planePointA }, glm::vec3{ planePointB }, 
+				glm::vec3{ planePointC }, glm::vec3{ point } );
 		}
 
-		bool IsPointInPlane(const glm::vec3& planePointA, const glm::vec3& planePointB, const glm::vec3& planePointC, const glm::vec3& point)
+		bool IsPointInPlane(const glm::vec3& planePointA, const glm::vec3& planePointB, 
+			const glm::vec3& planePointC, const glm::vec3& point)
 		{
 			const glm::vec3 ab = planePointB - planePointA;
 			const glm::vec3 ac = planePointC - planePointA;
@@ -248,6 +250,33 @@ namespace MyCode
 		{
 			const glm::vec4 intersectionPoint = GetIntersectionPointBetweenSegmentsStrictly(a, b, c, d);
 			return (intersectionPoint.w != 0);
+		}
+
+		bool IsPointInsidePolygon(const std::vector<glm::vec4>& polygon, const glm::vec4& point)
+		{
+			bool isInsidePolygon = false;
+			const auto pointsCount = polygon.size();
+			if (pointsCount > 2)
+			{
+				const bool isInSamePlane = IsPointInPlane(point, polygon[0], polygon[1], polygon[2]);
+				if (isInSamePlane)
+				{
+					isInsidePolygon = true;
+					for (size_t i = 0; i < pointsCount; ++i)
+					{
+						const auto& a = polygon[i];
+						const auto& b = polygon[(i + 1) % pointsCount];
+						const auto& c = polygon[(i + 2) % pointsCount];
+						const bool isInsideOfSide = IsPointInsideOfSide(a, b, c, point);
+						if (isInsideOfSide == false)
+						{
+							isInsidePolygon = false;
+							break;
+						}
+					}
+				}
+			}
+			return isInsidePolygon;
 		}
 	}
 }

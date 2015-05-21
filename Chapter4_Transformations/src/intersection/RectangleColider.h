@@ -21,10 +21,12 @@ namespace MyCode
 		{
 			bool DoPolygonsIntersect(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b);
 			bool DoPolygonProjectionsIntersect(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2);
-			std::pair<glm::vec3, glm::vec3> ProjectPolygonToAxis(const std::vector<glm::vec3>& polygon,
+			std::pair<float, float> ProjectPolygonToAxis(const std::vector<glm::vec3>& polygon,
 				const glm::vec3& axisPointA, const glm::vec3& axisPointB);
-			bool DoColinearLineSegmentsIntersect(const glm::vec3& a, const glm::vec3& b,
-				const glm::vec3& c, const glm::vec3& d);
+			bool DoColinearLineSegmentsIntersect(const float& factorA, const float& factorB,
+				const float& factorC, const float& factorD);
+			bool DoSegmentsIntersect(const float& factorA, const float& factorB,
+				const float& factorC, const float& factorD);
 		}
 		
 		namespace TravelPathBounding
@@ -42,15 +44,46 @@ namespace MyCode
 
 		namespace CollisionAvoidance
 		{
-			glm::vec3 GetPositionOnNearEdge(const Rectangle& a, const glm::vec3& targetCenter, const Rectangle& b);
-			std::vector<glm::vec3> GetNearestPoints(const Rectangle& r1, const glm::vec3& targetPoint, const glm::vec3& otherCenter);
-			std::vector<Collision> GetCollisions(const std::vector<glm::vec3>& forwardsR1, const std::vector<glm::vec3>& forwardsR2,
-				const glm::vec3& directionVector);
-			std::pair<Collision, bool> GetCollision(const std::vector<glm::vec3>& forwardsR1, const std::vector<glm::vec3>& forwardsR2,
-				const glm::vec3& currentCenter, const glm::vec3& targetCenter);
-			std::pair<glm::vec3, bool> GetClosestIntersectionPoint(const glm::vec3& a, const glm::vec3& b, const std::vector<glm::vec3>& lineSegments);
-			glm::vec3 GetCenterThatAvoidCollision(const glm::vec3& currentCenter, const glm::vec3& targetCenter,
-				const Collision& collision);
+			class CollisionAvoider
+			{
+			public:
+				enum class Avoidance
+				{
+					OUTSIDE_IN = 0,
+					INSIDE_OUT
+				};
+
+				CollisionAvoider(const std::vector<glm::vec3>& verticesR1, const std::vector<glm::vec3>& verticesR2,
+					const glm::vec3& currentCenter, const glm::vec3& targetCenter,
+					const Avoidance avoidance = Avoidance::OUTSIDE_IN);
+				
+				const glm::vec3& GetValidCenter() const { return mValidCenter; }
+			private:
+				void DetermineValidCenter();
+				std::pair<Collision, bool> GetNearEdgeCollision();
+				std::vector<Collision> GetCollisionsFromBothPolygons();
+				std::vector<Collision> GetCollisions(const std::vector<glm::vec3>& forwardsR1, const std::vector<glm::vec3>& forwardsR2,
+					const glm::vec3& directionVector) const ;
+				std::pair<glm::vec3, bool> GetClosestIntersectionPoint(const glm::vec3& a, const glm::vec3& b, 
+					const std::vector<glm::vec3>& lineSegments) const;
+				std::pair<glm::vec3, bool> GetFarthestIntersectionPoint(const glm::vec3& a, const glm::vec3& b,
+					const std::vector<glm::vec3>& lineSegments) const;
+
+				void SortAscending(std::vector<Collision>& collisions, const glm::vec3& biasPoint) const ;
+				glm::vec3 GetCenterThatAvoidsCollision(const glm::vec3& currentCenter, const Collision& collision) const;
+				
+				const std::vector<glm::vec3>& mVerticesR1;
+				const std::vector<glm::vec3>& mVerticesR2;
+				const glm::vec3& mCurrentCenter; 
+				const glm::vec3& mTargetCenter;
+				const glm::vec3 mDirectionVector;
+				const Avoidance mAvoidance;
+				glm::vec3 mValidCenter;
+			};
+
+			glm::vec3 GetPositionOnNearEdge(const std::vector<glm::vec3>& verticesOfR1, const glm::vec3& currentCenter,
+				const glm::vec3& targetCenter, const std::vector<glm::vec3> verticesOfR2, 
+				const CollisionAvoider::Avoidance avoidance = CollisionAvoider::Avoidance::OUTSIDE_IN);
 		}
 	}
 
@@ -65,6 +98,9 @@ namespace MyCode
 	private:
 		std::vector<const Rectangle*> mRectangles;
 	};
+
+	std::vector<const Rectangle*> SortByDistanceFromPoint(std::vector<const Rectangle*> rectangles, const glm::vec3& point);
+	glm::vec3 GetValidCenter(const Rectangle& rectangle, const Rectangle& obstacle, const glm::vec3& targetCenter);
 
 	void CollisionSanityCheck(const Rectangle& target, const glm::vec3& newTargetCenter, const Rectangle& obstacle);
 
