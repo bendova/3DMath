@@ -2,6 +2,8 @@
 #define _MY_CODE_UT_UTIL_H_
 
 #include <cstdio>
+#include <utility>
+#include <glm/glm.hpp>
 
 namespace MyCode
 {
@@ -29,6 +31,10 @@ namespace MyCode
 	}
 
 	bool CheckIsTrue(bool value, const char* expr, const char* testName);
+
+	bool AreSegmentsEqualWithinMargin(const std::pair<glm::vec3, glm::vec3>& ab, const std::pair<glm::vec3, glm::vec3>& cd,
+		const double margin);
+	bool AreVectorsEqualWithinMargin(const glm::vec3& a, const glm::vec3& b, const double margin);
 }
 
 #endif //_MY_CODE_UT_UTIL_H_

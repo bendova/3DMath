@@ -2,7 +2,7 @@
 #include "GL/freeglut.h"
 #include <cstdio>
 #include <cmath>
-#include "../framework/MathUtil.h"
+#include "../framework/VectorMath.h"
 
 namespace MyCode
 {
@@ -83,7 +83,7 @@ namespace MyCode
 	{
 		const auto ray = CastRayThroughPoint(screenX, screenY);
 		const glm::vec4 cubeCenter{ mBoundingRectangle.Center(), 1.0f };
-		return MathUtil::GetProjectionPointOnLine(ray.first, ray.second, cubeCenter);
+		return VectorMath::GetProjectionPointOnLine(ray.first, ray.second, cubeCenter);
 	}
 
 	bool ControlHelper::IsPointRoughlyInsideCube(const glm::vec3& point) const

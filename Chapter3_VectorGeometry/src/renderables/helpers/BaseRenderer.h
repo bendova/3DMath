@@ -4,12 +4,13 @@
 #include <glload/gl_3_3.h>
 #include <glm/glm.hpp>
 #include <vector>
-#include "../framework/MathUtil.h"
+#include "../framework/VectorMath.h"
+#include "../../PolygonMath.h"
 
 
 namespace MyCode
 {
-	using namespace MathUtil;
+	using namespace VectorMath;
 
 	class PosColorProgram;
 

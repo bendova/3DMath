@@ -51,8 +51,11 @@ namespace MyCode
 		};
 		
 		void InitCubes();
-		void InitRectangleColider();
-		void ValidateRectangleColider();
+		void InitRectangleCollider();
+		void ValidateRectangleCollider();
+
+		void InitCubeCollider();
+		void ValidateCubeCollider();
 
 		void RenderPlane(glutil::MatrixStack& modelMatrix);
 		void RenderCubes(glutil::MatrixStack& modelMatrix);

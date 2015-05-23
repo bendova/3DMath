@@ -1,6 +1,7 @@
 #include "TriangleIntersection.h"
 #include <float.h>
 #include <unordered_set>
+#include "../framework/VectorMath.h"
 
 namespace MyCode
 {
@@ -62,7 +63,7 @@ namespace MyCode
 		{
 			const int sideStartIndex = i;
 			const int sideEndIndex = (i + 1) % VERTICES_COUNT;
-			const auto point = MathUtil::GetIntersectionPointBetweenSegments(vertices[sideStartIndex], vertices[sideEndIndex], segmentStart, segmentEnd);
+			const auto point = GetIntersectionPointBetweenSegments(vertices[sideStartIndex], vertices[sideEndIndex], segmentStart, segmentEnd);
 			if (point.w != 0.0f)
 			{
 				intersectionPoints.push_back(point);

@@ -1,14 +1,16 @@
 #include "UT_RectangleColider.h"
 #include "../framework/UT_Util.h"
-#include "../framework/MathUtil.h"
+#include "../framework/VectorMath.h"
 
 namespace MyCode
 {
 	using namespace PolygonCollision;
+	using namespace VectorMath;
 
 	bool UT_RectangleColider::Validate()
 	{
-		RectangleCollisionTest collisionTest;
+		CollisionTest2D collisionTest2D;
+		CollisionTest3D collisionTest3D;
 		BoundingPathTest boundingPathTest;
 		ProjectionToAxesTest projectionToAxesTest;
 		ValidPositionTest validPositionTest;
@@ -16,14 +18,15 @@ namespace MyCode
 		SteppingOutOfCollisionTest stepOutOfCollisionTest;
 
 		return projectionToAxesTest.Run()
-			&& collisionTest.Run()
+			&& collisionTest2D.Run()
+			&& collisionTest3D.Run()
 			&& boundingPathTest.Run()
 			&& validPositionTest.Run()
 			&& objectsAvoidanceTest.Run()
 			&& stepOutOfCollisionTest.Run();
 	}
 
-	bool UT_RectangleColider::RectangleCollisionTest::Run()
+	bool UT_RectangleColider::CollisionTest2D::Run()
 	{
 		return NoCollision()
 			&& TouchingInOnePoint()
@@ -35,7 +38,7 @@ namespace MyCode
 			&& CollisionOfRotatedRectangles();
 	}
 
-	bool UT_RectangleColider::RectangleCollisionTest::NoCollision()
+	bool UT_RectangleColider::CollisionTest2D::NoCollision()
 	{
 		const std::vector<glm::vec3> rectangle1{ 
 			glm::vec3{ -1.0f, 0.0f,  1.0f }, glm::vec3{  1.0f, 0.0f,  1.0f },
@@ -44,13 +47,13 @@ namespace MyCode
 			glm::vec3{  3.0f, 0.0f,  1.0f }, glm::vec3{  10.0f, 0.0f, 1.0f },
 			glm::vec3{  10.0f, 0.0f, -1.0f }, glm::vec3{  3.0f, 0.0f, -1.0f } };
 		
-		const bool collision = PolygonIntersection::DoPolygonsIntersect(rectangle1, rectangle2);
+		const bool collision = PolygonIntersection2D::DoPolygonsIntersect2D(rectangle1, rectangle2);
 		const bool collisionExpected = false;
 
 		return CHECK_EQUALS(collision, collisionExpected);
 	}
 
-	bool UT_RectangleColider::RectangleCollisionTest::TouchingInOnePoint()
+	bool UT_RectangleColider::CollisionTest2D::TouchingInOnePoint()
 	{
 		const std::vector<glm::vec3> rectangle1{
 			glm::vec3{ -1.0f, 0.0f, 1.0f }, glm::vec3{ 1.0f, 0.0f, 1.0f },
@@ -59,13 +62,13 @@ namespace MyCode
 			glm::vec3{ 1.0f, 0.0f, 1.0f }, glm::vec3{ 1.0f, 0.0f, 2.0f },
 			glm::vec3{ 2.0f, 0.0f, 2.0f }, glm::vec3{ 2.0f, 0.0f, 1.0f } };
 
-		const bool collision = PolygonIntersection::DoPolygonsIntersect(rectangle1, rectangle2);
+		const bool collision = PolygonIntersection2D::DoPolygonsIntersect2D(rectangle1, rectangle2);
 		const bool collisionExpected = false;
 
 		return CHECK_EQUALS(collision, collisionExpected);
 	}
 
-	bool UT_RectangleColider::RectangleCollisionTest::TouchingOnOneSide()
+	bool UT_RectangleColider::CollisionTest2D::TouchingOnOneSide()
 	{
 		const std::vector<glm::vec3> rectangle1{
 			glm::vec3{ -1.0f, 0.0f,  1.0f }, glm::vec3{  1.0f, 0.0f, 1.0f },
@@ -74,13 +77,13 @@ namespace MyCode
 			glm::vec3{ 1.0f, 0.0f, 1.0f }, glm::vec3{ 2.0f, 0.0f, 1.0f },
 			glm::vec3{ 2.0f, 0.0f, -1.0f }, glm::vec3{ 1.0f, 0.0f, -1.0f } };
 		
-		const bool collision = PolygonIntersection::DoPolygonsIntersect(rectangle1, rectangle2);
+		const bool collision = PolygonIntersection2D::DoPolygonsIntersect2D(rectangle1, rectangle2);
 		const bool collisionExpected = false;
 
 		return CHECK_EQUALS(collision, collisionExpected);
 	}
 
-	bool UT_RectangleColider::RectangleCollisionTest::CollisionInOnePoint()
+	bool UT_RectangleColider::CollisionTest2D::CollisionInOnePoint()
 	{
 		const std::vector<glm::vec3> rectangle1{
 			glm::vec3{ -1.0f, 0.0f, 1.0f }, glm::vec3{ 1.0f, 0.0f, 1.0f },
@@ -89,13 +92,13 @@ namespace MyCode
 			glm::vec3{ 0.0f, 0.0f,  0.0f }, glm::vec3{ 2.0f, 0.0f,  0.0f },
 			glm::vec3{ 2.0f, 0.0f, -2.0f }, glm::vec3{ 0.0f, 0.0f, -2.0f } };
 
-		const bool collision = PolygonIntersection::DoPolygonsIntersect(rectangle1, rectangle2);
+		const bool collision = PolygonIntersection2D::DoPolygonsIntersect2D(rectangle1, rectangle2);
 		const bool collisionExpected = true;
 
 		return CHECK_EQUALS(collision, collisionExpected);
 	}
 
-	bool UT_RectangleColider::RectangleCollisionTest::CollisionOnOneSide()
+	bool UT_RectangleColider::CollisionTest2D::CollisionOnOneSide()
 	{
 		const std::vector<glm::vec3> rectangle1{
 			glm::vec3{ -1.0f, 0.0f, 1.0f }, glm::vec3{ 1.0f, 0.0f, 1.0f },
@@ -104,13 +107,13 @@ namespace MyCode
 			glm::vec3{ 0.0f, 0.0f, 1.0f }, glm::vec3{ 1.0f, 0.0f, 1.0f },
 			glm::vec3{ 1.0f, 0.0f, -1.0f }, glm::vec3{ 0.0f, 0.0f, -1.0f } };
 
-		const bool collision = PolygonIntersection::DoPolygonsIntersect(rectangle1, rectangle2);
+		const bool collision = PolygonIntersection2D::DoPolygonsIntersect2D(rectangle1, rectangle2);
 		const bool collisionExpected = true;
 
 		return CHECK_EQUALS(collision, collisionExpected);
 	}
 
-	bool UT_RectangleColider::RectangleCollisionTest::CompleteOverlap()
+	bool UT_RectangleColider::CollisionTest2D::CompleteOverlap()
 	{
 		const std::vector<glm::vec3> rectangle1{
 			glm::vec3{ -1.0f, 0.0f, 1.0f }, glm::vec3{ 1.0f, 0.0f, 1.0f },
@@ -119,13 +122,13 @@ namespace MyCode
 			glm::vec3{ -2.0f, 0.0f, 2.0f }, glm::vec3{ 2.0f, 0.0f, 2.0f },
 			glm::vec3{ 2.0f, 0.0f, -2.0f }, glm::vec3{ -2.0f, 0.0f, -2.0f } };
 
-		const bool collision = PolygonIntersection::DoPolygonsIntersect(rectangle1, rectangle2);
+		const bool collision = PolygonIntersection2D::DoPolygonsIntersect2D(rectangle1, rectangle2);
 		const bool collisionExpected = true;
 
 		return CHECK_EQUALS(collision, collisionExpected);
 	}
 
-	bool UT_RectangleColider::RectangleCollisionTest::NoCollisionOfRotatedRectangles()
+	bool UT_RectangleColider::CollisionTest2D::NoCollisionOfRotatedRectangles()
 	{
 		const std::vector<glm::vec3> rectangle1{
 			glm::vec3{ 1.0f, 0.0f, 0.0f }, glm::vec3{ 4.0f, 0.0f, -3.0f },
@@ -134,13 +137,13 @@ namespace MyCode
 			glm::vec3{ 3.0f, 0.0f, 0.0f }, glm::vec3{ 4.0f, 0.0f, 0.0f },
 			glm::vec3{ 4.0f, 0.0f, -1.0f }, glm::vec3{ 3.0f, 0.0f, -1.0f } };
 
-		const bool collision = PolygonIntersection::DoPolygonsIntersect(rectangle1, rectangle2);
+		const bool collision = PolygonIntersection2D::DoPolygonsIntersect2D(rectangle1, rectangle2);
 		const bool collisionExpected = false;
 
 		return CHECK_EQUALS(collision, collisionExpected);
 	}
 
-	bool UT_RectangleColider::RectangleCollisionTest::CollisionOfRotatedRectangles()
+	bool UT_RectangleColider::CollisionTest2D::CollisionOfRotatedRectangles()
 	{
 		const std::vector<glm::vec3> rectangle1{
 			glm::vec3{ 1.0f, 0.0f, 0.0f }, glm::vec3{ 4.0f, 0.0f, -3.0f },
@@ -149,7 +152,56 @@ namespace MyCode
 			glm::vec3{ 1.0f, 0.0f, 0.0f }, glm::vec3{ 4.0f, 0.0f, 0.0f },
 			glm::vec3{ 4.0f, 0.0f, -1.0f }, glm::vec3{ 1.0f, 0.0f, -1.0f } };
 
-		const bool collision = PolygonIntersection::DoPolygonsIntersect(rectangle1, rectangle2);
+		const bool collision = PolygonIntersection2D::DoPolygonsIntersect2D(rectangle1, rectangle2);
+		const bool collisionExpected = true;
+
+		return CHECK_EQUALS(collision, collisionExpected);
+	}
+
+	bool UT_RectangleColider::CollisionTest3D::Run()
+	{
+		return PointToPlaneProjection() // This seriously doesn't belong here
+			&& NoCollision()
+			&& CrossCollision();
+	}
+
+	bool UT_RectangleColider::CollisionTest3D::PointToPlaneProjection()
+	{
+		const glm::vec3 pointToProject{ 1.0f, 1.0f, 1.0f };
+		const glm::vec3 pointInPlane{ 0.0f, 0.0f, 0.0f };
+		const glm::vec3 planeNormal{ 0.0f, 0.0f, 1.0f };
+
+		const glm::vec3 projectedPoint = GetProjectionPointOnPlane(pointToProject, pointInPlane, planeNormal);
+		const glm::vec3 expectedPoint{ 1.0f, 1.0f, 0.0f };
+
+		return CHECK_EQUALS(projectedPoint, expectedPoint);
+	}
+
+	bool UT_RectangleColider::CollisionTest3D::NoCollision()
+	{
+		const std::vector<glm::vec3> rectangle1{
+			glm::vec3{ -1.0f, 0.0f, 1.0f }, glm::vec3{ 1.0f, 0.0f, 1.0f },
+			glm::vec3{ 1.0f, 0.0f, -1.0f }, glm::vec3{ -1.0f, 0.0f, -1.0f } };
+		const std::vector<glm::vec3> rectangle2{
+			glm::vec3{ -1.0f, 1.0f, 1.0f }, glm::vec3{ 1.0f, 1.0f, 1.0f },
+			glm::vec3{ 1.0f, 1.0f, -1.0f }, glm::vec3{ -1.0f, 1.0f, -1.0f } };
+
+		const bool collision = PolygonIntersection3D::DoPolygonsIntersect3D(rectangle1, rectangle2);
+		const bool collisionExpected = false;
+
+		return CHECK_EQUALS(collision, collisionExpected);
+	}
+
+	bool UT_RectangleColider::CollisionTest3D::CrossCollision()
+	{
+		const std::vector<glm::vec3> rectangleInXZ{
+			glm::vec3{ -1.0f, 0.0f, 1.0f }, glm::vec3{ 1.0f, 0.0f, 1.0f },
+			glm::vec3{ 1.0f, 0.0f, -1.0f }, glm::vec3{ -1.0f, 0.0f, -1.0f } };
+		const std::vector<glm::vec3> rectangleInXY{
+			glm::vec3{ -1.0f, -1.0f, 0.0f }, glm::vec3{ 1.0f, -1.0f, 0.0f },
+			glm::vec3{ 1.0f, 1.0f, 0.0f }, glm::vec3{ -1.0f, 1.0f, 0.0f } };
+
+		const bool collision = PolygonIntersection3D::DoPolygonsIntersect3D(rectangleInXZ, rectangleInXY);
 		const bool collisionExpected = true;
 
 		return CHECK_EQUALS(collision, collisionExpected);
@@ -287,7 +339,7 @@ namespace MyCode
 		const glm::vec3 c{ 1.0f, 0.0f, -1.0f };
 		const std::vector<glm::vec3> triangle{ a, b, c };
 
-		using namespace PolygonIntersection;
+		using namespace PolygonIntersection2D;
 		const auto projectionToAB = ProjectPointsToAxis(triangle, a, b);
 		const auto projectionToBC = ProjectPointsToAxis(triangle, b, c);
 		const auto projectionToCA = ProjectPointsToAxis(triangle, c, a);
@@ -393,7 +445,7 @@ namespace MyCode
 
 	std::pair<glm::vec3, glm::vec3> UT_RectangleColider::ProjectionToAxesTest::ProjectPointsToAxis(const std::vector<glm::vec3>& points, const glm::vec3& lineA, const glm::vec3& lineB)
 	{
-		const auto projectedFactors = PolygonIntersection::ProjectPolygonToAxis(points, lineA, lineB);
+		const auto projectedFactors = PolygonIntersection2D::ProjectPolygonToAxis(points, lineA, lineB);
 		return GetPointsOnLine(projectedFactors, lineA, lineB);
 	}
 
@@ -677,19 +729,5 @@ namespace MyCode
 		const double errorMargin = 1e-6;
 		const bool areEqual = CHECK_IS_TRUE(AreVectorsEqualWithinMargin(returnedDestination, expectedDestination, errorMargin));
 		return areEqual;
-	}
-
-	bool AreSegmentsEqualWithinMargin(const std::pair<glm::vec3, glm::vec3>& ab, const std::pair<glm::vec3, glm::vec3>& cd, 
-		const double margin)
-	{
-		return (AreVectorsEqualWithinMargin(ab.first, cd.first, margin) 
-			&& AreVectorsEqualWithinMargin(ab.second, cd.second, margin));
-	}
-
-	bool AreVectorsEqualWithinMargin(const glm::vec3& a, const glm::vec3& b, const double margin)
-	{
-		return ((std::abs(a.x - b.x) <= margin)
-			&& (std::abs(a.y - b.y) <= margin)
-			&& (std::abs(a.z - b.z) <= margin));
 	}
 }

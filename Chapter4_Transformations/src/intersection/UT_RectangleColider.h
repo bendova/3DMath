@@ -58,7 +58,7 @@ namespace MyCode
 			RectangleColider mColider;
 		};
 
-		class RectangleCollisionTest
+		class CollisionTest2D
 		{
 		public:
 			bool Run();
@@ -71,6 +71,16 @@ namespace MyCode
 			bool CompleteOverlap();
 			bool CollisionOfRotatedRectangles();
 			bool NoCollisionOfRotatedRectangles();
+		};
+
+		class CollisionTest3D
+		{
+		public:
+			bool Run();
+		private:
+			bool NoCollision();
+			bool PointToPlaneProjection();
+			bool CrossCollision();
 		};
 
 		class BoundingPathTest
@@ -137,16 +147,12 @@ namespace MyCode
 		public:
 			bool Run();
 		private:
-			bool DetectingInitialCollision();
+			bool StepOutOfCollision4();
 			bool StepOutOfCollision();
 			bool StepOutOfCollision2();
 			bool StepOutOfCollision3();
 		};
 	};
-
-	bool AreSegmentsEqualWithinMargin(const std::pair<glm::vec3, glm::vec3>& ab, const std::pair<glm::vec3, glm::vec3>& cd,
-		const double margin);
-	bool AreVectorsEqualWithinMargin(const glm::vec3& a, const glm::vec3& b, const double margin);
 }
 
 

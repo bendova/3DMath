@@ -3,6 +3,7 @@
 #include "../framework/MousePole.h"
 #include "../framework/MathUtil.h"
 #include "intersection/UT_RectangleColider.h"
+#include "intersection/UT_CubeCollider.h"
 #include "glutil/MatrixStack.h"
 #include <algorithm>
 
@@ -68,7 +69,8 @@ namespace MyCode
 	{
 		mInstance = this;
 		InitCubes();
-		InitRectangleColider();
+		InitRectangleCollider();
+		InitCubeCollider();
 
 		ConfigureOpenGL();
 		ConfigureInput();
@@ -116,19 +118,29 @@ namespace MyCode
 		mCubes.emplace_back("UnitCube.xml", boundingRectangle2, mColisionionHelper);*/
 	}
 
-	void Scene::InitRectangleColider()
+	void Scene::InitRectangleCollider()
 	{
-		ValidateRectangleColider();
+		ValidateRectangleCollider();
 		for (const auto& cube: mCubes)
 		{
 			mColisionionHelper.AddRectangle(cube.mCubeControl.GetBoundingBox());
 		}
 	}
 
-	void Scene::ValidateRectangleColider()
+	void Scene::ValidateRectangleCollider()
 	{
 		UT_RectangleColider squareColider;
 		assert(squareColider.Validate());
+	}
+
+	void Scene::InitCubeCollider()
+	{
+		ValidateCubeCollider();
+	}
+	void Scene::ValidateCubeCollider()
+	{
+		UT_CubeCollider cubeCollider;
+		assert(cubeCollider.Validate());
 	}
 
 	void Scene::ConfigureOpenGL()

@@ -135,7 +135,7 @@ namespace MyCode
 		Vector forward{ 0.0f, 0.0f, 1.0f };
 		Vector abPerpendicular = (outside) ? cross(forward, ab) : cross(ab, forward);
 		abPerpendicular.normalize();
-		abPerpendicular.scale(length(ab));
+		abPerpendicular.scale(ab.length());
 		
 		Vector abHalf = ab / 2;
 		Point abMiddle = a + abHalf;

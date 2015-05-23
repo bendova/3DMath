@@ -2,11 +2,13 @@
 #define _MY_CODE_DEMO_TRIANGLE_INTERSECTION_H_
 
 #include "../framework/MathUtil.h"
+#include "../PolygonMath.h"
+#include "../framework/VectorMath.h"
 
 namespace MyCode
 {
 	class TriangleRenderer;
-	using namespace MathUtil;
+	using namespace VectorMath;
 
 	class DemoTriangleIntersection
 	{

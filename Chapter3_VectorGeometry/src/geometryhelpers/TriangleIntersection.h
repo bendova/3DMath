@@ -6,11 +6,11 @@
 #include <glm/glm.hpp>
 #include <algorithm>
 #include <unordered_set>
-#include "../framework/MathUtil.h"
+#include "../PolygonMath.h"
 
 namespace MyCode
 {
-	using namespace MathUtil;
+	using namespace VectorMath;
 	class TriangleIntersection
 	{
 		friend class TriangleVerticesIntersectionTest;

@@ -1,5 +1,5 @@
 #include "RectangleColider.h"
-#include "../framework/MathUtil.h"
+#include "../framework/VectorMath.h"
 #include "../framework/Logging.h"
 #include <algorithm>
 #include <cassert>
@@ -8,14 +8,25 @@
 
 namespace MyCode
 {
+	using namespace VectorMath;
+
 	void RectangleColider::AddRectangle(const Rectangle& rectangle)
 	{
 		mRectangles.push_back(&rectangle);
 	}
 
+	void RectangleColider::AddRectangles(const std::vector<Rectangle>& rectangles)
+	{
+		for (const auto& rectangle : rectangles)
+		{
+			mRectangles.push_back(&rectangle);
+		}
+	}
+
 	glm::vec3 RectangleColider::GetPositionThatAvoidCollisions(const Rectangle& rectangle, glm::vec3 targetCenter) const
 	{
 		using namespace PolygonCollision;
+		using namespace RectangleColiderHelpers;
 
 		bool wasCollisionFound = false;
 		std::vector<const Rectangle*> sortedRectangles = SortByDistanceFromPoint(mRectangles, rectangle.Center());
@@ -43,79 +54,82 @@ namespace MyCode
 		return targetCenter;
 	}
 
-	std::vector<const Rectangle*> SortByDistanceFromPoint(std::vector<const Rectangle*> rectangles, const glm::vec3& point)
+	namespace RectangleColiderHelpers
 	{
-		std::sort(rectangles.begin(), rectangles.end(),
-			[&point](const Rectangle* a, const Rectangle* b)
+		std::vector<const Rectangle*> SortByDistanceFromPoint(std::vector<const Rectangle*> rectangles, const glm::vec3& point)
 		{
-			const auto distanceFromA_toPoint = glm::length(point - a->Center());
-			const auto distanceFromB_toPoint = glm::length(point - b->Center());
-			return distanceFromA_toPoint < distanceFromB_toPoint;
-		});
-
-		return rectangles;
-	}
-
-	glm::vec3 GetValidCenter(const Rectangle& rectangle, const Rectangle& obstacle, const glm::vec3& targetCenter)
-	{
-		Log("GetValidCenter() rectangle.Center() = [%f, %f, %f]\n", rectangle.Center().x, rectangle.Center().y, rectangle.Center().z);
-		Log("GetValidCenter() targetCenter = [%f, %f, %f]\n", targetCenter.x, targetCenter.y, targetCenter.z);
-		Log("GetValidCenter() obstacle.Center() = [%f, %f, %f]\n", obstacle.Center().x, obstacle.Center().y, obstacle.Center().z);
-
-		using namespace PolygonCollision;
-		using namespace CollisionAvoidance;
-
-		const std::vector<glm::vec3> verticesOfR1{ rectangle.A(), rectangle.B(), rectangle.C(), rectangle.D() };
-		const std::vector<glm::vec3> verticesOfR2{ obstacle.A(), obstacle.B(), obstacle.C(), obstacle.D() };
-		const glm::vec3& currentCenter{ rectangle.Center() };
-
-		glm::vec3 validCenter{ targetCenter };
-		if (PolygonIntersection::DoPolygonsIntersect(verticesOfR1, verticesOfR2))
-		{
-			const glm::vec3 directionVector{ targetCenter - currentCenter };
-			const glm::vec3 centersVector{ currentCenter - obstacle.Center() };
-			const bool isTargetDirectionCorrect = (glm::dot(directionVector, centersVector) > 0.0f);
-			if (isTargetDirectionCorrect == false)
+			std::sort(rectangles.begin(), rectangles.end(),
+				[&point](const Rectangle* a, const Rectangle* b)
 			{
-				const glm::vec3 inverseTarget = currentCenter - directionVector;
-				validCenter = GetPositionOnNearEdge(verticesOfR1, currentCenter,
-					inverseTarget, verticesOfR2, CollisionAvoider::Avoidance::INSIDE_OUT);
+				const auto distanceFromA_toPoint = glm::length(point - a->Center());
+				const auto distanceFromB_toPoint = glm::length(point - b->Center());
+				return distanceFromA_toPoint < distanceFromB_toPoint;
+			});
+
+			return rectangles;
+		}
+
+		glm::vec3 GetValidCenter(const Rectangle& rectangle, const Rectangle& obstacle, const glm::vec3& targetCenter)
+		{
+			Log("GetValidCenter() rectangle.Center() = [%f, %f, %f]\n", rectangle.Center().x, rectangle.Center().y, rectangle.Center().z);
+			Log("GetValidCenter() targetCenter = [%f, %f, %f]\n", targetCenter.x, targetCenter.y, targetCenter.z);
+			Log("GetValidCenter() obstacle.Center() = [%f, %f, %f]\n", obstacle.Center().x, obstacle.Center().y, obstacle.Center().z);
+
+			using namespace PolygonCollision;
+			using namespace CollisionAvoidance;
+
+			const std::vector<glm::vec3> verticesOfR1{ rectangle.A(), rectangle.B(), rectangle.C(), rectangle.D() };
+			const std::vector<glm::vec3> verticesOfR2{ obstacle.A(), obstacle.B(), obstacle.C(), obstacle.D() };
+			const glm::vec3& currentCenter{ rectangle.Center() };
+
+			glm::vec3 validCenter{ targetCenter };
+			if (PolygonIntersection2D::DoPolygonsIntersect2D(verticesOfR1, verticesOfR2))
+			{
+				const glm::vec3 directionVector{ targetCenter - currentCenter };
+				const glm::vec3 centersVector{ currentCenter - obstacle.Center() };
+				const bool isTargetDirectionCorrect = (glm::dot(directionVector, centersVector) > 0.0f);
+				if (isTargetDirectionCorrect == false)
+				{
+					const glm::vec3 inverseTarget = currentCenter - directionVector;
+					validCenter = GetPositionOnNearEdge(verticesOfR1, currentCenter,
+						inverseTarget, verticesOfR2, CollisionAvoider::Avoidance::INSIDE_OUT);
+				}
 			}
+			else
+			{
+				validCenter = GetPositionOnNearEdge(verticesOfR1, currentCenter,
+					targetCenter, verticesOfR2, CollisionAvoider::Avoidance::OUTSIDE_IN);
+			}
+
+			Log("GetValidCenter() validCenter = [%f, %f, %f]\n\n", validCenter.x, validCenter.y, validCenter.z);
+
+			return validCenter;
 		}
-		else
+
+		void CollisionSanityCheck(const Rectangle& target, const glm::vec3& newTargetCenter, const Rectangle& obstacle)
 		{
-			validCenter = GetPositionOnNearEdge(verticesOfR1, currentCenter,
-				targetCenter, verticesOfR2, CollisionAvoider::Avoidance::OUTSIDE_IN);
-		}
+			const float targetInscribedCircleRadius = glm::length(target.A() - target.B()) / 2.0f;
+			const float obstacleInscribedCircleRadius = glm::length(obstacle.A() - obstacle.B()) / 2.0f;
+			const float minDistanceBetweenCenters = targetInscribedCircleRadius + obstacleInscribedCircleRadius;
+			const float targetDistanceBetweenCenters = glm::length(obstacle.Center() - newTargetCenter);
 
-		Log("GetValidCenter() validCenter = [%f, %f, %f]\n\n", validCenter.x, validCenter.y, validCenter.z);
+			Log("CollisionSanityCheck() targetDistanceBetweenCenters = [%f]\n", targetDistanceBetweenCenters);
 
-		return validCenter;
-	}
-
-	void CollisionSanityCheck(const Rectangle& target, const glm::vec3& newTargetCenter, const Rectangle& obstacle)
-	{
-		const float targetInscribedCircleRadius = glm::length(target.A() - target.B()) / 2.0f;
-		const float obstacleInscribedCircleRadius = glm::length(obstacle.A() - obstacle.B()) / 2.0f;
-		const float minDistanceBetweenCenters = targetInscribedCircleRadius + obstacleInscribedCircleRadius;
-		const float targetDistanceBetweenCenters = glm::length(obstacle.Center() - newTargetCenter);
-
-		Log("CollisionSanityCheck() targetDistanceBetweenCenters = [%f]\n", targetDistanceBetweenCenters);
-
-		const double errorMargin = -1e-6;
-		const double delta = targetDistanceBetweenCenters - minDistanceBetweenCenters;
-		if ((delta < 0) && (delta < errorMargin))
-		{
-			Log("CollisionSanityCheck() Invalid targetCenter = [%f, %f, %f]\n", newTargetCenter.x, newTargetCenter.y, newTargetCenter.z);
+			const double errorMargin = -1e-6;
+			const double delta = targetDistanceBetweenCenters - minDistanceBetweenCenters;
+			if ((delta < 0) && (delta < errorMargin))
+			{
+				Log("CollisionSanityCheck() Invalid targetCenter = [%f, %f, %f]\n", newTargetCenter.x, newTargetCenter.y, newTargetCenter.z);
+			}
 		}
 	}
 
 	namespace PolygonCollision
 	{
 
-		namespace PolygonIntersection
+		namespace PolygonIntersection2D
 		{
-			bool DoPolygonsIntersect(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b)
+			bool DoPolygonsIntersect2D(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b)
 			{
 				bool doTheyOverlap = false;
 				const bool overlapAB = DoPolygonProjectionsIntersect(a, b);
@@ -129,26 +143,42 @@ namespace MyCode
 
 			bool DoPolygonProjectionsIntersect(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2)
 			{
+				bool doTheyIntersect = true;
 				const auto pointsCount = polygon1.size();
 				for (unsigned i = 0; i < pointsCount; ++i)
 				{
 					const auto& a = polygon1[i];
 					const auto& b = polygon1[(i + 1) % pointsCount];
 
-					const auto projPolygon1 = ProjectPolygonToAxis(polygon1, a, b);
-					const auto projPolygon2 = ProjectPolygonToAxis(polygon2, a, b);
-
-					const bool intersectionOnAxis = DoColinearLineSegmentsIntersect(
-						projPolygon1.first, projPolygon1.second,
-						projPolygon2.first, projPolygon2.second);
-
-					if (intersectionOnAxis == false)
+					if (a == b)
 					{
-						return false;
+						doTheyIntersect = IsPointInsidePolygon(polygon2, a);
+					}
+					else
+					{
+						doTheyIntersect = DoPolygonToAxisIntersection(polygon1, polygon2, a, b);
+					}
+
+					if (doTheyIntersect == false)
+					{
+						break;
 					}
 				}
 
-				return true;
+				return doTheyIntersect;
+			}
+
+			bool DoPolygonToAxisIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2,
+				const glm::vec3& axisA, const glm::vec3& axisB)
+			{
+				const auto projPolygon1 = ProjectPolygonToAxis(polygon1, axisA, axisB);
+				const auto projPolygon2 = ProjectPolygonToAxis(polygon2, axisA, axisB);
+
+				const bool doTheyIntersect = DoColinearLineSegmentsIntersect(
+					projPolygon1.first, projPolygon1.second,
+					projPolygon2.first, projPolygon2.second);
+
+				return doTheyIntersect;
 			}
 
 			bool DoColinearLineSegmentsIntersect(const float& factorA, const float& factorB,
@@ -187,8 +217,96 @@ namespace MyCode
 						rightEdgeFactor = factor;
 					}
 				}
-
 				return std::make_pair(leftEdgeFactor, rightEdgeFactor);
+			}
+
+			bool DoPolygonToPointIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2,
+				const glm::vec3& point)
+			{
+				const float minDistanceToPolygon1 = GetMinDistanceFromPolygonToPoint(polygon1, point);
+				const float minDistanceToPolygon2 = GetMinDistanceFromPolygonToPoint(polygon2, point);
+				//FIXME this is still incorrect
+				return (minDistanceToPolygon1 == minDistanceToPolygon2);
+			}
+
+			float GetMinDistanceFromPolygonToPoint(const std::vector<glm::vec3>& polygon,
+				const glm::vec3& point)
+			{
+				float minDistance = FLT_MAX;
+				for (const glm::vec3& vertex: polygon)
+				{
+					const float distance = glm::length(vertex - point);
+					if (distance < minDistance)
+					{
+						minDistance = distance;
+					}
+				}
+				return minDistance;
+			}
+		}
+
+		namespace PolygonIntersection3D
+		{
+			bool DoPolygonsIntersect3D(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b)
+			{
+				// for each polygon
+				// determine 3 coordinate axis that cross through it
+				// project both polygons on the 3 planes determined by those axes
+				// check the intersections of the shadows
+
+				bool doTheyOverlap = false;
+				const bool overlapAB = DoPolygonProjectionsIntersect(a, b);
+				if (overlapAB)
+				{
+					doTheyOverlap = DoPolygonProjectionsIntersect(b, a);
+				}
+
+				return doTheyOverlap;
+			}
+
+			bool DoPolygonProjectionsIntersect(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b)
+			{
+				using namespace PolygonIntersection2D;
+
+				bool doTheyIntersect = true;
+				const std::vector<Plane> planes = GetCoordinatePlanesRelativeToPlane(a);
+				for (const auto& plane: planes)
+				{
+					const std::vector<glm::vec3> projectionA = GetPolygonProjectionToPlane(a, plane);
+					const std::vector<glm::vec3> projectionB = GetPolygonProjectionToPlane(b, plane);
+					doTheyIntersect = DoPolygonsIntersect2D(projectionA, projectionB);
+					if (doTheyIntersect == false)
+					{
+						break;
+					}
+				}
+				return doTheyIntersect;
+			}
+
+			std::vector<Plane> GetCoordinatePlanesRelativeToPlane(const std::vector<glm::vec3>& a)
+			{
+				const glm::vec3& pointA = a[0];
+				const glm::vec3& pointB = a[1];
+				const glm::vec3& pointC = a[2];
+				const glm::vec3 normal1 = pointB - pointA;
+				const glm::vec3 normal2 = glm::cross(normal1, (pointC - pointA));
+				const glm::vec3 normal3 = glm::cross(normal1, normal2);
+
+				std::vector<Plane> axes;
+				axes.emplace_back(pointA, normal1);
+				axes.emplace_back(pointA, normal2);
+				axes.emplace_back(pointA, normal3);
+				return axes;
+			}
+
+			std::vector<glm::vec3> GetPolygonProjectionToPlane(const std::vector<glm::vec3>& polygon, const Plane& plane)
+			{
+				std::vector<glm::vec3> projection;
+				for (const auto& vertice: polygon)
+				{
+					projection.push_back(GetProjectionPointOnPlane(vertice, plane.mPoint, plane.mNormal));
+				}
+				return projection;
 			}
 		}
 
@@ -198,7 +316,7 @@ namespace MyCode
 			{
 				const auto travelPathPolygon = TravelPathBounding::GetTravelPathBounding(rectangle, targetCenter);
 				const std::vector<glm::vec3> obstacleVertices{ obstacle.A(), obstacle.B(), obstacle.C(), obstacle.D() };
-				bool doTheyOverlap = PolygonIntersection::DoPolygonsIntersect(travelPathPolygon, obstacleVertices);
+				bool doTheyOverlap = PolygonIntersection2D::DoPolygonsIntersect2D(travelPathPolygon, obstacleVertices);
 				return doTheyOverlap;
 			}
 
@@ -384,7 +502,7 @@ namespace MyCode
 				{
 					const auto& c = lineSegments[i];
 					const auto& d = lineSegments[(i + 1) % lineSegmentPoints];
-					const auto intersection = MathUtil::GetLineSegmentsIntersection(a, b, c, d);
+					const auto intersection = GetLineSegmentsIntersection(a, b, c, d);
 					if (intersection.second)
 					{
 						result.second = true;
@@ -410,7 +528,7 @@ namespace MyCode
 				{
 					const auto& c = lineSegments[i];
 					const auto& d = lineSegments[(i + 1) % lineSegmentPoints];
-					const auto intersection = MathUtil::GetLineSegmentsIntersection(a, b, c, d);
+					const auto intersection = GetLineSegmentsIntersection(a, b, c, d);
 					if (intersection.second)
 					{
 						result.second = true;

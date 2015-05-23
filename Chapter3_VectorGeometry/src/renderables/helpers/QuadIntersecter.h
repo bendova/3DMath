@@ -3,11 +3,11 @@
 
 #include <glload/gl_3_3.h>
 #include <glm/glm.hpp>
-#include "../../framework/MathUtil.h"
+#include "../../PolygonMath.h"
 
 namespace MyCode
 {
-	using namespace MathUtil;
+	using namespace VectorMath;
 	class QuadIntersecter
 	{
 	public:
