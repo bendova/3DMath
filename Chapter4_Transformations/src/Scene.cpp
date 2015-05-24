@@ -2,9 +2,6 @@
 #include "GL/freeglut.h"
 #include "../framework/MousePole.h"
 #include "../framework/MathUtil.h"
-#include "intersection2d/UT_RectangleColider.h"
-#include "intersection3d/UT_CubeCollider.h"
-#include "intersection3d/UT_PolygonCollider.h"
 #include "glutil/MatrixStack.h"
 #include <algorithm>
 
@@ -69,9 +66,9 @@ namespace MyCode
 		, mCubeSideLength(1.0f)
 	{
 		mInstance = this;
+
 		InitCubes();
 		InitColliderForPolygons2D();
-		InitCubeCollider();
 
 		ConfigureOpenGL();
 		ConfigureInput();
@@ -121,36 +118,10 @@ namespace MyCode
 
 	void Scene::InitColliderForPolygons2D()
 	{
-		ValidateColliderForPolygons2D();
 		for (const auto& cube: mCubes)
 		{
 			mColisionionHelper.AddRectangle(cube.mCubeControl.GetBoundingBox());
 		}
-	}
-
-	void Scene::ValidateColliderForPolygons2D()
-	{
-		UT_RectangleColider squareColider;
-		assert(squareColider.Validate());
-	}
-
-
-	void Scene::InitCubeCollider()
-	{
-		ValidateColliderForPolygons3D();
-		ValidateCubeCollider();
-	}
-
-	void Scene::ValidateColliderForPolygons3D()
-	{
-		UT_PolygonCollider collider;
-		assert(collider.Validate());
-	}
-
-	void Scene::ValidateCubeCollider()
-	{
-		UT_CubeCollider cubeCollider;
-		assert(cubeCollider.Validate());
 	}
 
 	void Scene::ConfigureOpenGL()

@@ -18,34 +18,8 @@ namespace MyCode
 
 	bool UT_PolygonCollider::CollisionTest3D::Run()
 	{
-		return PointToPlaneProjection() // This should be moved to UT_VectorMath
-			&& PointToPlaneProjection1()
-			&& NoCollision()
+		return NoCollision()
 			&& CrossCollision();
-	}
-
-	bool UT_PolygonCollider::CollisionTest3D::PointToPlaneProjection()
-	{
-		const glm::vec3 pointToProject{ 1.0f, 1.0f, 1.0f };
-		const glm::vec3 pointInPlane{ 0.0f, 0.0f, 0.0f };
-		const glm::vec3 planeNormal{ 0.0f, 0.0f, 1.0f };
-
-		const glm::vec3 projectedPoint = GetProjectionPointOnPlane(pointToProject, pointInPlane, planeNormal);
-		const glm::vec3 expectedPoint{ 1.0f, 1.0f, 0.0f };
-
-		return CHECK_EQUALS(projectedPoint, expectedPoint);
-	}
-
-	bool UT_PolygonCollider::CollisionTest3D::PointToPlaneProjection1()
-	{
-		const glm::vec3 pointToProject{ -1.0f, -1.0f, 0.0f };
-		const glm::vec3 pointInPlane{ -1.0f, 0.0f, 1.0f };
-		const glm::vec3 planeNormal{ 0.0f, 4.0f, 0.0f };
-
-		const glm::vec3 projectedPoint = GetProjectionPointOnPlane(pointToProject, pointInPlane, planeNormal);
-		const glm::vec3 expectedPoint{ -1.0f, 0.0f, 0.0f };
-
-		return CHECK_EQUALS(projectedPoint, expectedPoint);
 	}
 
 	bool UT_PolygonCollider::CollisionTest3D::NoCollision()

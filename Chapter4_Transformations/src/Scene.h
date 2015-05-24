@@ -50,14 +50,9 @@ namespace MyCode
 			ControlHelper mCubeControl;
 		};
 		
-		void InitCubes();
-		
-		void InitColliderForPolygons2D();
-		void ValidateColliderForPolygons2D();
 
-		void InitCubeCollider();
-		void ValidateColliderForPolygons3D();
-		void ValidateCubeCollider();
+		void InitCubes();
+		void InitColliderForPolygons2D();
 
 		void RenderPlane(glutil::MatrixStack& modelMatrix);
 		void RenderCubes(glutil::MatrixStack& modelMatrix);

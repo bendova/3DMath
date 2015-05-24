@@ -2,11 +2,13 @@
 #include "GL/freeglut.h"
 #include <memory>
 #include "Scene.h"
+#include "UnitTestRunner.h"
 
 std::unique_ptr<MyCode::Scene> gScene;
 
 void init()
 {
+	MyCode::UnitTestRunner::RunUnitTests();
 	gScene = std::unique_ptr<MyCode::Scene>(new MyCode::Scene());
 }
 
