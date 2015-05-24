@@ -1,5 +1,5 @@
 #include "UT_CubeCollider.h"
-#include "../framework/UT_Util.h"
+#include "../framework/UTUtil.h"
 #include "../framework/MathUtil.h"
 
 namespace MyCode
@@ -28,22 +28,22 @@ namespace MyCode
 		const glm::vec3 cubeCenter{ 0.0f, 0.0f, 0.0f };
 		Cube c{ cubeCenter, cubeVertices };
 
-		const Rectangle expectedFrontFace{bottomA, bottomB, topB, topA};
+		const Polygon expectedFrontFace{bottomA, bottomB, topB, topA};
 		const bool isFrontFaceValid = CHECK_IS_TRUE(expectedFrontFace == c.FrontFace());
 
-		const Rectangle expectedRightFace{ bottomB, bottomC, topC, topB };
+		const Polygon expectedRightFace{ bottomB, bottomC, topC, topB };
 		const bool isRightFaceValid = CHECK_IS_TRUE(expectedRightFace == c.RightFace());
 
-		const Rectangle expectedBackFace{ bottomC, bottomD, topD, topC };
+		const Polygon expectedBackFace{ bottomC, bottomD, topD, topC };
 		const bool isBackFaceValid = CHECK_IS_TRUE(expectedBackFace == c.BackFace());
 
-		const Rectangle expectedLeftFace{ bottomD, bottomA, topA, topD };
+		const Polygon expectedLeftFace{ bottomD, bottomA, topA, topD };
 		const bool isLeftFaceValid = CHECK_IS_TRUE(expectedLeftFace == c.LeftFace());
 
-		const Rectangle expectedBottomFace{ bottomA, bottomB, bottomC, bottomD };
+		const Polygon expectedBottomFace{ bottomA, bottomB, bottomC, bottomD };
 		const bool isBottomFaceValid = CHECK_IS_TRUE(expectedBottomFace == c.BottomFace());
 
-		const Rectangle expectedTopFace{ topA, topB, topC, topD };
+		const Polygon expectedTopFace{ topA, topB, topC, topD };
 		const bool isTopFaceValid = CHECK_IS_TRUE(expectedTopFace == c.TopFace());
 
 		return (isFrontFaceValid && isRightFaceValid && isBackFaceValid 

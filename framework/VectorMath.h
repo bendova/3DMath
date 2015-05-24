@@ -36,27 +36,26 @@ namespace MyCode
 			Color color;
 		};
 
-		float IsIntersectionFactorOnSegment(const float factor);
-		float IsIntersectionFactorOnSegmentStrictly(const float factor);
+		float FloorWithPrecision(const float x, const int precision);
+		double FloorWithPrecision(const double x, const int precision);
+		void Floor(glm::vec3& v, const int precision = 5);
+		void Floor(glm::vec4& v, const int precision = 5);
 
-		bool DoLineSegmentsIntersectStrictly(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, const glm::vec3& d);
-		bool DoLineSegmentsIntersectStrictly(const glm::vec4& a, const glm::vec4& b, const glm::vec4& c, const glm::vec4& d);
+		float IsIntersectionFactorOnSegment(const float factor, const bool strictly = false);
 
 		float GetDistanceFromPointToLine(const glm::vec3& p, const glm::vec3& a, const glm::vec3& b);
 		
 		glm::vec3 GetProjectionPointOnPlane(const glm::vec3& pointToProject, const glm::vec3& pointInPlane, const glm::vec3& planeNormal);
 		float GetDistanceBetweenPointAndPlane(const glm::vec3& pointToProject, const glm::vec3& pointInPlane, const glm::vec3& planeNormal);
-		bool IsPointOnSameSideOfPlane(const glm::vec3& pointToProject, const glm::vec3& pointInPlane, const glm::vec3& planeNormal);
 
 		bool IsPointInPlane(const glm::vec4& planePointA, const glm::vec4& planePointB,
 			const glm::vec4& planePointC, const glm::vec4& point);
 		bool IsPointInPlane(const glm::vec3& planePointA, const glm::vec3& planePointB,
 			const glm::vec3& planePointC, const glm::vec3& point);
 
-		float FloorWithPrecision(const float x, const int precision);
-		double FloorWithPrecision(const double x, const int precision);
-		void Floor(glm::vec3& v, const int precision = 5);
-		void Floor(glm::vec4& v, const int precision = 5);
+		bool ArePointsCollinear(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c);
+		bool DoesLineSegmentIntersectPolygon(const glm::vec3& a, const glm::vec3& b, const std::vector<glm::vec3>& polygon,
+			const bool strictly = false);
 
 		template<typename T>
 		std::pair<float, bool> GetSegmentIntersectionFactor(const T& a, const T& b, const T& c, const T& d)
@@ -78,25 +77,18 @@ namespace MyCode
 		}
 
 		template<typename T>
-		bool DoLineSegmentsIntersect(const T& a, const T& b, const T& c, const T& d)
+		bool DoLineSegmentsIntersect(const T& a, const T& b, const T& c, const T& d, const bool strictly = false)
 		{
-			const T intersectionPoint = GetIntersectionPointBetweenSegments(a, b, c, d);
-			return (intersectionPoint.w != 0);
-		}
-
-		template<typename T>
-		T GetIntersectionPointBetweenSegments(const T& a, const T& b, const T& c, const T& d)
-		{
-			T intersectionPoint{ 0.0f };
+			bool doTheyIntersect = false;
 
 			const auto factorAB = GetSegmentIntersectionFactor(a, b, c, d);
 			const auto factorCD = GetSegmentIntersectionFactor(c, d, a, b);
-			if (factorAB.second && IsIntersectionFactorOnSegment(factorAB.first) &&
-				factorCD.second && IsIntersectionFactorOnSegment(factorCD.first))
+			if (factorAB.second && IsIntersectionFactorOnSegment(factorAB.first, strictly) &&
+				factorCD.second && IsIntersectionFactorOnSegment(factorCD.first, strictly))
 			{
-				intersectionPoint = a + factorAB.first * (b - a);
+				doTheyIntersect = true;
 			}
-			return intersectionPoint;
+			return doTheyIntersect;
 		}
 
 		template<typename T>
@@ -128,21 +120,6 @@ namespace MyCode
 				intersection.second = true;
 			}
 			return intersection;
-		}
-
-		template<typename T>
-		T GetIntersectionPointBetweenSegmentsStrictly(const T& a, const T& b, const T& c, const T& d)
-		{
-			T intersectionPoint{ 0.0f };
-
-			const auto factorAB = GetSegmentIntersectionFactor(a, b, c, d);
-			const auto factorCD = GetSegmentIntersectionFactor(c, d, a, b);
-			if (factorAB.second && IsIntersectionFactorOnSegmentStrictly(factorAB.first) &&
-				factorCD.second && IsIntersectionFactorOnSegmentStrictly(factorCD.first))
-			{
-				intersectionPoint = a + factorAB.first * (b - a);
-			}
-			return intersectionPoint;
 		}
 
 		template<typename T>
@@ -201,10 +178,9 @@ namespace MyCode
 						const auto& a = polygon[i];
 						const auto& b = polygon[(i + 1) % pointsCount];
 						const auto& c = polygon[(i + 2) % pointsCount];
-						const bool isInsideOfSide = IsPointInsideOfSide(a, b, c, point);
-						if (isInsideOfSide == false)
+						isInsidePolygon = IsPointInsideOfSide(a, b, c, point);
+						if (isInsidePolygon == false)
 						{
-							isInsidePolygon = false;
 							break;
 						}
 					}

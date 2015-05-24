@@ -9,7 +9,7 @@
 #include "Scene.h"
 #include "programs/PosColorProgram.h"
 #include "control/ControlHelper.h"
-#include "intersection/RectangleColider.h"
+#include "intersection2d/RectangleColider.h"
 #include "../framework/MyMesh.h"
 
 namespace glutil
@@ -51,10 +51,12 @@ namespace MyCode
 		};
 		
 		void InitCubes();
-		void InitRectangleCollider();
-		void ValidateRectangleCollider();
+		
+		void InitColliderForPolygons2D();
+		void ValidateColliderForPolygons2D();
 
 		void InitCubeCollider();
+		void ValidateColliderForPolygons3D();
 		void ValidateCubeCollider();
 
 		void RenderPlane(glutil::MatrixStack& modelMatrix);

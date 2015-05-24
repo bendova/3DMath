@@ -25,7 +25,7 @@ namespace MyCode
 
 	glm::vec3 RectangleColider::GetPositionThatAvoidCollisions(const Rectangle& rectangle, glm::vec3 targetCenter) const
 	{
-		using namespace PolygonCollision;
+		using namespace Intersection2D;
 		using namespace RectangleColiderHelpers;
 
 		bool wasCollisionFound = false;
@@ -75,7 +75,7 @@ namespace MyCode
 			Log("GetValidCenter() targetCenter = [%f, %f, %f]\n", targetCenter.x, targetCenter.y, targetCenter.z);
 			Log("GetValidCenter() obstacle.Center() = [%f, %f, %f]\n", obstacle.Center().x, obstacle.Center().y, obstacle.Center().z);
 
-			using namespace PolygonCollision;
+			using namespace Intersection2D;
 			using namespace CollisionAvoidance;
 
 			const std::vector<glm::vec3> verticesOfR1{ rectangle.A(), rectangle.B(), rectangle.C(), rectangle.D() };
@@ -83,7 +83,7 @@ namespace MyCode
 			const glm::vec3& currentCenter{ rectangle.Center() };
 
 			glm::vec3 validCenter{ targetCenter };
-			if (PolygonIntersection2D::DoPolygonsIntersect2D(verticesOfR1, verticesOfR2))
+			if (PolygonIntersection::DoPolygonsIntersect2D(verticesOfR1, verticesOfR2))
 			{
 				const glm::vec3 directionVector{ targetCenter - currentCenter };
 				const glm::vec3 centersVector{ currentCenter - obstacle.Center() };
@@ -124,189 +124,203 @@ namespace MyCode
 		}
 	}
 
-	namespace PolygonCollision
+	namespace Intersection2D
 	{
-
-		namespace PolygonIntersection2D
+		namespace PolygonIntersection
 		{
 			bool DoPolygonsIntersect2D(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b)
 			{
+				using namespace Detail;
+
 				bool doTheyOverlap = false;
-				const bool overlapAB = DoPolygonProjectionsIntersect(a, b);
-				if (overlapAB)
+
+				const IntersectionType intersectionType = GetIntersectionType(a, b);
+				switch (intersectionType)
 				{
-					doTheyOverlap = DoPolygonProjectionsIntersect(b, a);
+				case IntersectionType::POLYGON_WITH_POLYGON:
+					doTheyOverlap = PolygonsIntersection::DoCoplanarPolygonsIntersect(a, b);
+					break;
+				case IntersectionType::POLYGON_WITH_LINE_SEGMENT:
+					doTheyOverlap = DoPolygonWithLineSegmentIntersection(a, b);
+					break;
+				case IntersectionType::LINE_SEGMENT_WITH_POLYGON:
+					doTheyOverlap = DoPolygonWithLineSegmentIntersection(b, a);
+					break;
+				case IntersectionType::LINE_SEGMENT_WITH_LINE_SEGMENT:
+					doTheyOverlap = DoLineSegmentsIntersection(a, b);
+					break;
 				}
 
 				return doTheyOverlap;
 			}
 
-			bool DoPolygonProjectionsIntersect(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2)
+			namespace Detail
 			{
-				bool doTheyIntersect = true;
-				const auto pointsCount = polygon1.size();
-				for (unsigned i = 0; i < pointsCount; ++i)
+				IntersectionType GetIntersectionType(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b)
 				{
-					const auto& a = polygon1[i];
-					const auto& b = polygon1[(i + 1) % pointsCount];
-
-					if (a == b)
+					IntersectionType intersectionType = IntersectionType::POLYGON_WITH_POLYGON;
+					const bool isLineSegmentA = IsLineSegment(a);
+					const bool isLineSegmentB = IsLineSegment(b);
+					if (isLineSegmentA && isLineSegmentB)
 					{
-						doTheyIntersect = IsPointInsidePolygon(polygon2, a);
+						intersectionType = IntersectionType::LINE_SEGMENT_WITH_LINE_SEGMENT;
 					}
-					else
+					else if (isLineSegmentA)
 					{
-						doTheyIntersect = DoPolygonToAxisIntersection(polygon1, polygon2, a, b);
+						intersectionType = IntersectionType::LINE_SEGMENT_WITH_POLYGON;
 					}
-
-					if (doTheyIntersect == false)
+					else if (isLineSegmentB)
 					{
-						break;
+						intersectionType = IntersectionType::POLYGON_WITH_LINE_SEGMENT;
 					}
+					return intersectionType;
 				}
 
-				return doTheyIntersect;
-			}
-
-			bool DoPolygonToAxisIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2,
-				const glm::vec3& axisA, const glm::vec3& axisB)
-			{
-				const auto projPolygon1 = ProjectPolygonToAxis(polygon1, axisA, axisB);
-				const auto projPolygon2 = ProjectPolygonToAxis(polygon2, axisA, axisB);
-
-				const bool doTheyIntersect = DoColinearLineSegmentsIntersect(
-					projPolygon1.first, projPolygon1.second,
-					projPolygon2.first, projPolygon2.second);
-
-				return doTheyIntersect;
-			}
-
-			bool DoColinearLineSegmentsIntersect(const float& factorA, const float& factorB,
-				const float& factorC, const float& factorD)
-			{
-				const bool doTheyIntersect = DoSegmentsIntersect(factorA, factorB, factorC, factorD)
-					|| DoSegmentsIntersect(factorC, factorD, factorA, factorB);
-				return (doTheyIntersect);
-			}
-
-			bool DoSegmentsIntersect(const float& factorA, const float& factorB,
-				const float& factorC, const float& factorD)
-			{
-				return !((factorC >= factorB) || (factorA >= factorD));
-			}
-
-			std::pair<float, float> ProjectPolygonToAxis(const std::vector<glm::vec3>& polygon,
-				const glm::vec3& axisPointA, const glm::vec3& axisPointB)
-			{
-				float leftEdgeFactor = FLT_MAX;
-				float rightEdgeFactor = -FLT_MAX;
-
-				const glm::vec3 lineDirection = axisPointB - axisPointA;
-				const glm::vec3::value_type lineDirectionLengthSquared = glm::dot(lineDirection, lineDirection);
-
-				for (unsigned i = 0; i < polygon.size(); ++i)
+				bool IsLineSegment(const std::vector<glm::vec3>& points)
 				{
-					const glm::vec3 vectorFromLineToPoint = polygon[i] - axisPointA;
-					const glm::vec3::value_type factor = glm::dot(lineDirection, vectorFromLineToPoint) / lineDirectionLengthSquared;
-					if (factor < leftEdgeFactor)
+					std::vector<glm::vec3> distinctPoints{ GetPairwiseDistinctPoints(points, 3) };
+					bool isLineSegment = true;
+					if (distinctPoints.size() == 3)
 					{
-						leftEdgeFactor = factor;
+						isLineSegment = VectorMath::ArePointsCollinear(distinctPoints[0],
+									distinctPoints[1], distinctPoints[2]);
 					}
-					if (factor > rightEdgeFactor)
+					return isLineSegment;
+				}
+
+				std::vector<glm::vec3> GetPairwiseDistinctPoints(const std::vector<glm::vec3>& points, const int count)
+				{
+					std::vector<glm::vec3> distinctPoints;
+					distinctPoints.push_back(points[0]);
+					for (unsigned i = 1; i < points.size(); ++i)
 					{
-						rightEdgeFactor = factor;
+						const auto& point = points[i];
+						if (point != distinctPoints.back())
+						{
+							distinctPoints.push_back(point);
+							if (distinctPoints.size() == count)
+							{
+								break;
+							}
+						}
 					}
+					return distinctPoints;
 				}
-				return std::make_pair(leftEdgeFactor, rightEdgeFactor);
-			}
 
-			bool DoPolygonToPointIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2,
-				const glm::vec3& point)
-			{
-				const float minDistanceToPolygon1 = GetMinDistanceFromPolygonToPoint(polygon1, point);
-				const float minDistanceToPolygon2 = GetMinDistanceFromPolygonToPoint(polygon2, point);
-				//FIXME this is still incorrect
-				return (minDistanceToPolygon1 == minDistanceToPolygon2);
-			}
-
-			float GetMinDistanceFromPolygonToPoint(const std::vector<glm::vec3>& polygon,
-				const glm::vec3& point)
-			{
-				float minDistance = FLT_MAX;
-				for (const glm::vec3& vertex: polygon)
+				std::pair<glm::vec3, glm::vec3> GetLineSegmentFromCollinearPoints(const std::vector<glm::vec3>& collinearPoints)
 				{
-					const float distance = glm::length(vertex - point);
-					if (distance < minDistance)
+					std::vector<glm::vec3> distinctPoints{ GetPairwiseDistinctPoints(collinearPoints, 2) };
+					std::pair<float, float> edgeFactors = PolygonsIntersection::ProjectPolygonToAxis(collinearPoints, 
+						distinctPoints[0], distinctPoints[1]);
+					const glm::vec3 directionVector = distinctPoints[1] - distinctPoints[0];
+					const glm::vec3 leftEdge = distinctPoints[0] + edgeFactors.first * directionVector;
+					const glm::vec3 rightEdge = distinctPoints[0] + edgeFactors.second * directionVector;
+					return std::make_pair(leftEdge, rightEdge);
+				}
+
+				bool DoPolygonWithLineSegmentIntersection(const std::vector<glm::vec3>& polygon, 
+					const std::vector<glm::vec3>& collinearPoints)
+				{
+					const auto lineSegment = GetLineSegmentFromCollinearPoints(collinearPoints);
+					const bool doTheyIntersect = VectorMath::DoesLineSegmentIntersectPolygon(lineSegment.first, lineSegment.second,
+						polygon, true);
+					return doTheyIntersect;
+				}
+
+				bool DoLineSegmentsIntersection(const std::vector<glm::vec3>& collinearPointsA, 
+					const std::vector<glm::vec3>& collinearPointsB)
+				{
+					const auto lineSegmentA = GetLineSegmentFromCollinearPoints(collinearPointsA);
+					const auto lineSegmentB = GetLineSegmentFromCollinearPoints(collinearPointsB);
+					const bool doTheyIntersect = VectorMath::DoLineSegmentsIntersect(lineSegmentA.first, lineSegmentA.second,
+						lineSegmentB.first, lineSegmentB.second);
+					return doTheyIntersect;
+				}
+
+				namespace PolygonsIntersection
+				{
+					bool DoCoplanarPolygonsIntersect(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b)
 					{
-						minDistance = distance;
+						bool doTheyOverlap = DoPolygonsSideIntersection(a, b);
+						if (doTheyOverlap)
+						{
+							doTheyOverlap = DoPolygonsSideIntersection(b, a);
+						}
+						return doTheyOverlap;
 					}
-				}
-				return minDistance;
-			}
-		}
 
-		namespace PolygonIntersection3D
-		{
-			bool DoPolygonsIntersect3D(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b)
-			{
-				// for each polygon
-				// determine 3 coordinate axis that cross through it
-				// project both polygons on the 3 planes determined by those axes
-				// check the intersections of the shadows
-
-				bool doTheyOverlap = false;
-				const bool overlapAB = DoPolygonProjectionsIntersect(a, b);
-				if (overlapAB)
-				{
-					doTheyOverlap = DoPolygonProjectionsIntersect(b, a);
-				}
-
-				return doTheyOverlap;
-			}
-
-			bool DoPolygonProjectionsIntersect(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b)
-			{
-				using namespace PolygonIntersection2D;
-
-				bool doTheyIntersect = true;
-				const std::vector<Plane> planes = GetCoordinatePlanesRelativeToPlane(a);
-				for (const auto& plane: planes)
-				{
-					const std::vector<glm::vec3> projectionA = GetPolygonProjectionToPlane(a, plane);
-					const std::vector<glm::vec3> projectionB = GetPolygonProjectionToPlane(b, plane);
-					doTheyIntersect = DoPolygonsIntersect2D(projectionA, projectionB);
-					if (doTheyIntersect == false)
+					bool DoPolygonsSideIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2)
 					{
-						break;
+						bool doTheyIntersect = true;
+						const auto pointsCount = polygon1.size();
+						for (unsigned i = 0; i < pointsCount; ++i)
+						{
+							const auto& a = polygon1[i];
+							const auto& b = polygon1[(i + 1) % pointsCount];
+
+							doTheyIntersect = DoPolygonToAxisIntersection(polygon1, polygon2, a, b);
+
+							if (doTheyIntersect == false)
+							{
+								break;
+							}
+						}
+
+						return doTheyIntersect;
+					}
+
+					bool DoPolygonToAxisIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2,
+						const glm::vec3& axisA, const glm::vec3& axisB)
+					{
+						const auto projPolygon1 = ProjectPolygonToAxis(polygon1, axisA, axisB);
+						const auto projPolygon2 = ProjectPolygonToAxis(polygon2, axisA, axisB);
+
+						const bool doTheyIntersect = DoColinearLineSegmentsIntersect(
+							projPolygon1.first, projPolygon1.second,
+							projPolygon2.first, projPolygon2.second);
+
+						return doTheyIntersect;
+					}
+
+					bool DoColinearLineSegmentsIntersect(const float& factorA, const float& factorB,
+						const float& factorC, const float& factorD)
+					{
+						const bool doTheyIntersect = DoSegmentsIntersect(factorA, factorB, factorC, factorD)
+							|| DoSegmentsIntersect(factorC, factorD, factorA, factorB);
+						return (doTheyIntersect);
+					}
+
+					bool DoSegmentsIntersect(const float& factorA, const float& factorB,
+						const float& factorC, const float& factorD)
+					{
+						return !((factorC >= factorB) || (factorA >= factorD));
+					}
+
+					std::pair<float, float> ProjectPolygonToAxis(const std::vector<glm::vec3>& polygon,
+						const glm::vec3& axisPointA, const glm::vec3& axisPointB)
+					{
+						float leftEdgeFactor = FLT_MAX;
+						float rightEdgeFactor = -FLT_MAX;
+
+						const glm::vec3 lineDirection = axisPointB - axisPointA;
+						const glm::vec3::value_type lineDirectionLengthSquared = glm::dot(lineDirection, lineDirection);
+
+						for (unsigned i = 0; i < polygon.size(); ++i)
+						{
+							const glm::vec3 vectorFromLineToPoint = polygon[i] - axisPointA;
+							const glm::vec3::value_type factor = glm::dot(lineDirection, vectorFromLineToPoint) / lineDirectionLengthSquared;
+							if (factor < leftEdgeFactor)
+							{
+								leftEdgeFactor = factor;
+							}
+							if (factor > rightEdgeFactor)
+							{
+								rightEdgeFactor = factor;
+							}
+						}
+						return std::make_pair(leftEdgeFactor, rightEdgeFactor);
 					}
 				}
-				return doTheyIntersect;
-			}
-
-			std::vector<Plane> GetCoordinatePlanesRelativeToPlane(const std::vector<glm::vec3>& a)
-			{
-				const glm::vec3& pointA = a[0];
-				const glm::vec3& pointB = a[1];
-				const glm::vec3& pointC = a[2];
-				const glm::vec3 normal1 = pointB - pointA;
-				const glm::vec3 normal2 = glm::cross(normal1, (pointC - pointA));
-				const glm::vec3 normal3 = glm::cross(normal1, normal2);
-
-				std::vector<Plane> axes;
-				axes.emplace_back(pointA, normal1);
-				axes.emplace_back(pointA, normal2);
-				axes.emplace_back(pointA, normal3);
-				return axes;
-			}
-
-			std::vector<glm::vec3> GetPolygonProjectionToPlane(const std::vector<glm::vec3>& polygon, const Plane& plane)
-			{
-				std::vector<glm::vec3> projection;
-				for (const auto& vertice: polygon)
-				{
-					projection.push_back(GetProjectionPointOnPlane(vertice, plane.mPoint, plane.mNormal));
-				}
-				return projection;
 			}
 		}
 
@@ -316,7 +330,7 @@ namespace MyCode
 			{
 				const auto travelPathPolygon = TravelPathBounding::GetTravelPathBounding(rectangle, targetCenter);
 				const std::vector<glm::vec3> obstacleVertices{ obstacle.A(), obstacle.B(), obstacle.C(), obstacle.D() };
-				bool doTheyOverlap = PolygonIntersection2D::DoPolygonsIntersect2D(travelPathPolygon, obstacleVertices);
+				bool doTheyOverlap = PolygonIntersection::DoPolygonsIntersect2D(travelPathPolygon, obstacleVertices);
 				return doTheyOverlap;
 			}
 

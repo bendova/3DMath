@@ -3,7 +3,7 @@
 
 #include <glm/glm.hpp>
 #include <utility>
-#include "../intersection/RectangleColider.h"
+#include "../intersection2d/RectangleColider.h"
 
 namespace MyCode
 {

@@ -63,10 +63,10 @@ namespace MyCode
 		{
 			const int sideStartIndex = i;
 			const int sideEndIndex = (i + 1) % VERTICES_COUNT;
-			const auto point = GetIntersectionPointBetweenSegments(vertices[sideStartIndex], vertices[sideEndIndex], segmentStart, segmentEnd);
-			if (point.w != 0.0f)
+			const auto point = GetLineSegmentsIntersection(vertices[sideStartIndex], vertices[sideEndIndex], segmentStart, segmentEnd);
+			if (point.second != 0.0f)
 			{
-				intersectionPoints.push_back(point);
+				intersectionPoints.push_back(point.first);
 			}
 		}
 		std::sort(intersectionPoints.begin(), intersectionPoints.end(), [&segmentStart](Point &a, Point &b)

@@ -37,7 +37,7 @@ namespace MyCode
 		const glm::vec3 c = mCenter + mBottomTopFacesVectorsCCW[indexC];
 		const glm::vec3 d = mCenter + mBottomTopFacesVectorsCCW[indexD];
 
-		mFaces.emplace_back(a, b, c, d);
+		mFaces.push_back(Polygon{ a, b, c, d });
 	}
 
 	void Cube::SetCenter(const glm::vec3& newCenter)

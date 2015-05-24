@@ -73,16 +73,6 @@ namespace MyCode
 			bool NoCollisionOfRotatedRectangles();
 		};
 
-		class CollisionTest3D
-		{
-		public:
-			bool Run();
-		private:
-			bool NoCollision();
-			bool PointToPlaneProjection();
-			bool CrossCollision();
-		};
-
 		class BoundingPathTest
 		{
 		public:

@@ -1,6 +1,7 @@
 #include "CubeCollider.h"
-#include "RectangleColider.h"
+#include "../intersection2d/RectangleColider.h"
 #include <algorithm>
+#include "PolygonCollider.h"
 
 namespace MyCode
 {
@@ -44,15 +45,15 @@ namespace MyCode
 		{
 			using namespace TravelPathIntersection;
 
-			RectangleColider rectangleCollider;
-			rectangleCollider.AddRectangles(obstacle.GetFaces());
+			PolygonCollider polygonCollider;
+			polygonCollider.AddPolygons(obstacle.GetFaces());
 
 			glm::vec3 directionVector = targetCenter - cube.GetCenter();
 			for (int i = 0; i < cube.FacesCount(); ++i)
 			{
-				const Rectangle& face = cube[i];
+				const Polygon& face = cube[i];
 				const glm::vec3 faceTargetCenter = face.Center() + directionVector;
-				const glm::vec3 validTargetCenter = rectangleCollider.GetPositionThatAvoidCollisions(face, faceTargetCenter);
+				const glm::vec3 validTargetCenter = polygonCollider.GetPositionThatAvoidCollisions(face, faceTargetCenter);
 				if (validTargetCenter != faceTargetCenter)
 				{
 					directionVector = validTargetCenter - face.Center();
@@ -74,9 +75,9 @@ namespace MyCode
 			// project the 3D objects and then check their shadows for intersection
 			for (int i = 0; i < cube.FacesCount(); ++i)
 			{
-				const Rectangle& face = cube[i];
+				const Polygon& face = cube[i];
 				const glm::vec3 faceTargetCenter = face.Center() + directionVector;
-				doesItCollide = DoesTravellingRectangleCollideCube(face, faceTargetCenter, obstacle);
+				doesItCollide = DoesTravelPathCollideCube(face, faceTargetCenter, obstacle);
 				if (doesItCollide)
 				{
 					break;
@@ -85,13 +86,13 @@ namespace MyCode
 			return doesItCollide;
 		}
 
-		bool DoesTravellingRectangleCollideCube(const Rectangle& target, const glm::vec3& targetCenter, const Cube& obstacle)
+		bool DoesTravelPathCollideCube(const Polygon& target, const glm::vec3& targetCenter, const Cube& obstacle)
 		{
-			using namespace PolygonCollision;
+			using namespace Intersection3D;
 			bool doesItCollide = false;
 			for (int i = 0; i < obstacle.FacesCount(); ++i)
 			{
-				const Rectangle& obstacleFace = obstacle[i];
+				const Polygon& obstacleFace = obstacle[i];
 				doesItCollide = TravelPathBounding::DoesTravelPathCollide(target, targetCenter, obstacleFace);
 				if (doesItCollide)
 				{

@@ -4,18 +4,14 @@ namespace MyCode
 {
 	namespace VectorMath
 	{
-		float IsIntersectionFactorOnSegmentStrictly(const float factor)
+		float IsIntersectionFactorOnSegment(const float factor, const bool strictly)
 		{
 			const float minFactor = 0.0f;
 			const float maxFactor = 1.0f;
-			return ((minFactor < factor) && (factor < maxFactor));
-		}
-
-		float IsIntersectionFactorOnSegment(const float factor)
-		{
-			const float minFactor = 0.0f;
-			const float maxFactor = 1.0f;
-			return ((minFactor <= factor) && (factor <= maxFactor));
+			
+			const bool isOnSegment = (strictly) ? ((minFactor < factor) && (factor < maxFactor))
+												: ((minFactor <= factor) && (factor <= maxFactor));
+			return isOnSegment;
 		}
 
 		float FloorWithPrecision(const float x, const int precision)
@@ -67,32 +63,10 @@ namespace MyCode
 			return distanceToLine;
 		}
 
-		bool DoLineSegmentsIntersectStrictly(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, const glm::vec3& d)
-		{
-			bool doTheyIntersect = false;
-
-			const auto factorAB = GetSegmentIntersectionFactor(a, b, c, d);
-			const auto factorCD = GetSegmentIntersectionFactor(c, d, a, b);
-			if (factorAB.second && IsIntersectionFactorOnSegmentStrictly(factorAB.first) &&
-				factorCD.second && IsIntersectionFactorOnSegmentStrictly(factorCD.first))
-			{
-				doTheyIntersect = true;
-			}
-			return doTheyIntersect;
-		}
-
-		bool DoLineSegmentsIntersectStrictly(const glm::vec4& a, const glm::vec4& b, const glm::vec4& c, const glm::vec4& d)
-		{
-			const glm::vec4 intersectionPoint = GetIntersectionPointBetweenSegmentsStrictly(a, b, c, d);
-			return (intersectionPoint.w != 0);
-		}
-
 		glm::vec3 GetProjectionPointOnPlane(const glm::vec3& pointToProject, const glm::vec3& pointInPlane, const glm::vec3& planeNormal)
 		{
 			const float distance = GetDistanceBetweenPointAndPlane(pointToProject, pointInPlane, planeNormal);
-			const bool isPointOnSameSide = IsPointOnSameSideOfPlane(pointToProject, pointInPlane, planeNormal);
-			const int signOfDisplacement = (isPointOnSameSide) ? -1 : 1;
-			const float factor = signOfDisplacement * (distance / glm::length(planeNormal));
+			const float factor = (distance / glm::length(planeNormal));
 			const glm::vec3 projectedPoint = pointToProject + factor * planeNormal;
 			return projectedPoint;
 		}
@@ -100,15 +74,9 @@ namespace MyCode
 		float GetDistanceBetweenPointAndPlane(const glm::vec3& pointToProject, const glm::vec3& pointInPlane, const glm::vec3& planeNormal)
 		{
 			const glm::vec3 vectorFromPlaneToPoint = pointToProject - pointInPlane;
-			const float distance = glm::dot(vectorFromPlaneToPoint, planeNormal) / glm::length(planeNormal);
-			return distance;
-		}
-
-		bool IsPointOnSameSideOfPlane(const glm::vec3& pointToProject, const glm::vec3& pointInPlane, const glm::vec3& planeNormal)
-		{
-			const glm::vec3 vectorFromPlaneToPoint = pointToProject - pointInPlane;
 			const float dotValue = glm::dot(vectorFromPlaneToPoint, planeNormal);
-			return (dotValue >= 0);
+			const float distance = -dotValue / glm::length(planeNormal);
+			return distance;
 		}
 
 		bool IsPointInPlane(const glm::vec4& planePointA, const glm::vec4& planePointB,
@@ -127,6 +95,35 @@ namespace MyCode
 			const glm::vec3 ap = point - planePointA;
 			const bool isInPlane = (glm::dot(planeNormal, ap) == 0);
 			return isInPlane;
+		}
+
+		bool ArePointsCollinear(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c)
+		{
+			const glm::vec3 ab = b - a;
+			const glm::vec3 ac = c - a;
+			const auto dotValue = glm::dot(ab, ac);
+			const float lengthsProduct = (glm::length(ab) * glm::length(ac));
+			const bool areCollinear = (std::abs(dotValue) == lengthsProduct);
+			return areCollinear;
+		}
+
+		bool DoesLineSegmentIntersectPolygon(const glm::vec3& segmentA, const glm::vec3& segmentB, const std::vector<glm::vec3>& polygon,
+			const bool strictly)
+		{
+			bool doTheyIntersect = false;
+			const auto pointsCount = polygon.size();
+			for (size_t i = 0; i < pointsCount; ++i)
+			{
+				const auto& a = polygon[i];
+				const auto& b = polygon[(i + 1) % pointsCount];
+				doTheyIntersect = (strictly) ? DoLineSegmentsIntersect(segmentA, segmentB, a, b)
+											: DoLineSegmentsIntersect(segmentA, segmentB, a, b);
+				if (doTheyIntersect)
+				{
+					break;
+				}
+			}
+			return doTheyIntersect;
 		}
 	}
 }

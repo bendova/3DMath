@@ -27,7 +27,7 @@ namespace MyCode
 		void CollisionSanityCheck(const Rectangle& target, const glm::vec3& newTargetCenter, const Rectangle& obstacle);
 	}
 
-	namespace PolygonCollision
+	namespace Intersection2D
 	{
 		struct Collision
 		{
@@ -35,44 +35,45 @@ namespace MyCode
 			glm::vec3 mPointOfCollision;
 		};
 
-		namespace PolygonIntersection2D
+		namespace PolygonIntersection
 		{
 			bool DoPolygonsIntersect2D(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b);
-			bool DoPolygonProjectionsIntersect(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2);
 
-			bool DoPolygonToAxisIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2,
-				const glm::vec3& axisA, const glm::vec3& axisB);
-			
-			std::pair<float, float> ProjectPolygonToAxis(const std::vector<glm::vec3>& polygon,
-				const glm::vec3& axisPointA, const glm::vec3& axisPointB);
-			bool DoColinearLineSegmentsIntersect(const float& factorA, const float& factorB,
-				const float& factorC, const float& factorD);
-			bool DoSegmentsIntersect(const float& factorA, const float& factorB,
-				const float& factorC, const float& factorD);
-
-			bool DoPolygonToPointIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2,
-				const glm::vec3& axisA);
-			float GetMinDistanceFromPolygonToPoint(const std::vector<glm::vec3>& polygon,
-				const glm::vec3& point);
-		}
-
-		namespace PolygonIntersection3D
-		{
-			struct Plane
+			namespace Detail
 			{
-				Plane(const glm::vec3& point, const glm::vec3& normal)
-					: mPoint(point)
-					, mNormal(normal)
-				{}
+				enum class IntersectionType
+				{
+					POLYGON_WITH_POLYGON = 0,
+					POLYGON_WITH_LINE_SEGMENT,
+					LINE_SEGMENT_WITH_POLYGON,
+					LINE_SEGMENT_WITH_LINE_SEGMENT,
+				};
 
-				glm::vec3 mPoint;
-				glm::vec3 mNormal;
-			};
+				IntersectionType GetIntersectionType(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b);
+				bool IsLineSegment(const std::vector<glm::vec3>& points);
+				std::pair<glm::vec3, glm::vec3> GetLineSegmentFromCollinearPoints(const std::vector<glm::vec3>& collinearPoints);
+				std::vector<glm::vec3> GetPairwiseDistinctPoints(const std::vector<glm::vec3>& points, const int count);
+				bool DoPolygonWithLineSegmentIntersection(const std::vector<glm::vec3>& polygon,
+					const std::vector<glm::vec3>& collinearPoints);
+				bool DoLineSegmentsIntersection(const std::vector<glm::vec3>& collinearPointsA,
+					const std::vector<glm::vec3>& collinearPointsB);
 
-			bool DoPolygonsIntersect3D(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b);
-			bool DoPolygonProjectionsIntersect(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b);
-			std::vector<Plane> GetCoordinatePlanesRelativeToPlane(const std::vector<glm::vec3>& a);
-			std::vector<glm::vec3> GetPolygonProjectionToPlane(const std::vector<glm::vec3>& polygon, const Plane& plane);
+				namespace PolygonsIntersection
+				{
+					bool DoCoplanarPolygonsIntersect(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2);
+					bool DoPolygonsSideIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2);
+
+					bool DoPolygonToAxisIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2,
+						const glm::vec3& axisA, const glm::vec3& axisB);
+
+					std::pair<float, float> ProjectPolygonToAxis(const std::vector<glm::vec3>& polygon,
+						const glm::vec3& axisPointA, const glm::vec3& axisPointB);
+					bool DoColinearLineSegmentsIntersect(const float& factorA, const float& factorB,
+						const float& factorC, const float& factorD);
+					bool DoSegmentsIntersect(const float& factorA, const float& factorB,
+						const float& factorC, const float& factorD);
+				}
+			}
 		}
 
 		namespace TravelPathBounding
@@ -132,7 +133,6 @@ namespace MyCode
 				const CollisionAvoider::Avoidance avoidance = CollisionAvoider::Avoidance::OUTSIDE_IN);
 		}
 	}
-
 }
 
 

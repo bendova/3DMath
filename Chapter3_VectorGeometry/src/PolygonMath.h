@@ -112,10 +112,10 @@ namespace MyCode
 			const auto& c = q[2];
 			const auto& d = q[3];
 
-			return DoLineSegmentsIntersectStrictly(a, b, lineSegmentPointA, lineSegmentPointB)
-				|| DoLineSegmentsIntersectStrictly(b, c, lineSegmentPointA, lineSegmentPointB)
-				|| DoLineSegmentsIntersectStrictly(c, d, lineSegmentPointA, lineSegmentPointB)
-				|| DoLineSegmentsIntersectStrictly(d, a, lineSegmentPointA, lineSegmentPointB);
+			return DoLineSegmentsIntersect(a, b, lineSegmentPointA, lineSegmentPointB)
+				|| DoLineSegmentsIntersect(b, c, lineSegmentPointA, lineSegmentPointB)
+				|| DoLineSegmentsIntersect(c, d, lineSegmentPointA, lineSegmentPointB)
+				|| DoLineSegmentsIntersect(d, a, lineSegmentPointA, lineSegmentPointB);
 		}
 	}
 }

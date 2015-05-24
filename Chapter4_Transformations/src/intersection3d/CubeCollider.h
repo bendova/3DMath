@@ -27,7 +27,7 @@ namespace MyCode
 	namespace TravelPathIntersection
 	{
 		bool DoesTravelPathCollide(const Cube& cube, const glm::vec3& targetCenter, const Cube& obstacle);
-		bool DoesTravellingRectangleCollideCube(const Rectangle& target, const glm::vec3& targetCenter, const Cube& obstacle);
+		bool DoesTravelPathCollideCube(const Polygon& target, const glm::vec3& targetCenter, const Cube& obstacle);
 	}
 }
 

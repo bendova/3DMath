@@ -8,25 +8,7 @@
 
 namespace MyCode
 {
-	void Log(const char* format)
-	{
-		std::stringstream outStream;
-		while (format && *format)
-		{
-			const char currentChar = *format;
-			if (currentChar)
-			{
-				outStream << currentChar;
-
-				const char nextChar = *(++format);
-				if ((currentChar == '%') && (nextChar != '%'))
-				{
-					assert(false && "Log() Missing arguments in format!");
-				}
-			}
-		}
-		OutputDebugStringA(outStream.str().c_str());
-	}
+	void Log(const char* format);
 
 	template<typename T, typename... Args>
 	void Log(const char* format, T value, Args... args)

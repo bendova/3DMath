@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <glm/glm.hpp>
-#include "Rectangle.h"
+#include "Polygon.h"
 
 namespace MyCode
 {
@@ -13,20 +13,20 @@ namespace MyCode
 		Cube(const glm::vec3& center,
 			const std::vector<glm::vec3>& bottomTopFacesVectorsCCW);
 
-		const std::vector<Rectangle>& GetFaces() const { return mFaces; }
+		const std::vector<Polygon>& GetFaces() const { return mFaces; }
 		const glm::vec3& GetCenter() const { return mCenter; }
 		void SetCenter(const glm::vec3& newCenter);
 
 		int FacesCount() const { return FACES_COUNT; }
 
-		const Rectangle& FrontFace()	const { return mFaces[0]; }
-		const Rectangle& RightFace()	const { return mFaces[1]; }
-		const Rectangle& BackFace()		const { return mFaces[2]; }
-		const Rectangle& LeftFace()		const { return mFaces[3]; }
-		const Rectangle& BottomFace()	const { return mFaces[4]; }
-		const Rectangle& TopFace()		const { return mFaces[5]; }
+		const Polygon& FrontFace()	const { return mFaces[0]; }
+		const Polygon& RightFace()	const { return mFaces[1]; }
+		const Polygon& BackFace()		const { return mFaces[2]; }
+		const Polygon& LeftFace()		const { return mFaces[3]; }
+		const Polygon& BottomFace()	const { return mFaces[4]; }
+		const Polygon& TopFace()		const { return mFaces[5]; }
 
-		const Rectangle& operator[](const int index) const
+		const Polygon& operator[](const int index) const
 		{
 			return mFaces[index];
 		}
@@ -37,7 +37,7 @@ namespace MyCode
 
 		static const int FACES_COUNT;
 		glm::vec3 mCenter;
-		std::vector<Rectangle> mFaces;
+		std::vector<Polygon> mFaces;
 		const std::vector<glm::vec3> mBottomTopFacesVectorsCCW;
 	};
 }
