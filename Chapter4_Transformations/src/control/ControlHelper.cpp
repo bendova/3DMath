@@ -172,8 +172,8 @@ namespace MyCode
 		const glm::vec4 cubePlaneNormal{0.0f, 1.0f, 0.0f, 1.0f};
 
 		const auto ray = CastRayThroughPoint(screenX, screenY);
-		const VectorMath::MarginPoint<glm::vec4> rayOrigin{ ray.first, true, true };
-		const VectorMath::MarginPoint<glm::vec4> rayPoint{ ray.second, false, false };
+		const VectorMath::MarginPoint<glm::vec4> rayOrigin{ ray.first };
+		const VectorMath::MarginPoint<glm::vec4> rayPoint{ ray.second, VectorMath::MarginPoint<glm::vec4>::UNBOUNDED };
 		const auto intersection = VectorMath::GetIntersectionOfLineWithPlane3D(rayOrigin, rayPoint, cubeCenter, cubePlaneNormal);
 		return intersection.first;
 	}

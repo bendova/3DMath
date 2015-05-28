@@ -47,9 +47,11 @@ namespace MyCode
 			std::vector<glm::vec3> GetPolygonProjectionToPlane(const std::vector<glm::vec3>& polygon, const Plane& plane);
 		}
 
-		namespace PathCollisionDetection
+		namespace CollisionDetection
 		{
 			bool DoesPathCollide(const Polygon& target, const glm::vec3& targetCenter, const Polygon& obstacle);
+			bool DoesAnyVerticePathCollide(const std::vector<glm::vec3>& targetVertices, const glm::vec3& directionVector,
+				const std::vector<glm::vec3>& obstacleVertices);
 		}
 
 		namespace CollisionAvoidance

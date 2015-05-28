@@ -93,8 +93,7 @@ namespace MyCode
 			for (int i = 0; i < obstacle.FacesCount(); ++i)
 			{
 				const Polygon& obstacleFace = obstacle[i];
-				//FIXME
-				//doesItCollide = TravelPathBounding::DoesTravelPathCollide(target, targetCenter, obstacleFace);
+				doesItCollide = CollisionDetection::DoesPathCollide(target, targetCenter, obstacleFace);
 				if (doesItCollide)
 				{
 					break;

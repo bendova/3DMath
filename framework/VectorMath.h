@@ -107,24 +107,36 @@ namespace MyCode
 		template<typename T>
 		struct MarginPoint
 		{
-			MarginPoint(const T& point, const bool isBoundingPoint, 
-				const bool isClosed)
+			enum BoundingPointType
+			{
+				UNBOUNDED = 0,
+				BOUNDED,
+			};
+
+			enum PointType
+			{
+				CLOSED_ENDED = 0,
+				OPEN_ENDED,
+			};
+
+			MarginPoint(const T& point, const BoundingPointType boundingType = BOUNDED,
+				const PointType pointType = CLOSED_ENDED)
 				: mPoint(point)
-				, mIsBoundingPoint(isBoundingPoint)
-				, mIsClosed(isClosed)
+				, mBoundingPointType(boundingType)
+				, mPointEndType(pointType)
 			{}
 			const T mPoint;
-			const bool mIsBoundingPoint;
-			const bool mIsClosed;
+			const BoundingPointType mBoundingPointType;
+			const PointType mPointEndType;
 		};
 
 		template<typename T>
 		bool IsFactorValidForLeftMarginPoint(const float factor, const MarginPoint<T>& a)
 		{
 			bool isValid = true;
-			if (a.mIsBoundingPoint)
+			if (a.mBoundingPointType == MarginPoint<T>::BOUNDED)
 			{
-				if (a.mIsClosed)
+				if (a.mPointEndType == MarginPoint<T>::CLOSED_ENDED)
 				{
 					isValid = (factor >= 0.0f);
 				}
@@ -140,9 +152,9 @@ namespace MyCode
 		bool IsFactorValidForRightMarginPoint(const float factor, const MarginPoint<T>& b)
 		{
 			bool isValid = true;
-			if (b.mIsBoundingPoint)
+			if (b.mBoundingPointType == MarginPoint<T>::BOUNDED)
 			{
-				if (b.mIsClosed)
+				if (b.mPointEndType == MarginPoint<T>::CLOSED_ENDED)
 				{
 					isValid = (factor <= 1.0f);
 				}
@@ -266,8 +278,8 @@ namespace MyCode
 			const auto pointsCount = polygon.size();
 			for (size_t i = 0; i < pointsCount; ++i)
 			{
-				const MarginPoint<T> c{ polygon[i], true, true };
-				const MarginPoint<T> d{ polygon[(i + 1) % pointsCount], true, true };
+				const MarginPoint<T> c{ polygon[i] };
+				const MarginPoint<T> d{ polygon[(i + 1) % pointsCount] };
 				intersection = GetLinesIntersection(a, b, c, d);
 				if (intersection.second)
 				{
@@ -323,11 +335,10 @@ namespace MyCode
 		}
 
 		template<typename T>
-		std::pair<T, bool> GetIntersectionBetweenLineAndPolygon(const T& a, const T& b, const std::vector<T>& polygon)
+		std::pair<T, bool> GetIntersectionBetweenLineAndPolygon(const MarginPoint<T>& a, const MarginPoint<T>& b, 
+			const std::vector<T>& polygon)
 		{
-			const MarginPoint<T> marginA{ a, true, true };
-			const MarginPoint<T> marginB{ b, true, true };
-			const T lineDirection = b - a;
+			const T lineDirection = b.mPoint - a.mPoint;
 			const T& polygonPoint = polygon[0];
 			const T normalToPolygonPlane = T{ glm::cross(polygon[1] - polygonPoint, polygon[2] - polygonPoint) };
 			bool isSegmentInPolygonPlane = (glm::dot(normalToPolygonPlane, lineDirection) == 0);
@@ -335,11 +346,11 @@ namespace MyCode
 			std::pair<glm::vec3, bool> intersection{ T{0.0f}, false };
 			if (isSegmentInPolygonPlane)
 			{
-				intersection = GetIntersectionOfLineWithPolygon2D(marginA, marginB, polygon);
+				intersection = GetIntersectionOfLineWithPolygon2D(a, b, polygon);
 			}
 			else
 			{
-				intersection = GetIntersectionOfLineWithPlane3D(marginA, marginB, polygonPoint, normalToPolygonPlane);
+				intersection = GetIntersectionOfLineWithPlane3D(a, b, polygonPoint, normalToPolygonPlane);
 				if (intersection.second)
 				{
 					intersection.second = IsPointInsidePolygon(polygon, intersection.first);

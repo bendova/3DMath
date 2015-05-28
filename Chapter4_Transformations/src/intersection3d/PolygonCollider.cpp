@@ -33,9 +33,7 @@ namespace MyCode
 			const Polygon& obstacle = *r;
 			if (&target != &obstacle)
 			{
-				//FIXME
-				const bool doesTravelPathCollide = false;// TravelPathBounding::DoesTravelPathCollide(target, targetCenter, obstacle);
-				if (doesTravelPathCollide)
+				if (CollisionDetection::DoesPathCollide(target, targetCenter, obstacle))
 				{
 					wasCollisionFound = true;
 					targetCenter = GetValidCenter(target, obstacle, targetCenter);
@@ -191,34 +189,31 @@ namespace MyCode
 			}
 		}
 
-		namespace PathCollisionDetection
+		namespace CollisionDetection
 		{
 			bool DoesPathCollide(const Polygon& target, const glm::vec3& targetCenter, const Polygon& obstacle)
 			{
-				// FIXME This doesn't work.
-				// See UT_PolygonCollider::PathCollisionDetectionTest::NearSideCollision()
-
 				const auto& targetVertices = target.Vertices();
 				const auto& obstacleVertices = obstacle.Vertices();
 				const glm::vec3 directionVector{targetCenter - target.Center()};
+				const bool doesItCollide = DoesAnyVerticePathCollide(targetVertices, directionVector, obstacleVertices) ||
+										DoesAnyVerticePathCollide(obstacleVertices, -directionVector, targetVertices);
+				return doesItCollide;
+			}
+
+			bool DoesAnyVerticePathCollide(const std::vector<glm::vec3>& targetVertices, const glm::vec3& directionVector,
+				const std::vector<glm::vec3>& obstacleVertices)
+			{
 				bool doesItCollide = false;
-				for (const auto& vertex: targetVertices)
+				for (const auto& vertex : targetVertices)
 				{
-					if (VectorMath::GetIntersectionBetweenLineAndPolygon(vertex, vertex + directionVector, obstacleVertices).second)
+					const MarginPoint<glm::vec3> a{ vertex };
+					const MarginPoint<glm::vec3> b{ vertex + directionVector };
+					const auto intersection = VectorMath::GetIntersectionBetweenLineAndPolygon(a, b, obstacleVertices);
+					if (intersection.second)
 					{
 						doesItCollide = true;
 						break;
-					}
-				}
-				if (doesItCollide == false)
-				{
-					for (const auto& vertex : obstacleVertices)
-					{
-						if (VectorMath::GetIntersectionBetweenLineAndPolygon(vertex, vertex - directionVector, targetVertices).second)
-						{
-							doesItCollide = true;
-							break;
-						}
 					}
 				}
 				return doesItCollide;

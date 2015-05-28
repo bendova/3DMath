@@ -13,6 +13,14 @@ namespace MyCode
 		class Setup
 		{
 		public:
+			Setup(const std::initializer_list<Polygon>& polygons)
+				: mPolygons()
+				, mCollider()
+			{
+				mPolygons.insert(mPolygons.end(), polygons.begin(), polygons.end());
+				AddRectanglesToCollider();
+			}
+
 			Setup(const std::initializer_list<glm::vec3> centers)
 				: mPolygons()
 				, mCollider()
@@ -54,7 +62,7 @@ namespace MyCode
 			PolygonCollider mCollider;
 		};
 
-		class CollisionTest3D
+		class IntersectionTest3D
 		{
 		public:
 			bool Run();
@@ -65,7 +73,7 @@ namespace MyCode
 			bool CrossCollision();
 		};
 
-		class PathCollisionDetectionTest
+		class CollisionDetectionTest
 		{
 		public:
 			bool Run();
@@ -73,6 +81,15 @@ namespace MyCode
 			bool NoCollision();
 			bool NearSideCollision();
 			bool FarSideCollision();
+		};
+
+		class CollisionAvoidanceTest
+		{
+		public:
+			bool Run();
+		private:
+			bool ValidPositionForNoCollision();
+			bool ValidPositionForPointCollision();
 		};
 	};
 }

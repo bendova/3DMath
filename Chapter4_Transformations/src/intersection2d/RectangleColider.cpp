@@ -222,8 +222,8 @@ namespace MyCode
 					const std::vector<glm::vec3>& collinearPoints)
 				{
 					const auto lineSegment = GetLineSegmentFromCollinearPoints(collinearPoints);
-					const VectorMath::MarginPoint<glm::vec3> a{ lineSegment.first, true, true };
-					const VectorMath::MarginPoint<glm::vec3> b{ lineSegment.second, true, true };
+					const VectorMath::MarginPoint<glm::vec3> a{ lineSegment.first,};
+					const VectorMath::MarginPoint<glm::vec3> b{ lineSegment.second};
 					const bool doTheyIntersect = VectorMath::GetIntersectionOfLineWithPolygon2D(a, b, polygon).second;
 					return doTheyIntersect;
 				}
@@ -517,8 +517,8 @@ namespace MyCode
 				std::pair<glm::vec3, bool> result{ glm::vec3{ FLT_MAX, FLT_MAX, FLT_MAX }, false };
 				float currentMinDistanceToA = FLT_MAX;
 
-				VectorMath::MarginPoint<glm::vec3> marginA{ a, true, true };
-				VectorMath::MarginPoint<glm::vec3> marginB{ b, false, true };
+				VectorMath::MarginPoint<glm::vec3> marginA{ a};
+				VectorMath::MarginPoint<glm::vec3> marginB{ b, VectorMath::MarginPoint<glm::vec3>::UNBOUNDED };
 
 				const auto lineSegmentPoints = lineSegments.size();
 				for (size_t i = 0; i < lineSegmentPoints; ++i)
@@ -526,8 +526,8 @@ namespace MyCode
 					const auto& c = lineSegments[i];
 					const auto& d = lineSegments[(i + 1) % lineSegmentPoints];
 					
-					VectorMath::MarginPoint<glm::vec3> marginC{ c, true, true };
-					VectorMath::MarginPoint<glm::vec3> marginD{ d, true, true };
+					VectorMath::MarginPoint<glm::vec3> marginC{ c };
+					VectorMath::MarginPoint<glm::vec3> marginD{ d };
 					const auto intersection = GetLinesIntersection(marginA, marginB, marginC, marginD);
 					if (intersection.second)
 					{
