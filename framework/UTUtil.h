@@ -1,7 +1,7 @@
 #ifndef _MY_CODE_UT_UTIL_H_
 #define _MY_CODE_UT_UTIL_H_
 
-#include <cstdio>
+#include "Logging.h"
 #include <utility>
 #include <glm/glm.hpp>
 
@@ -19,11 +19,11 @@ namespace MyCode
 		{
 			if (msg)
 			{
-				std::printf("%s() Failed: %s!\n", testName, msg);
+				Log("%s() Failed: %s!\n", testName, msg);
 			}
 			else
 			{
-				std::printf("%s() Failed!\n", testName);
+				Log("%s() Failed!\n", testName);
 			}
 		}
 
@@ -31,10 +31,6 @@ namespace MyCode
 	}
 
 	bool CheckIsTrue(bool value, const char* expr, const char* testName);
-
-	bool AreSegmentsEqualWithinMargin(const std::pair<glm::vec3, glm::vec3>& ab, const std::pair<glm::vec3, glm::vec3>& cd,
-		const double margin);
-	bool AreVectorsEqualWithinMargin(const glm::vec3& a, const glm::vec3& b, const double margin);
 }
 
 #endif //_MY_CODE_UT_UTIL_H_

@@ -172,14 +172,16 @@ namespace MyCode
 		const glm::vec4 cubePlaneNormal{0.0f, 1.0f, 0.0f, 1.0f};
 
 		const auto ray = CastRayThroughPoint(screenX, screenY);
-		const glm::vec4 newCenter = GetIntersectionOfLineWithPlane(ray.first, ray.second, cubeCenter, cubePlaneNormal);
-		return newCenter;
+		const VectorMath::MarginPoint<glm::vec4> rayOrigin{ ray.first, true, true };
+		const VectorMath::MarginPoint<glm::vec4> rayPoint{ ray.second, false, false };
+		const auto intersection = VectorMath::GetIntersectionOfLineWithPlane3D(rayOrigin, rayPoint, cubeCenter, cubePlaneNormal);
+		return intersection.first;
 	}
 
 	glm::vec4 ControlHelper::GetIntersectionOfLineWithPlane(const glm::vec4& lineA, const glm::vec4& lineB, 
 		const glm::vec4& planePoint, const glm::vec4& planeNormal)
 	{
-		glm::vec4 intersectionPoint; 
+		glm::vec4 intersectionPoint{0.0f};
 
 		const auto vectorPlaneToLine = planePoint - lineA;
 		const auto lineDirection = lineB - lineA;
@@ -193,7 +195,6 @@ namespace MyCode
 		else if (denominator == 0.0f)
 		{
 			// the line is parallel with the plane, and never shall the two meet
-			intersectionPoint = glm::vec4{ 0.0f, 0.0f, 0.0f, 0.0f }; // at infinity
 		}
 		else
 		{
@@ -241,7 +242,7 @@ namespace MyCode
 	{
 		if (mBoundingRectangle.Center() != position)
 		{
-			mBoundingRectangle.SetCenter(mColisionHelper.GetPositionThatAvoidCollisions(mBoundingRectangle, position));
+			mBoundingRectangle.SetCenter(mColisionHelper.GetPositionThatAvoidsCollisions(mBoundingRectangle, position));
 		}
 	}
 }

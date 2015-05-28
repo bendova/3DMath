@@ -410,8 +410,8 @@ namespace MyCode
 
 	bool UT_RectangleColider::ValidPositionTest::Run()
 	{
-		return NearEdgeIntersection()
-			&& FarEdgeIntersection()
+		return NearEdgeTarget()
+			&& FarEdgeTarget()
 			&& PathIntersection()
 			&& DiagonalPathIntersection()
 			&& EdgeIntersection()
@@ -421,8 +421,7 @@ namespace MyCode
 			&& CrossIntersection3()
 			&& CrossIntersection4()
 			&& CrossIntersection5()
-			&& CrossIntersection6()
-			&& CrossIntersection7();
+			&& CrossIntersection6();
 	}
 
 	bool UT_RectangleColider::ValidPositionTest::NoCollision()
@@ -430,28 +429,28 @@ namespace MyCode
 		Setup setup{ glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ 3.0f, 0.0f, 0.0f } };
 
 		const glm::vec3 targetOfR1{ 1.0f, 0.0f, 0.0f };
-		const glm::vec3 validTarget = setup.Collider().GetPositionThatAvoidCollisions(setup[0], targetOfR1);
+		const glm::vec3 validTarget = setup.Collider().GetPositionThatAvoidsCollisions(setup[0], targetOfR1);
 		
 		return CHECK_EQUALS(targetOfR1, validTarget);
 	}
 
-	bool UT_RectangleColider::ValidPositionTest::NearEdgeIntersection()
+	bool UT_RectangleColider::ValidPositionTest::NearEdgeTarget()
 	{
 		Setup setup{ glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ 3.0f, 0.0f, 0.0f } };
 
 		const glm::vec3 targetOfR1{ 3.0f, 0.0f, 0.0f };
-		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidCollisions(setup[0], targetOfR1);
+		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidsCollisions(setup[0], targetOfR1);
 		const glm::vec3 expectedTargetOfR1{ 2.0f, 0.0f, 0.0f };
 
 		return CHECK_EQUALS(expectedTargetOfR1, returnedTarget);
 	}
 
-	bool UT_RectangleColider::ValidPositionTest::FarEdgeIntersection()
+	bool UT_RectangleColider::ValidPositionTest::FarEdgeTarget()
 	{
 		Setup setup{ glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ 3.0f, 0.0f, 0.0f } };
 
 		const glm::vec3 targetOfR1{ 4.5f, 0.0f, 0.0f };
-		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidCollisions(setup[0], targetOfR1);
+		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidsCollisions(setup[0], targetOfR1);
 		const glm::vec3 expectedTargetOfR1{ 2.0f, 0.0f, 0.0f };
 
 		return CHECK_EQUALS(expectedTargetOfR1, returnedTarget);
@@ -464,7 +463,7 @@ namespace MyCode
 		Setup setup{ centerOfR1, centerOfR2 };
 
 		const glm::vec3 targetOfR1{ -1.0f, 0.0f, -1.0f };
-		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidCollisions(setup[0], targetOfR1);
+		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidsCollisions(setup[0], targetOfR1);
 		const glm::vec3 expectedTargetOfR1{ targetOfR1 };
 
 		return CHECK_EQUALS(expectedTargetOfR1, returnedTarget);
@@ -477,7 +476,7 @@ namespace MyCode
 		Setup setup{ centerOfR1, centerOfR2 };
 
 		const glm::vec3 targetOfR1{ 2.3f, 0.0f, 0.9f };
-		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidCollisions(setup[0], targetOfR1);
+		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidsCollisions(setup[0], targetOfR1);
 		const glm::vec3 expectedTargetOfR1{ targetOfR1 };
 
 		return CHECK_EQUALS(expectedTargetOfR1, returnedTarget);
@@ -488,7 +487,7 @@ namespace MyCode
 		Setup setup{ glm::vec3{ -1.0f, 0.0f, -4.0f }, glm::vec3{ -1.0f, 0.0f, 0.0f } };
 
 		const glm::vec3 targetOfR1{ -1.0f, 0.0f, 0.0f };
-		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidCollisions(setup[0], targetOfR1);
+		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidsCollisions(setup[0], targetOfR1);
 		const glm::vec3 expectedTargetOfR1{ -1.0f, 0.0f, -1.0f };
 
 		return CHECK_EQUALS(expectedTargetOfR1, returnedTarget);
@@ -499,7 +498,7 @@ namespace MyCode
 		Setup setup{ glm::vec3{ -3.0f, 0.0f, -3.0f }, glm::vec3{ 0.0f, 0.0f, 0.0f } };
 
 		const glm::vec3 targetOfR1{ 0.0f, 0.0f, 0.0f };
-		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidCollisions(setup[0], targetOfR1);
+		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidsCollisions(setup[0], targetOfR1);
 		const glm::vec3 expectedTargetOfR1{ -1.0f, 0.0f, -1.0f };
 
 		const double errorMargin = 1e-6;
@@ -511,7 +510,7 @@ namespace MyCode
 		Setup setup{ glm::vec3{ -1.0f, 0.0f, -1.0f }, glm::vec3{ 0.0f, 0.0f, 0.0f } };
 
 		const glm::vec3 targetOfR1{ 1.0f, 0.0f, 0.0f };
-		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidCollisions(setup[0], targetOfR1);
+		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidsCollisions(setup[0], targetOfR1);
 		const glm::vec3 expectedTargetOfR1{ -1.0f, 0.0f, -1.0f };
 
 		return CHECK_EQUALS(returnedTarget, expectedTargetOfR1);
@@ -522,7 +521,7 @@ namespace MyCode
 		Setup setup{ glm::vec3{ -0.8f, 0.0f, -1.0f }, glm::vec3{ 0.0f, 0.0f, 0.0f } };
 
 		const glm::vec3 targetOfR1{ 0.2f, 0.0f, -0.45f };
-		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidCollisions(setup[0], targetOfR1);
+		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidsCollisions(setup[0], targetOfR1);
 		const glm::vec3 expectedTargetOfR1{ setup[0].Center() };
 
 		return CHECK_EQUALS(returnedTarget, expectedTargetOfR1);
@@ -533,7 +532,7 @@ namespace MyCode
 		Setup setup{ glm::vec3{ -1.0f, 0.0f, -0.5f }, glm::vec3{ 0.0f, 0.0f, 0.0f } };
 
 		const glm::vec3 targetOfR1{ -0.5f, 0.0f, 0.5f };
-		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidCollisions(setup[0], targetOfR1);
+		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidsCollisions(setup[0], targetOfR1);
 		const glm::vec3 expectedTargetOfR1{ setup[0].Center() };
 
 		return CHECK_EQUALS(returnedTarget, expectedTargetOfR1);
@@ -544,7 +543,7 @@ namespace MyCode
 		Setup setup{ glm::vec3{ -1.71264f, 0.0f, -1.6331f }, glm::vec3{ 0.0f, 0.0f, 0.0f } };
 
 		const glm::vec3 targetOfR1{ -0.947925f, 0.0f, -0.924394f };
-		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidCollisions(setup[0], targetOfR1);
+		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidsCollisions(setup[0], targetOfR1);
 		const glm::vec3 expectedTargetOfR1{ -1.0f, 0.0f, -1.0f };
 
 		// FIXME This is an unbelievably poor error margin, 
@@ -560,7 +559,7 @@ namespace MyCode
 		Setup setup{ glm::vec3{ 0.886919f, 0.0f, -0.677766f }, glm::vec3{ 0.114781f, 0.0f, 0.252855f } };
 
 		const glm::vec3 targetOfR1{ 1.29656f, 0.0f, -0.686211f };
-		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidCollisions(setup[0], targetOfR1);
+		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidsCollisions(setup[0], targetOfR1);
 		const glm::vec3 expectedTargetOfR1{ targetOfR1 };
 
 		const double errorMargin = 1e-6;
@@ -573,20 +572,7 @@ namespace MyCode
 		Setup setup{ glm::vec3{ -1.0f, 0.0f, -0.2f }, glm::vec3{ 0.0f, 0.0f, 0.0f } };
 
 		const glm::vec3 targetOfR1{ -0.9f, 0.0f, -0.2f };
-		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidCollisions(setup[0], targetOfR1);
-		const glm::vec3 expectedTargetOfR1{ setup[0].Center() };
-
-		const double errorMargin = 1e-6;
-		const bool areEqual = CHECK_IS_TRUE(AreVectorsEqualWithinMargin(returnedTarget, expectedTargetOfR1, errorMargin));
-		return areEqual;
-	}
-
-	bool UT_RectangleColider::ValidPositionTest::CrossIntersection7()
-	{
-		Setup setup{ glm::vec3{ 0.0f, 0.0f, 0.999999940f }, glm::vec3{ 0.0f, 0.0f, 0.0f } };
-
-		const glm::vec3 targetOfR1{ 0.0f, 0.0f, 0.899999917f };
-		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidCollisions(setup[0], targetOfR1);
+		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidsCollisions(setup[0], targetOfR1);
 		const glm::vec3 expectedTargetOfR1{ setup[0].Center() };
 
 		const double errorMargin = 1e-6;
@@ -608,7 +594,7 @@ namespace MyCode
 		Setup setup{ targetCenter, farObstacleCenter, nearObstacleCenter };
 
 		const glm::vec3 destination{ 6.0f, 0.0f, 0.0f };
-		const glm::vec3 returnedDestination = setup.Collider().GetPositionThatAvoidCollisions(setup[0], destination);
+		const glm::vec3 returnedDestination = setup.Collider().GetPositionThatAvoidsCollisions(setup[0], destination);
 		const glm::vec3 expectedDestination{ 2.0f, 0.0f, 0.0f };
 
 		return CHECK_EQUALS(returnedDestination, expectedDestination);
@@ -616,10 +602,24 @@ namespace MyCode
 
 	bool UT_RectangleColider::SteppingOutOfCollisionTest::Run()
 	{
-		return StepOutOfCollision()
+		return StepOutOfCollisionWithSidesAligned()
+			&& StepOutOfCollision()
 			&& StepOutOfCollision2()
 			&& StepOutOfCollision3()
 			&& StepOutOfCollision4();
+	}
+
+	bool UT_RectangleColider::SteppingOutOfCollisionTest::StepOutOfCollisionWithSidesAligned()
+	{
+		Setup setup{ glm::vec3{ 0.0f, 0.0f, 0.9f }, glm::vec3{ 0.0f, 0.0f, 0.0f } };
+
+		const glm::vec3 targetOfR1{ 0.0f, 0.0f, 0.8f };
+		const glm::vec3 returnedTarget = setup.Collider().GetPositionThatAvoidsCollisions(setup[0], targetOfR1);
+		const glm::vec3 expectedTargetOfR1{ 0.0f, 0.0f, 1.0f };
+
+		const double errorMargin = 1e-6;
+		const bool areEqual = CHECK_IS_TRUE(AreVectorsEqualWithinMargin(returnedTarget, expectedTargetOfR1, errorMargin));
+		return areEqual;
 	}
 
 	bool UT_RectangleColider::SteppingOutOfCollisionTest::StepOutOfCollision4()
@@ -630,7 +630,7 @@ namespace MyCode
 		Setup setup{ targetCenter, nearObstacleCenter };
 
 		const glm::vec3 destination{ -6.0f, 0.0f, 0.0f };
-		const glm::vec3 returnedDestination = setup.Collider().GetPositionThatAvoidCollisions(setup[0], destination);
+		const glm::vec3 returnedDestination = setup.Collider().GetPositionThatAvoidsCollisions(setup[0], destination);
 		const glm::vec3 expectedDestination{ destination };
 
 		return CHECK_EQUALS(returnedDestination, expectedDestination);
@@ -641,7 +641,7 @@ namespace MyCode
 		Setup setup{ glm::vec3{ -2.5f, 0.0f, 2.5f }, glm::vec3{ -1.52f, 0.0f, 2.5f } };
 
 		const glm::vec3 destination{ -2.52f, 0.0f, 2.413f };
-		const glm::vec3 returnedDestination = setup.Collider().GetPositionThatAvoidCollisions(setup[0], destination);
+		const glm::vec3 returnedDestination = setup.Collider().GetPositionThatAvoidsCollisions(setup[0], destination);
 		const glm::vec3 expectedDestination{ destination };
 
 		const double errorMargin = 1e-6;
@@ -657,7 +657,7 @@ namespace MyCode
 		Setup setup{ targetCenter, nearObstacleCenter };
 
 		const glm::vec3 destination{ 6.0f, 0.0f, 0.0f };
-		const glm::vec3 returnedDestination = setup.Collider().GetPositionThatAvoidCollisions(setup[0], destination);
+		const glm::vec3 returnedDestination = setup.Collider().GetPositionThatAvoidsCollisions(setup[0], destination);
 		const glm::vec3 expectedDestination{ -0.5f, 0.0f, 0.325f };
 
 		const double errorMargin = 1e-6;
@@ -673,7 +673,7 @@ namespace MyCode
 		Setup setup{ targetCenter, nearObstacleCenter };
 
 		const glm::vec3 destination{ 6.0f, 1.0f, 0.0f };
-		const glm::vec3 returnedDestination = setup.Collider().GetPositionThatAvoidCollisions(setup[0], destination);
+		const glm::vec3 returnedDestination = setup.Collider().GetPositionThatAvoidsCollisions(setup[0], destination);
 		const glm::vec3 expectedDestination{ -0.5f, 1.0f, 0.325f };
 
 		const double errorMargin = 1e-6;

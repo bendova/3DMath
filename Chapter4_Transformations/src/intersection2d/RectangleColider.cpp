@@ -23,7 +23,7 @@ namespace MyCode
 		}
 	}
 
-	glm::vec3 RectangleColider::GetPositionThatAvoidCollisions(const Rectangle& rectangle, glm::vec3 targetCenter) const
+	glm::vec3 RectangleColider::GetPositionThatAvoidsCollisions(const Rectangle& rectangle, glm::vec3 targetCenter) const
 	{
 		using namespace Intersection2D;
 		using namespace RectangleColiderHelpers;
@@ -222,8 +222,9 @@ namespace MyCode
 					const std::vector<glm::vec3>& collinearPoints)
 				{
 					const auto lineSegment = GetLineSegmentFromCollinearPoints(collinearPoints);
-					const bool doTheyIntersect = VectorMath::DoesLineSegmentIntersectPolygon(lineSegment.first, lineSegment.second,
-						polygon, true);
+					const VectorMath::MarginPoint<glm::vec3> a{ lineSegment.first, true, true };
+					const VectorMath::MarginPoint<glm::vec3> b{ lineSegment.second, true, true };
+					const bool doTheyIntersect = VectorMath::GetIntersectionOfLineWithPolygon2D(a, b, polygon).second;
 					return doTheyIntersect;
 				}
 
@@ -422,7 +423,7 @@ namespace MyCode
 		namespace CollisionAvoidance
 		{
 			glm::vec3 GetPositionOnNearEdge(const std::vector<glm::vec3>& verticesOfR1, const glm::vec3& currentCenter,
-				const glm::vec3& targetCenter, const std::vector<glm::vec3> verticesOfR2, const CollisionAvoider::Avoidance avoidance)
+				const glm::vec3& targetCenter, const std::vector<glm::vec3>& verticesOfR2, const CollisionAvoider::Avoidance avoidance)
 			{
 				CollisionAvoider avoider{ verticesOfR1, verticesOfR2, currentCenter, targetCenter, avoidance };
 				glm::vec3 validCenter = avoider.GetValidCenter();
@@ -467,7 +468,7 @@ namespace MyCode
 				}
 				else
 				{
-					Log("CollisionAvoidance::GetCollision() No collision was actually found!\n This should NOT happen.\n");
+					Log("CollisionAvoidance::GetNearEdgeCollision() No collision was actually found!\n This should NOT happen.\n");
 				}
 				return nearEdgeCollision;
 			}
@@ -488,12 +489,17 @@ namespace MyCode
 				const std::vector<glm::vec3>& verticesR2,
 				const glm::vec3& directionVector) const
 			{
+				const bool insidePointsOnly = (mAvoidance == Avoidance::INSIDE_OUT);
+
 				std::vector<Collision> collisions;
 				for (const auto& vertex : verticesR1)
 				{
-					const auto intersection = (mAvoidance == Avoidance::OUTSIDE_IN) 
-						? GetClosestIntersectionPoint(vertex, vertex + directionVector, verticesR2)
-						: GetFarthestIntersectionPoint(vertex, vertex + directionVector, verticesR2);
+					if (insidePointsOnly && (VectorMath::IsPointInsidePolygon(verticesR2, vertex) == false))
+					{
+						continue;
+					}
+
+					const auto intersection = GetClosestIntersectionPoint(vertex, vertex + directionVector, verticesR2);
 					if (intersection.second)
 					{
 						Collision collision;
@@ -511,12 +517,18 @@ namespace MyCode
 				std::pair<glm::vec3, bool> result{ glm::vec3{ FLT_MAX, FLT_MAX, FLT_MAX }, false };
 				float currentMinDistanceToA = FLT_MAX;
 
+				VectorMath::MarginPoint<glm::vec3> marginA{ a, true, true };
+				VectorMath::MarginPoint<glm::vec3> marginB{ b, false, true };
+
 				const auto lineSegmentPoints = lineSegments.size();
 				for (size_t i = 0; i < lineSegmentPoints; ++i)
 				{
 					const auto& c = lineSegments[i];
 					const auto& d = lineSegments[(i + 1) % lineSegmentPoints];
-					const auto intersection = GetLineSegmentsIntersection(a, b, c, d);
+					
+					VectorMath::MarginPoint<glm::vec3> marginC{ c, true, true };
+					VectorMath::MarginPoint<glm::vec3> marginD{ d, true, true };
+					const auto intersection = GetLinesIntersection(marginA, marginB, marginC, marginD);
 					if (intersection.second)
 					{
 						result.second = true;
@@ -524,32 +536,6 @@ namespace MyCode
 						if (distanceToA < currentMinDistanceToA)
 						{
 							currentMinDistanceToA = distanceToA;
-							result.first = intersection.first;
-						}
-					}
-				}
-				return result;
-			}
-
-			std::pair<glm::vec3, bool> CollisionAvoider::GetFarthestIntersectionPoint(const glm::vec3& a, const glm::vec3& b,
-				const std::vector<glm::vec3>& lineSegments) const
-			{
-				std::pair<glm::vec3, bool> result{ a, false };
-				float currentMaxDistanceToA = 0.0f;
-
-				const auto lineSegmentPoints = lineSegments.size();
-				for (size_t i = 0; i < lineSegmentPoints; ++i)
-				{
-					const auto& c = lineSegments[i];
-					const auto& d = lineSegments[(i + 1) % lineSegmentPoints];
-					const auto intersection = GetLineSegmentsIntersection(a, b, c, d);
-					if (intersection.second)
-					{
-						result.second = true;
-						const auto distanceToA = glm::length(intersection.first - a);
-						if (distanceToA > currentMaxDistanceToA)
-						{
-							currentMaxDistanceToA = distanceToA;
 							result.first = intersection.first;
 						}
 					}

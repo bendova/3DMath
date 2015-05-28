@@ -17,6 +17,39 @@ namespace MyCode
 			bool PointToPlaneProjection();
 			bool PointToPlaneProjection1();
 		};
+
+		class LinesIntersection
+		{
+		public:
+			bool Run();
+		private:
+			bool NoIntersectionBetweenClosedLineSegments();
+			bool NoIntersectionBetweenOpenLineSegments();
+			bool IntersectionBetweenClosedLineSegments();
+			bool IntersectionBetweenOpenLineSegments();
+			bool IntersectionBetweenLineSegmentAndRay();
+			bool IntersectionBetweenLineSegmentAndLine();
+			
+			bool NoIntersectionBetweenRays();
+			bool IntersectionBetweenRays();
+
+			bool NoIntersectionBetweenLines();
+			bool IntersectionBetweenLines();
+
+			bool NoIntersectionBetweenColinearLineSegments();
+		};
+
+		class LineSegmentPolygonIntersection
+		{
+		public:
+			bool Run();
+		private:
+			bool NoIntersection();
+			bool SegmentCrossingThroughPolygon();
+			bool SegmentIsInPolygon();
+			bool SegmentIntersectsSideOfCoplanarPolygon();
+			bool SegmentIntersectsSideOfPolygon();
+		};
 	};
 }
 

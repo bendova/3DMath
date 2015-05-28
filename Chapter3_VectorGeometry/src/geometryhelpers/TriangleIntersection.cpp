@@ -59,12 +59,20 @@ namespace MyCode
 
 		const auto& vertices = triangle.GetVertices();
 		const int VERTICES_COUNT = Triangle::GetPointsCount();
+
+		const MarginPoint<glm::vec4> a{ segmentStart, true, true };
+		const MarginPoint<glm::vec4> b{ segmentEnd, true, true };
+
 		for (int i = 0; i < VERTICES_COUNT; ++i)
 		{
 			const int sideStartIndex = i;
 			const int sideEndIndex = (i + 1) % VERTICES_COUNT;
-			const auto point = GetLineSegmentsIntersection(vertices[sideStartIndex], vertices[sideEndIndex], segmentStart, segmentEnd);
-			if (point.second != 0.0f)
+
+			const MarginPoint<glm::vec4> c{ vertices[sideStartIndex], true, true };
+			const MarginPoint<glm::vec4> d{ vertices[sideEndIndex], true, true };
+
+			const auto point = GetLinesIntersection(a, b, c, d);
+			if (point.second)
 			{
 				intersectionPoints.push_back(point.first);
 			}

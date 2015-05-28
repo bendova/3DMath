@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <initializer_list>
 #include <vector>
+#include <algorithm>
 
 namespace MyCode
 {
@@ -36,6 +37,10 @@ namespace MyCode
 			Color color;
 		};
 
+		bool AreSegmentsEqualWithinMargin(const std::pair<glm::vec3, glm::vec3>& ab, const std::pair<glm::vec3, glm::vec3>& cd,
+			const double margin = 1e-6);
+		bool AreVectorsEqualWithinMargin(const glm::vec3& a, const glm::vec3& b, const double margin = 1e-6);
+
 		float FloorWithPrecision(const float x, const int precision);
 		double FloorWithPrecision(const double x, const int precision);
 		void Floor(glm::vec3& v, const int precision = 5);
@@ -54,26 +59,34 @@ namespace MyCode
 			const glm::vec3& planePointC, const glm::vec3& point);
 
 		bool ArePointsCollinear(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c);
-		bool DoesLineSegmentIntersectPolygon(const glm::vec3& a, const glm::vec3& b, const std::vector<glm::vec3>& polygon,
-			const bool strictly = false);
 
 		template<typename T>
-		std::pair<float, bool> GetSegmentIntersectionFactor(const T& a, const T& b, const T& c, const T& d)
+		float GetColinearSegmentsIntersectionFactor(const T& a, const T& b, const T& c, const T& d)
+		{
+			const glm::vec3 lineDirection = b - a;
+			const glm::vec3::value_type lineDirectionLengthSquared = glm::dot(lineDirection, lineDirection);
+
+			const glm::vec3 ac = c - a;
+			const float glm::vec3::value_type factor = glm::dot(lineDirection, vectorFromLineToPoint) / lineDirectionLengthSquared;
+		}
+
+		template<typename T>
+		std::pair<float, bool> GetIntersectionFactor(const T& a, const T& b, const T& c, const T& d)
 		{
 			bool doesIntersectionPointExist = false;
-			float factorAB = FLT_MAX;
-			const glm::vec3 lineDirectionAB{ b - a };
-			const glm::vec3 lineDirectionCD{ d - c };
-			const glm::vec3 lineDirectionsCross{ glm::cross(lineDirectionAB, lineDirectionCD) };
-			const auto lineDirectionsCrossLength = glm::length(lineDirectionsCross);
-			if (lineDirectionsCrossLength)
+			float intersectionFactor = FLT_MAX;
+			const glm::vec3 ab{ b - a };
+			const glm::vec3 cd{ d - c };
+			const glm::vec3 lineDirectionsCross{ glm::cross(ab, cd) };
+			const auto lineDirectionsCrossLengthSquared = glm::dot(lineDirectionsCross, lineDirectionsCross);
+			if (lineDirectionsCrossLengthSquared)
 			{
-				const glm::vec3 ca{ a - c };
-				factorAB = -glm::dot(glm::cross(ca, lineDirectionCD), lineDirectionsCross)
-					/ (lineDirectionsCrossLength * lineDirectionsCrossLength);
 				doesIntersectionPointExist = true;
+				const glm::vec3 ca{ a - c };
+				intersectionFactor = -glm::dot(glm::cross(ca, cd), lineDirectionsCross)
+					/ lineDirectionsCrossLengthSquared;
 			}
-			return std::make_pair(factorAB, doesIntersectionPointExist);
+			return std::make_pair(intersectionFactor, doesIntersectionPointExist);
 		}
 
 		template<typename T>
@@ -81,8 +94,8 @@ namespace MyCode
 		{
 			bool doTheyIntersect = false;
 
-			const auto factorAB = GetSegmentIntersectionFactor(a, b, c, d);
-			const auto factorCD = GetSegmentIntersectionFactor(c, d, a, b);
+			const auto factorAB = GetIntersectionFactor(a, b, c, d);
+			const auto factorCD = GetIntersectionFactor(c, d, a, b);
 			if (factorAB.second && IsIntersectionFactorOnSegment(factorAB.first, strictly) &&
 				factorCD.second && IsIntersectionFactorOnSegment(factorCD.first, strictly))
 			{
@@ -92,33 +105,88 @@ namespace MyCode
 		}
 
 		template<typename T>
-		std::pair<T, bool> GetLineSegmentsIntersection(const T& a, const T& b, const T& c, const T& d)
+		struct MarginPoint
 		{
-			std::pair<T, bool> intersection{ T{ 0.0f }, false };
+			MarginPoint(const T& point, const bool isBoundingPoint, 
+				const bool isClosed)
+				: mPoint(point)
+				, mIsBoundingPoint(isBoundingPoint)
+				, mIsClosed(isClosed)
+			{}
+			const T mPoint;
+			const bool mIsBoundingPoint;
+			const bool mIsClosed;
+		};
 
-			const auto factorAB = GetSegmentIntersectionFactor(a, b, c, d);
-			const auto factorCD = GetSegmentIntersectionFactor(c, d, a, b);
-			if (factorAB.second && IsIntersectionFactorOnSegment(factorAB.first) &&
-				factorCD.second && IsIntersectionFactorOnSegment(factorCD.first))
+		template<typename T>
+		bool IsFactorValidForLeftMarginPoint(const float factor, const MarginPoint<T>& a)
+		{
+			bool isValid = true;
+			if (a.mIsBoundingPoint)
 			{
-				intersection.first = a + factorAB.first * (b - a);
-				intersection.second = true;
+				if (a.mIsClosed)
+				{
+					isValid = (factor >= 0.0f);
+				}
+				else
+				{
+					isValid = (factor > 0.0f);
+				}
 			}
-			return intersection;
+			return isValid;
 		}
 
 		template<typename T>
-		std::pair<T, bool> GetIntersectionPointBetweenLines(const T& a, const T& b, const T& c, const T& d)
+		bool IsFactorValidForRightMarginPoint(const float factor, const MarginPoint<T>& b)
+		{
+			bool isValid = true;
+			if (b.mIsBoundingPoint)
+			{
+				if (b.mIsClosed)
+				{
+					isValid = (factor <= 1.0f);
+				}
+				else
+				{
+					isValid = (factor < 1.0f);
+				}
+			}
+			return isValid;
+		}
+
+		template<typename T>
+		bool IsFactorValidForMarginPoints(const float factor, const MarginPoint<T>& a, const MarginPoint<T>& b)
+		{
+			const bool isFactorValidForA = IsFactorValidForLeftMarginPoint(factor, a);
+			const bool isFactorValidForB = IsFactorValidForRightMarginPoint(factor, b);
+			return isFactorValidForA && isFactorValidForB;
+		}
+
+		template<typename T>
+		std::pair<T, bool> GetLinesIntersection(const MarginPoint<T>& a, const MarginPoint<T>& b, 
+			const MarginPoint<T>& c, const MarginPoint<T>& d)
 		{
 			std::pair<T, bool> intersection{ T{ 0.0f }, false };
 
-			const auto factorAB = GetSegmentIntersectionFactor(a, b, c, d);
-			const auto factorCD = GetSegmentIntersectionFactor(c, d, a, b);
+			const auto factorAB = GetIntersectionFactor(a.mPoint, b.mPoint, c.mPoint, d.mPoint);
+			const auto factorCD = GetIntersectionFactor(c.mPoint, d.mPoint, a.mPoint, b.mPoint);
+			
 			if (factorAB.second && factorCD.second)
 			{
-				intersection.first = a + factorAB.first * (b - a);
-				intersection.second = true;
+				const bool isFactorValidForAB = IsFactorValidForMarginPoints(factorAB.first, a, b);
+				const bool isFactorValidForCD = IsFactorValidForMarginPoints(factorCD.first, c, d);
+				if (isFactorValidForAB && isFactorValidForCD)
+				{
+					const T pointOnAB = a.mPoint + factorAB.first * (b.mPoint - a.mPoint);
+					const T pointOnCD = c.mPoint + factorCD.first * (d.mPoint - c.mPoint);
+					if (AreVectorsEqualWithinMargin(pointOnAB, pointOnCD))
+					{
+						intersection.first = pointOnAB;
+						intersection.second = true;
+					}
+				}
 			}
+
 			return intersection;
 		}
 
@@ -187,6 +255,98 @@ namespace MyCode
 				}
 			}
 			return isInsidePolygon;
+		}
+
+		template<typename T>
+		std::pair<T, bool> GetIntersectionOfLineWithPolygon2D(const MarginPoint<T>& a, const MarginPoint<T>& b, 
+			const std::vector<T>& polygon)
+		{
+			std::pair<T, bool> intersection{ T{ 0.0f }, false };
+
+			const auto pointsCount = polygon.size();
+			for (size_t i = 0; i < pointsCount; ++i)
+			{
+				const MarginPoint<T> c{ polygon[i], true, true };
+				const MarginPoint<T> d{ polygon[(i + 1) % pointsCount], true, true };
+				intersection = GetLinesIntersection(a, b, c, d);
+				if (intersection.second)
+				{
+					break;
+				}
+			}
+			if (intersection.second == false)
+			{
+				if (IsPointInsidePolygon(polygon, a.mPoint))
+				{
+					intersection.first = a.mPoint;
+					intersection.second = true;
+				}
+				else if (IsPointInsidePolygon(polygon, b.mPoint))
+				{
+					intersection.first = b.mPoint;
+					intersection.second = true;
+				}
+			}
+			return intersection;
+		}
+
+		template<typename T>
+		std::pair<T, bool> GetIntersectionOfLineWithPlane3D(const MarginPoint<T>& a, const MarginPoint<T>& b,
+			const T& planePoint, const T& planeNormal)
+		{
+			std::pair<T, bool> intersection{ T{ 0.0f }, false };
+
+			const auto vectorPlaneToLine = planePoint - a.mPoint;
+			const auto lineDirection = b.mPoint - a.mPoint;
+			const auto numerator = glm::dot(planeNormal, vectorPlaneToLine);
+			const auto denominator = glm::dot(planeNormal, lineDirection);
+			if (numerator == 0.0f)
+			{
+				// the line is in the plane
+				intersection.first = a.mPoint;
+				intersection.second = true;
+			}
+			else if (denominator == 0.0f)
+			{
+				// the line is parallel with the plane, and never shall the two meet
+			}
+			else
+			{
+				const auto factor = numerator / denominator;
+				if (IsFactorValidForMarginPoints(factor, a, b))
+				{
+					intersection.first = a.mPoint + factor * lineDirection;
+					intersection.second = true;
+				}
+			}
+			return intersection;
+		}
+
+		template<typename T>
+		std::pair<T, bool> GetIntersectionBetweenLineAndPolygon(const T& a, const T& b, const std::vector<T>& polygon)
+		{
+			const MarginPoint<T> marginA{ a, true, true };
+			const MarginPoint<T> marginB{ b, true, true };
+			const T lineDirection = b - a;
+			const T& polygonPoint = polygon[0];
+			const T normalToPolygonPlane = T{ glm::cross(polygon[1] - polygonPoint, polygon[2] - polygonPoint) };
+			bool isSegmentInPolygonPlane = (glm::dot(normalToPolygonPlane, lineDirection) == 0);
+			
+			std::pair<glm::vec3, bool> intersection{ T{0.0f}, false };
+			if (isSegmentInPolygonPlane)
+			{
+				intersection = GetIntersectionOfLineWithPolygon2D(marginA, marginB, polygon);
+			}
+			else
+			{
+				intersection = GetIntersectionOfLineWithPlane3D(marginA, marginB, polygonPoint, normalToPolygonPlane);
+				if (intersection.second)
+				{
+					intersection.second = IsPointInsidePolygon(polygon, intersection.first);
+				}
+			}
+			
+			return intersection;
 		}
 	}
 }

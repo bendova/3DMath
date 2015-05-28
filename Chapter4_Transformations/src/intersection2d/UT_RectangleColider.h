@@ -109,8 +109,8 @@ namespace MyCode
 			bool Run();
 		private:
 			bool NoCollision();
-			bool NearEdgeIntersection();
-			bool FarEdgeIntersection();
+			bool NearEdgeTarget();
+			bool FarEdgeTarget();
 			bool PathIntersection();
 			bool EdgeIntersection();
 			bool CornerIntersection();
@@ -121,7 +121,6 @@ namespace MyCode
 			bool CrossIntersection4();
 			bool CrossIntersection5();
 			bool CrossIntersection6();
-			bool CrossIntersection7();
 		};
 
 		class MultipleObjectsAvoidanceTest
@@ -137,10 +136,11 @@ namespace MyCode
 		public:
 			bool Run();
 		private:
-			bool StepOutOfCollision4();
+			bool StepOutOfCollisionWithSidesAligned();
 			bool StepOutOfCollision();
 			bool StepOutOfCollision2();
 			bool StepOutOfCollision3();
+			bool StepOutOfCollision4();
 		};
 	};
 }

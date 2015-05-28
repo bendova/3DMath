@@ -13,7 +13,7 @@ namespace MyCode
 	public:
 		void AddRectangle(const Rectangle& rectangle);
 		void AddRectangles(const std::vector<Rectangle>& rectangles);
-		glm::vec3 GetPositionThatAvoidCollisions(const Rectangle& rectangle, glm::vec3 targetCenter) const;
+		glm::vec3 GetPositionThatAvoidsCollisions(const Rectangle& rectangle, glm::vec3 targetCenter) const;
 
 	private:
 		std::vector<const Rectangle*> mRectangles;
@@ -109,8 +109,10 @@ namespace MyCode
 				void DetermineValidCenter();
 				std::pair<Collision, bool> GetNearEdgeCollision();
 				std::vector<Collision> GetCollisionsFromBothPolygons();
+				
 				std::vector<Collision> GetCollisions(const std::vector<glm::vec3>& forwardsR1, const std::vector<glm::vec3>& forwardsR2,
 					const glm::vec3& directionVector) const ;
+
 				std::pair<glm::vec3, bool> GetClosestIntersectionPoint(const glm::vec3& a, const glm::vec3& b, 
 					const std::vector<glm::vec3>& lineSegments) const;
 				std::pair<glm::vec3, bool> GetFarthestIntersectionPoint(const glm::vec3& a, const glm::vec3& b,
@@ -129,7 +131,7 @@ namespace MyCode
 			};
 
 			glm::vec3 GetPositionOnNearEdge(const std::vector<glm::vec3>& verticesOfR1, const glm::vec3& currentCenter,
-				const glm::vec3& targetCenter, const std::vector<glm::vec3> verticesOfR2, 
+				const glm::vec3& targetCenter, const std::vector<glm::vec3>& verticesOfR2, 
 				const CollisionAvoider::Avoidance avoidance = CollisionAvoider::Avoidance::OUTSIDE_IN);
 		}
 	}

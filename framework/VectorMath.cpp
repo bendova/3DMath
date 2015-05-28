@@ -4,6 +4,21 @@ namespace MyCode
 {
 	namespace VectorMath
 	{
+
+		bool AreSegmentsEqualWithinMargin(const std::pair<glm::vec3, glm::vec3>& ab, const std::pair<glm::vec3, glm::vec3>& cd,
+			const double margin)
+		{
+			return (AreVectorsEqualWithinMargin(ab.first, cd.first, margin)
+				&& AreVectorsEqualWithinMargin(ab.second, cd.second, margin));
+		}
+
+		bool AreVectorsEqualWithinMargin(const glm::vec3& a, const glm::vec3& b, const double margin)
+		{
+			return ((std::abs(a.x - b.x) <= margin)
+				&& (std::abs(a.y - b.y) <= margin)
+				&& (std::abs(a.z - b.z) <= margin));
+		}
+
 		float IsIntersectionFactorOnSegment(const float factor, const bool strictly)
 		{
 			const float minFactor = 0.0f;
@@ -105,25 +120,6 @@ namespace MyCode
 			const float lengthsProduct = (glm::length(ab) * glm::length(ac));
 			const bool areCollinear = (std::abs(dotValue) == lengthsProduct);
 			return areCollinear;
-		}
-
-		bool DoesLineSegmentIntersectPolygon(const glm::vec3& segmentA, const glm::vec3& segmentB, const std::vector<glm::vec3>& polygon,
-			const bool strictly)
-		{
-			bool doTheyIntersect = false;
-			const auto pointsCount = polygon.size();
-			for (size_t i = 0; i < pointsCount; ++i)
-			{
-				const auto& a = polygon[i];
-				const auto& b = polygon[(i + 1) % pointsCount];
-				doTheyIntersect = (strictly) ? DoLineSegmentsIntersect(segmentA, segmentB, a, b)
-											: DoLineSegmentsIntersect(segmentA, segmentB, a, b);
-				if (doTheyIntersect)
-				{
-					break;
-				}
-			}
-			return doTheyIntersect;
 		}
 	}
 }

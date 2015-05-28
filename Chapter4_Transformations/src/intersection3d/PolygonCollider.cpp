@@ -33,7 +33,8 @@ namespace MyCode
 			const Polygon& obstacle = *r;
 			if (&target != &obstacle)
 			{
-				const bool doesTravelPathCollide = TravelPathBounding::DoesTravelPathCollide(target, targetCenter, obstacle);
+				//FIXME
+				const bool doesTravelPathCollide = false;// TravelPathBounding::DoesTravelPathCollide(target, targetCenter, obstacle);
 				if (doesTravelPathCollide)
 				{
 					wasCollisionFound = true;
@@ -190,11 +191,37 @@ namespace MyCode
 			}
 		}
 
-		namespace TravelPathBounding
+		namespace PathCollisionDetection
 		{
-			bool DoesTravelPathCollide(const Polygon& target, const glm::vec3& targetCenter, const Polygon& obstacle)
+			bool DoesPathCollide(const Polygon& target, const glm::vec3& targetCenter, const Polygon& obstacle)
 			{
-				return false; // FIXME
+				// FIXME This doesn't work.
+				// See UT_PolygonCollider::PathCollisionDetectionTest::NearSideCollision()
+
+				const auto& targetVertices = target.Vertices();
+				const auto& obstacleVertices = obstacle.Vertices();
+				const glm::vec3 directionVector{targetCenter - target.Center()};
+				bool doesItCollide = false;
+				for (const auto& vertex: targetVertices)
+				{
+					if (VectorMath::GetIntersectionBetweenLineAndPolygon(vertex, vertex + directionVector, obstacleVertices).second)
+					{
+						doesItCollide = true;
+						break;
+					}
+				}
+				if (doesItCollide == false)
+				{
+					for (const auto& vertex : obstacleVertices)
+					{
+						if (VectorMath::GetIntersectionBetweenLineAndPolygon(vertex, vertex - directionVector, targetVertices).second)
+						{
+							doesItCollide = true;
+							break;
+						}
+					}
+				}
+				return doesItCollide;
 			}
 		}
 
