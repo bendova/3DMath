@@ -3,6 +3,8 @@
 
 #include <vector>
 #include <glm/glm.hpp>
+#include <utility>
+#include "../framework/VectorMath.h"
 
 namespace MyCode
 {
@@ -11,16 +13,23 @@ namespace MyCode
 	private:
 		glm::vec3 mCenter;
 		std::vector<glm::vec3> mOffsets;
+		float mInscribedCircleRadius;
+		float mCircumscribedCircleRadius;
 
 	public:
 		Rectangle(const glm::vec3& a, const glm::vec3& b,
 			const glm::vec3& c, const glm::vec3& d)
+			: mCenter((a + b + c + d) / 4.0f)
+			, mOffsets()
+			, mInscribedCircleRadius(0.0f)
+			, mCircumscribedCircleRadius(0.0f)
 		{
-			mCenter = (a + b + c + d) / 4.0f;
 			mOffsets.push_back(a - mCenter);
 			mOffsets.push_back(b - mCenter);
 			mOffsets.push_back(c - mCenter);
 			mOffsets.push_back(d - mCenter);
+
+			UpdateBoundingRadiuses();
 		}
 
 		Rectangle(const glm::vec3& center, const glm::vec3& vectorToA,
@@ -28,11 +37,22 @@ namespace MyCode
 			const glm::vec3& vectorToD)
 			: mCenter(center)
 			, mOffsets()
+			, mInscribedCircleRadius(0.0f)
+			, mCircumscribedCircleRadius(0.0f)
 		{
 			mOffsets.push_back(vectorToA);
 			mOffsets.push_back(vectorToB);
 			mOffsets.push_back(vectorToC);
 			mOffsets.push_back(vectorToD);
+
+			UpdateBoundingRadiuses();
+		}
+
+		void UpdateBoundingRadiuses()
+		{
+			std::pair<float, float> minMaxPair = VectorMath::GetMinMaxLengthsPair(mOffsets);
+			mInscribedCircleRadius = minMaxPair.first;
+			mCircumscribedCircleRadius = minMaxPair.second;
 		}
 
 		void SetCenter(const glm::vec3& center)
@@ -74,6 +94,15 @@ namespace MyCode
 		bool operator==(const Rectangle& other) const
 		{
 			return ((mCenter == other.mCenter) && (mOffsets == other.mOffsets));
+		}
+
+		float CircumbscribedCircleRadius() const
+		{
+			return mCircumscribedCircleRadius;
+		}
+		float InscribedCircleRadius() const
+		{
+			return mInscribedCircleRadius;
 		}
 	};
 }

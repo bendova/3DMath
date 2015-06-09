@@ -34,7 +34,6 @@ namespace MyCode
 
 			void BuildCubes(const std::initializer_list<glm::vec3> centers)
 			{
-				const glm::vec3 cubeCenter{ 0.0f, 0.0f, 0.0f };
 				const glm::vec3 bottomA{ -1.0f, -1.0f, 1.0f };
 				const glm::vec3 bottomB{ 1.0f, -1.0f, 1.0f };
 				const glm::vec3 bottomC{ 1.0f, -1.0f, -1.0f };
@@ -70,6 +69,8 @@ namespace MyCode
 
 		bool CubeRepresentation();
 		bool AvoidCollision();
+		bool AvoidCollision2();
+		bool MoveAwayTouchingCubes();
 	};
 }
 

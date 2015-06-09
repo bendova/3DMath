@@ -67,10 +67,9 @@ namespace MyCode
 		public:
 			bool Run();
 		private:
-			bool PointToPlaneProjection();
-			bool PointToPlaneProjection1();
 			bool NoCollision();
 			bool CrossCollision();
+			bool SamePlaneCollision();
 		};
 
 		class CollisionDetectionTest
@@ -90,6 +89,10 @@ namespace MyCode
 		private:
 			bool ValidPositionForNoCollision();
 			bool ValidPositionForPointCollision();
+			bool ValidPositionForSideCollision();
+			bool MoveAwayOverlappingPolygons();
+			bool MoveAwayTouchingPolygons();
+			bool MoveAwayFullyOverlappedPolygons();
 		};
 	};
 }

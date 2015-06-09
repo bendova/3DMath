@@ -53,6 +53,11 @@ namespace MyCode
 			&& IntersectionBetweenClosedLineSegments()
 			&& IntersectionBetweenOpenLineSegments()
 			&& NoIntersectionBetweenColinearLineSegments()
+			&& IntersectionBetweenColinearLineSegmentsA()
+			&& IntersectionBetweenColinearLineSegmentsB()
+			&& IntersectionBetweenColinearLineSegmentsC()
+			&& IntersectionBetweenColinearLineSegmentsD()
+			&& IntersectionBetweenColinearLineSegmentsWithMarginError()
 			&& IntersectionBetweenLineSegmentAndRay()
 			&& IntersectionBetweenLineSegmentAndLine()
 			&& NoIntersectionBetweenRays()
@@ -78,7 +83,8 @@ namespace MyCode
 	bool UT_VectorMath::LinesIntersection::NoIntersectionBetweenOpenLineSegments()
 	{
 		MarginPoint<glm::vec3> a{ glm::vec3(0.0f, 0.0f, 0.0f)};
-		MarginPoint<glm::vec3> b{ glm::vec3(1.0f, 0.0f, 0.0f), MarginPoint<glm::vec3>::BOUNDED, MarginPoint<glm::vec3>::OPEN_ENDED };
+		MarginPoint<glm::vec3> b{ glm::vec3(1.0f, 0.0f, 0.0f), BoundingPointType::BOUNDED, 
+			PointType::OPEN_ENDED };
 		MarginPoint<glm::vec3> c{ glm::vec3(1.0f, 0.0f, 0.0f) };
 		MarginPoint<glm::vec3> d{ glm::vec3(1.0f, 0.0f, 4.0f) };
 
@@ -104,10 +110,10 @@ namespace MyCode
 	}
 	bool UT_VectorMath::LinesIntersection::IntersectionBetweenOpenLineSegments()
 	{
-		MarginPoint<glm::vec3> a{ glm::vec3(0.0f, 0.0f,  0.0f), MarginPoint<glm::vec3>::BOUNDED, MarginPoint<glm::vec3>::OPEN_ENDED };
-		MarginPoint<glm::vec3> b{ glm::vec3(2.0f, 0.0f,  0.0f), MarginPoint<glm::vec3>::BOUNDED, MarginPoint<glm::vec3>::OPEN_ENDED };
-		MarginPoint<glm::vec3> c{ glm::vec3(1.0f, 0.0f, -2.0f), MarginPoint<glm::vec3>::BOUNDED, MarginPoint<glm::vec3>::OPEN_ENDED };
-		MarginPoint<glm::vec3> d{ glm::vec3(1.0f, 0.0f,  4.0f), MarginPoint<glm::vec3>::BOUNDED, MarginPoint<glm::vec3>::OPEN_ENDED };
+		MarginPoint<glm::vec3> a{ glm::vec3(0.0f, 0.0f,  0.0f), BoundingPointType::BOUNDED, PointType::OPEN_ENDED };
+		MarginPoint<glm::vec3> b{ glm::vec3(2.0f, 0.0f,  0.0f), BoundingPointType::BOUNDED, PointType::OPEN_ENDED };
+		MarginPoint<glm::vec3> c{ glm::vec3(1.0f, 0.0f, -2.0f), BoundingPointType::BOUNDED, PointType::OPEN_ENDED };
+		MarginPoint<glm::vec3> d{ glm::vec3(1.0f, 0.0f,  4.0f), BoundingPointType::BOUNDED, PointType::OPEN_ENDED };
 
 		const auto intersection = GetLinesIntersection(a, b, c, d);
 		const glm::vec3 intersectionPoint = intersection.first;
@@ -119,7 +125,7 @@ namespace MyCode
 	bool UT_VectorMath::LinesIntersection::NoIntersectionBetweenColinearLineSegments()
 	{
 		MarginPoint<glm::vec3> a{ glm::vec3(0.0f, 0.0f, 0.0f)};
-		MarginPoint<glm::vec3> b{ glm::vec3(1.0f, 0.0f, 0.0f), MarginPoint<glm::vec3>::BOUNDED, MarginPoint<glm::vec3>::OPEN_ENDED };
+		MarginPoint<glm::vec3> b{ glm::vec3(1.0f, 0.0f, 0.0f)};
 		MarginPoint<glm::vec3> c{ glm::vec3(2.0f, 0.0f, 0.0f)};
 		MarginPoint<glm::vec3> d{ glm::vec3(3.0f, 0.0f, 0.0f)};
 
@@ -130,12 +136,77 @@ namespace MyCode
 		return CHECK_EQUALS(intersectionPointExpected, doesIntersectionPointExist);
 	}
 
+	bool UT_VectorMath::LinesIntersection::IntersectionBetweenColinearLineSegmentsA()
+	{
+		MarginPoint<glm::vec3> a{ glm::vec3(1.0f, 0.0f, 0.0f) };
+		MarginPoint<glm::vec3> b{ glm::vec3(2.0f, 0.0f, 0.0f) };
+		MarginPoint<glm::vec3> c{ glm::vec3(0.0f, 0.0f, 0.0f) };
+		MarginPoint<glm::vec3> d{ glm::vec3(3.0f, 0.0f, 0.0f) };
+
+		const auto intersection = GetLinesIntersection(a, b, c, d);
+		const std::pair<glm::vec3, bool> expected{a.mPoint, true};
+
+		return CHECK_EQUALS(intersection, expected);
+	}
+
+	bool UT_VectorMath::LinesIntersection::IntersectionBetweenColinearLineSegmentsB()
+	{
+		MarginPoint<glm::vec3> a{ glm::vec3(4.0f, 0.0f, 0.0f) };
+		MarginPoint<glm::vec3> b{ glm::vec3(2.0f, 0.0f, 0.0f) };
+		MarginPoint<glm::vec3> c{ glm::vec3(3.0f, 0.0f, 0.0f) };
+		MarginPoint<glm::vec3> d{ glm::vec3(0.0f, 0.0f, 0.0f) };
+
+		const auto intersection = GetLinesIntersection(a, b, c, d);
+		const std::pair<glm::vec3, bool> expected{ c.mPoint, true };
+
+		return CHECK_EQUALS(intersection, expected);
+	}
+
+	bool UT_VectorMath::LinesIntersection::IntersectionBetweenColinearLineSegmentsC()
+	{
+		MarginPoint<glm::vec3> a{ glm::vec3(0.0f, 0.0f, 0.0f) };
+		MarginPoint<glm::vec3> b{ glm::vec3(3.0f, 0.0f, 0.0f) };
+		MarginPoint<glm::vec3> c{ glm::vec3(1.0f, 0.0f, 0.0f) };
+		MarginPoint<glm::vec3> d{ glm::vec3(2.0f, 0.0f, 0.0f) };
+
+		const auto intersection = GetLinesIntersection(a, b, c, d);
+		const std::pair<glm::vec3, bool> expected{ c.mPoint, true };
+
+		return CHECK_EQUALS(intersection, expected);
+	}
+
+	bool UT_VectorMath::LinesIntersection::IntersectionBetweenColinearLineSegmentsD()
+	{
+		MarginPoint<glm::vec3> a{ glm::vec3(3.0f, 0.0f, 0.0f) };
+		MarginPoint<glm::vec3> b{ glm::vec3(1.0f, 0.0f, 0.0f) };
+		MarginPoint<glm::vec3> c{ glm::vec3(2.0f, 0.0f, 0.0f) };
+		MarginPoint<glm::vec3> d{ glm::vec3(0.0f, 0.0f, 0.0f) };
+
+		const auto intersection = GetLinesIntersection(a, b, c, d);
+		const std::pair<glm::vec3, bool> expected{ c.mPoint, true };
+
+		return CHECK_EQUALS(intersection, expected);
+	}
+
+	bool UT_VectorMath::LinesIntersection::IntersectionBetweenColinearLineSegmentsWithMarginError()
+	{
+		MarginPoint<glm::vec3> a{ glm::vec3(0.0f, 0.0f, 1.0f) };
+		MarginPoint<glm::vec3> b{ glm::vec3(4.0f, 0.0f, -3.0f) };
+		MarginPoint<glm::vec3> c{ glm::vec3(1.0f, 0.0f, 0.0f) };
+		MarginPoint<glm::vec3> d{ glm::vec3(3.0f, 0.0f, -2.0f) };
+
+		const auto intersection = GetLinesIntersection(a, b, c, d);
+		const std::pair<glm::vec3, bool> expected{ c.mPoint, true };
+
+		return CHECK_EQUALS(intersection, expected);
+	}
+
 	bool UT_VectorMath::LinesIntersection::IntersectionBetweenLineSegmentAndRay()
 	{
 		MarginPoint<glm::vec3> a{ glm::vec3(0.0f, 0.0f,  0.0f)};
 		MarginPoint<glm::vec3> b{ glm::vec3(2.0f, 0.0f,  0.0f)};
 		MarginPoint<glm::vec3> c{ glm::vec3(1.0f, 0.0f, 10.0f)};
-		MarginPoint<glm::vec3> d{ glm::vec3(1.0f, 0.0f, 9.0f), MarginPoint<glm::vec3>::UNBOUNDED};
+		MarginPoint<glm::vec3> d{ glm::vec3(1.0f, 0.0f, 9.0f), BoundingPointType::UNBOUNDED };
 
 		const auto intersection = GetLinesIntersection(a, b, c, d);
 		const glm::vec3 intersectionPoint = intersection.first;
@@ -147,8 +218,8 @@ namespace MyCode
 	{
 		MarginPoint<glm::vec3> a{ glm::vec3(0.0f, 0.0f, 0.0f)};
 		MarginPoint<glm::vec3> b{ glm::vec3(2.0f, 0.0f, 0.0f)};
-		MarginPoint<glm::vec3> c{ glm::vec3(1.0f, 0.0f, -10.0f), MarginPoint<glm::vec3>::UNBOUNDED };
-		MarginPoint<glm::vec3> d{ glm::vec3(1.0f, 0.0f, -9.0f), MarginPoint<glm::vec3>::UNBOUNDED };
+		MarginPoint<glm::vec3> c{ glm::vec3(1.0f, 0.0f, -10.0f), BoundingPointType::UNBOUNDED };
+		MarginPoint<glm::vec3> d{ glm::vec3(1.0f, 0.0f, -9.0f), BoundingPointType::UNBOUNDED };
 
 		const auto intersection = GetLinesIntersection(a, b, c, d);
 		const glm::vec3 intersectionPoint = intersection.first;
@@ -159,9 +230,9 @@ namespace MyCode
 	bool UT_VectorMath::LinesIntersection::NoIntersectionBetweenRays()
 	{
 		MarginPoint<glm::vec3> a{ glm::vec3(2.0f, 0.0f, 0.0f)};
-		MarginPoint<glm::vec3> b{ glm::vec3(0.0f, 0.0f, 0.0f), MarginPoint<glm::vec3>::UNBOUNDED};
+		MarginPoint<glm::vec3> b{ glm::vec3(0.0f, 0.0f, 0.0f), BoundingPointType::UNBOUNDED };
 		MarginPoint<glm::vec3> c{ glm::vec3(3.0f, 0.0f, 0.0f)};
-		MarginPoint<glm::vec3> d{ glm::vec3(5.0f, 0.0f, 0.0f), MarginPoint<glm::vec3>::UNBOUNDED};
+		MarginPoint<glm::vec3> d{ glm::vec3(5.0f, 0.0f, 0.0f), BoundingPointType::UNBOUNDED };
 
 		const auto intersection = GetLinesIntersection(a, b, c, d);
 		const bool doesIntersectionPointExist = intersection.second;
@@ -172,9 +243,9 @@ namespace MyCode
 	bool UT_VectorMath::LinesIntersection::IntersectionBetweenRays()
 	{
 		MarginPoint<glm::vec3> a{ glm::vec3(0.0f, 0.0f, 0.0f)};
-		MarginPoint<glm::vec3> b{ glm::vec3(1.0f, 0.0f, 0.0f), MarginPoint<glm::vec3>::UNBOUNDED };
+		MarginPoint<glm::vec3> b{ glm::vec3(1.0f, 0.0f, 0.0f), BoundingPointType::UNBOUNDED };
 		MarginPoint<glm::vec3> c{ glm::vec3(5.0f, 0.0f, 10.0f) };
-		MarginPoint<glm::vec3> d{ glm::vec3(5.0f, 0.0f, 9.0f), MarginPoint<glm::vec3>::UNBOUNDED };
+		MarginPoint<glm::vec3> d{ glm::vec3(5.0f, 0.0f, 9.0f), BoundingPointType::UNBOUNDED };
 
 		const auto intersection = GetLinesIntersection(a, b, c, d);
 		const glm::vec3 intersectionPoint = intersection.first;
@@ -184,10 +255,10 @@ namespace MyCode
 	}
 	bool UT_VectorMath::LinesIntersection::NoIntersectionBetweenLines()
 	{
-		MarginPoint<glm::vec3> a{ glm::vec3(0.0f, 0.0f, 0.0f), MarginPoint<glm::vec3>::UNBOUNDED };
-		MarginPoint<glm::vec3> b{ glm::vec3(1.0f, 0.0f, 0.0f), MarginPoint<glm::vec3>::UNBOUNDED };
-		MarginPoint<glm::vec3> c{ glm::vec3(0.0f, 0.0f, 1.0f), MarginPoint<glm::vec3>::UNBOUNDED };
-		MarginPoint<glm::vec3> d{ glm::vec3(1.0f, 0.0f, 1.0f), MarginPoint<glm::vec3>::UNBOUNDED };
+		MarginPoint<glm::vec3> a{ glm::vec3(0.0f, 0.0f, 0.0f), BoundingPointType::UNBOUNDED };
+		MarginPoint<glm::vec3> b{ glm::vec3(1.0f, 0.0f, 0.0f), BoundingPointType::UNBOUNDED };
+		MarginPoint<glm::vec3> c{ glm::vec3(0.0f, 0.0f, 1.0f), BoundingPointType::UNBOUNDED };
+		MarginPoint<glm::vec3> d{ glm::vec3(1.0f, 0.0f, 1.0f), BoundingPointType::UNBOUNDED };
 
 		const auto intersection = GetLinesIntersection(a, b, c, d);
 		const bool doesIntersectionPointExist = intersection.second;
@@ -197,10 +268,10 @@ namespace MyCode
 	}
 	bool UT_VectorMath::LinesIntersection::IntersectionBetweenLines()
 	{
-		MarginPoint<glm::vec3> a{ glm::vec3(0.0f, 0.0f, 0.0f), MarginPoint<glm::vec3>::UNBOUNDED };
-		MarginPoint<glm::vec3> b{ glm::vec3(1.0f, 0.0f, 0.0f), MarginPoint<glm::vec3>::UNBOUNDED };
-		MarginPoint<glm::vec3> c{ glm::vec3(5.0f, 0.0f, 3.0f), MarginPoint<glm::vec3>::UNBOUNDED };
-		MarginPoint<glm::vec3> d{ glm::vec3(5.0f, 0.0f, 5.0f), MarginPoint<glm::vec3>::UNBOUNDED };
+		MarginPoint<glm::vec3> a{ glm::vec3(0.0f, 0.0f, 0.0f), BoundingPointType::UNBOUNDED };
+		MarginPoint<glm::vec3> b{ glm::vec3(1.0f, 0.0f, 0.0f), BoundingPointType::UNBOUNDED };
+		MarginPoint<glm::vec3> c{ glm::vec3(5.0f, 0.0f, 3.0f), BoundingPointType::UNBOUNDED };
+		MarginPoint<glm::vec3> d{ glm::vec3(5.0f, 0.0f, 5.0f), BoundingPointType::UNBOUNDED };
 
 		const auto intersection = GetLinesIntersection(a, b, c, d);
 		const glm::vec3 intersectionPoint = intersection.first;
@@ -215,7 +286,8 @@ namespace MyCode
 			&& SegmentCrossingThroughPolygon()
 			&& SegmentIsInPolygon()
 			&& SegmentIntersectsSideOfCoplanarPolygon()
-			&& SegmentIntersectsSideOfPolygon();
+			&& SegmentIntersectsSideOfPolygon()
+			&& NoIntersectionForTouchingPolygon();
 	}
 
 	bool UT_VectorMath::LineSegmentPolygonIntersection::NoIntersection()
@@ -284,5 +356,21 @@ namespace MyCode
 		const glm::vec3 expected{2.0f, 0.0f, 0.0f};
 
 		return CHECK_IS_TRUE(AreVectorsEqualWithinMargin(intersection.first, expected));
+	}
+
+	bool UT_VectorMath::LineSegmentPolygonIntersection::NoIntersectionForTouchingPolygon()
+	{
+		const MarginPoint<glm::vec3> a{ glm::vec3{ 1.0f, -1.0f, 1.0f }, BoundingPointType::BOUNDED,
+			PointType::OPEN_ENDED };
+		const MarginPoint<glm::vec3> b{ glm::vec3{ -9.0f, -1.0f, 1.0f }, BoundingPointType::BOUNDED,
+			PointType::OPEN_ENDED };
+		const std::vector<glm::vec3> polygon{
+			glm::vec3{ 1.0f, -1.0f, 1.0f }, glm::vec3{ 3.0f, -1.0f, 1.0f },
+			glm::vec3{ 3.0f, 1.0f, 1.0f }, glm::vec3{ 1.0f, 1.0f, 1.0f } };
+
+		const auto intersection = GetIntersectionBetweenLineAndPolygon(a, b, polygon);
+		const bool expected = false;
+
+		return CHECK_EQUALS(intersection.second, expected);
 	}
 }

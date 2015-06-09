@@ -65,6 +65,50 @@ namespace MyCode
 			glm::vec3 GetPositionOnNearEdge(const Polygon& target, const glm::vec3& targetCenter,
 				const Polygon& obstacle,
 				const Avoidance avoidance = Avoidance::OUTSIDE_IN);
+
+			struct Collision
+			{
+				Collision(const glm::vec3& collidingVertex, const glm::vec3& pointOfCollision)
+					: mCollidingVertex(collidingVertex)
+					, mPointOfCollision(pointOfCollision)
+				{}
+
+				glm::vec3 mCollidingVertex;
+				glm::vec3 mPointOfCollision;
+			};
+
+			class CollisionAvoider
+			{
+			public:
+				CollisionAvoider(const std::vector<glm::vec3>& verticesR1, const std::vector<glm::vec3>& verticesR2,
+					const glm::vec3& currentCenter, const glm::vec3& targetCenter,
+					const Avoidance avoidance = Avoidance::OUTSIDE_IN);
+
+				const glm::vec3& GetValidCenter() const { return mValidCenter; }
+			private:
+				void DetermineValidCenter();
+				std::pair<Collision, bool> GetNearEdgeCollision();
+				std::vector<Collision> GetCollisionsFromBothPolygons();
+
+				std::vector<Collision> GetCollisions(const std::vector<glm::vec3>& forwardsR1, const std::vector<glm::vec3>& forwardsR2,
+					const glm::vec3& directionVector) const;
+
+				std::pair<glm::vec3, bool> GetClosestIntersectionPoint(const glm::vec3& a, const glm::vec3& b,
+					const std::vector<glm::vec3>& lineSegments) const;
+				std::pair<glm::vec3, bool> GetFarthestIntersectionPoint(const glm::vec3& a, const glm::vec3& b,
+					const std::vector<glm::vec3>& lineSegments) const;
+
+				void SortAscending(std::vector<Collision>& collisions, const glm::vec3& biasPoint) const;
+				glm::vec3 GetCenterThatAvoidsCollision(const glm::vec3& currentCenter, const Collision& collision) const;
+
+				const std::vector<glm::vec3>& mVerticesR1;
+				const std::vector<glm::vec3>& mVerticesR2;
+				const glm::vec3& mCurrentCenter;
+				const glm::vec3& mTargetCenter;
+				const glm::vec3 mDirectionVector;
+				const Avoidance mAvoidance;
+				glm::vec3 mValidCenter;
+			};
 		}
 	}
 }

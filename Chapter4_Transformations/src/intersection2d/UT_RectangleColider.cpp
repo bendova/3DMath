@@ -61,7 +61,7 @@ namespace MyCode
 			glm::vec3{ 2.0f, 0.0f, 2.0f }, glm::vec3{ 2.0f, 0.0f, 1.0f } };
 
 		const bool collision = PolygonIntersection::DoPolygonsIntersect2D(rectangle1, rectangle2);
-		const bool collisionExpected = false;
+		const bool collisionExpected = true;
 
 		return CHECK_EQUALS(collision, collisionExpected);
 	}
@@ -76,7 +76,7 @@ namespace MyCode
 			glm::vec3{ 2.0f, 0.0f, -1.0f }, glm::vec3{ 1.0f, 0.0f, -1.0f } };
 		
 		const bool collision = PolygonIntersection::DoPolygonsIntersect2D(rectangle1, rectangle2);
-		const bool collisionExpected = false;
+		const bool collisionExpected = true;
 
 		return CHECK_EQUALS(collision, collisionExpected);
 	}
@@ -392,20 +392,11 @@ namespace MyCode
 		return (isValidProjAB && isValidProjBC && isValidProjCD && isValidProjDE && isValidProjEA);
 	}
 
-	std::pair<glm::vec3, glm::vec3> UT_RectangleColider::ProjectionToAxesTest::ProjectPointsToAxis(const std::vector<glm::vec3>& points, const glm::vec3& lineA, const glm::vec3& lineB)
-	{
-		using namespace PolygonIntersection::Detail::PolygonsIntersection;
-		const auto projectedFactors = ProjectPolygonToAxis(points, lineA, lineB);
-		return GetPointsOnLine(projectedFactors, lineA, lineB);
-	}
-
-	std::pair<glm::vec3, glm::vec3> UT_RectangleColider::ProjectionToAxesTest::GetPointsOnLine(std::pair<float, float> factors,
+	std::pair<glm::vec3, glm::vec3> UT_RectangleColider::ProjectionToAxesTest::ProjectPointsToAxis(const std::vector<glm::vec3>& points, 
 		const glm::vec3& lineA, const glm::vec3& lineB)
 	{
-		const glm::vec3 lineDirection = lineB - lineA;
-		const glm::vec3 pointM = lineA + factors.first * lineDirection;
-		const glm::vec3 pointN = lineA + factors.second * lineDirection;
-		return std::make_pair(pointM, pointN);
+		using namespace PolygonIntersection::Detail::PolygonsIntersection;
+		return ProjectPolygonToAxis(points, lineA, lineB);
 	}
 
 	bool UT_RectangleColider::ValidPositionTest::Run()

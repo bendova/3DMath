@@ -99,8 +99,6 @@ namespace MyCode
 			bool ProjectPentagon();
 
 			std::pair<glm::vec3, glm::vec3> ProjectPointsToAxis(const std::vector<glm::vec3>& points, const glm::vec3& lineA, const glm::vec3& lineB);
-			std::pair<glm::vec3, glm::vec3> GetPointsOnLine(std::pair<float, float> factors,
-				const glm::vec3& lineA, const glm::vec3& lineB);
 		};
 
 		class ValidPositionTest

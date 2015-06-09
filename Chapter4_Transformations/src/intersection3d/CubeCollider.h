@@ -11,7 +11,7 @@ namespace MyCode
 	{
 	public:
 		void AddCube(const Cube& c) { mCubes.push_back(&c); };
-		glm::vec3 GetPositionThatAvoidCollisions(const Cube& cube, glm::vec3 targetCenter) const;
+		glm::vec3 GetPositionThatAvoidsCollisions(const Cube& cube, glm::vec3 targetCenter) const;
 
 	private:
 		std::vector<const Cube*> mCubes;
@@ -22,6 +22,9 @@ namespace MyCode
 	{
 		std::vector<const Cube*> SortByDistanceFromPoint(std::vector<const Cube*> rectangles, const glm::vec3& point);
 		glm::vec3 GetValidPosition(const Cube& cube, const glm::vec3& targetCenter, const Cube& obstacle);
+		bool DoCubesIntersect(const Cube& a, const Cube& b);
+		glm::vec3 StepOutOfCollision(const Cube& cube, const glm::vec3& targetCenter, const Cube& obstacle);
+		glm::vec3 AvoidPathCollision(const Cube& cube, const glm::vec3& targetCenter, const Cube& obstacle);
 	}
 
 	namespace TravelPathIntersection

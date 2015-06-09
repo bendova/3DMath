@@ -47,8 +47,8 @@ namespace MyCode
 
 		if (wasCollisionFound == false)
 		{
-			Log("Starting from center = [%f, %f, %f]\n", rectangle.Center().x, rectangle.Center().y, rectangle.Center().z);
-			Log("No collision was found for targetCenter = [%f, %f, %f]\n", targetCenter.x, targetCenter.y, targetCenter.z);
+			/*Log("Starting from center = [%f, %f, %f]\n", rectangle.Center().x, rectangle.Center().y, rectangle.Center().z);
+			Log("No collision was found for targetCenter = [%f, %f, %f]\n", targetCenter.x, targetCenter.y, targetCenter.z);*/
 		}
 
 		return targetCenter;
@@ -108,9 +108,7 @@ namespace MyCode
 
 		void CollisionSanityCheck(const Rectangle& target, const glm::vec3& newTargetCenter, const Rectangle& obstacle)
 		{
-			const float targetInscribedCircleRadius = glm::length(target.A() - target.B()) / 2.0f;
-			const float obstacleInscribedCircleRadius = glm::length(obstacle.A() - obstacle.B()) / 2.0f;
-			const float minDistanceBetweenCenters = targetInscribedCircleRadius + obstacleInscribedCircleRadius;
+			const float minDistanceBetweenCenters = target.InscribedCircleRadius() + obstacle.InscribedCircleRadius();
 			const float targetDistanceBetweenCenters = glm::length(obstacle.Center() - newTargetCenter);
 
 			Log("CollisionSanityCheck() targetDistanceBetweenCenters = [%f]\n", targetDistanceBetweenCenters);
@@ -210,12 +208,8 @@ namespace MyCode
 				std::pair<glm::vec3, glm::vec3> GetLineSegmentFromCollinearPoints(const std::vector<glm::vec3>& collinearPoints)
 				{
 					std::vector<glm::vec3> distinctPoints{ GetPairwiseDistinctPoints(collinearPoints, 2) };
-					std::pair<float, float> edgeFactors = PolygonsIntersection::ProjectPolygonToAxis(collinearPoints, 
+					return PolygonsIntersection::ProjectPolygonToAxis(collinearPoints,
 						distinctPoints[0], distinctPoints[1]);
-					const glm::vec3 directionVector = distinctPoints[1] - distinctPoints[0];
-					const glm::vec3 leftEdge = distinctPoints[0] + edgeFactors.first * directionVector;
-					const glm::vec3 rightEdge = distinctPoints[0] + edgeFactors.second * directionVector;
-					return std::make_pair(leftEdge, rightEdge);
 				}
 
 				bool DoPolygonWithLineSegmentIntersection(const std::vector<glm::vec3>& polygon, 
@@ -276,28 +270,13 @@ namespace MyCode
 						const auto projPolygon1 = ProjectPolygonToAxis(polygon1, axisA, axisB);
 						const auto projPolygon2 = ProjectPolygonToAxis(polygon2, axisA, axisB);
 
-						const bool doTheyIntersect = DoColinearLineSegmentsIntersect(
-							projPolygon1.first, projPolygon1.second,
-							projPolygon2.first, projPolygon2.second);
+						const bool doTheyIntersect = VectorMath::DoLineSegmentsIntersect(projPolygon1.first, 
+							projPolygon1.second, projPolygon2.first, projPolygon2.second);
 
 						return doTheyIntersect;
 					}
 
-					bool DoColinearLineSegmentsIntersect(const float& factorA, const float& factorB,
-						const float& factorC, const float& factorD)
-					{
-						const bool doTheyIntersect = DoSegmentsIntersect(factorA, factorB, factorC, factorD)
-							|| DoSegmentsIntersect(factorC, factorD, factorA, factorB);
-						return (doTheyIntersect);
-					}
-
-					bool DoSegmentsIntersect(const float& factorA, const float& factorB,
-						const float& factorC, const float& factorD)
-					{
-						return !((factorC >= factorB) || (factorA >= factorD));
-					}
-
-					std::pair<float, float> ProjectPolygonToAxis(const std::vector<glm::vec3>& polygon,
+					std::pair<glm::vec3, glm::vec3> ProjectPolygonToAxis(const std::vector<glm::vec3>& polygon,
 						const glm::vec3& axisPointA, const glm::vec3& axisPointB)
 					{
 						float leftEdgeFactor = FLT_MAX;
@@ -319,7 +298,9 @@ namespace MyCode
 								rightEdgeFactor = factor;
 							}
 						}
-						return std::make_pair(leftEdgeFactor, rightEdgeFactor);
+						const auto leftEdge = axisPointA + leftEdgeFactor * lineDirection;
+						const auto rightEdge = axisPointA + rightEdgeFactor * lineDirection;
+						return std::make_pair(leftEdge, rightEdge);
 					}
 				}
 			}
@@ -329,10 +310,32 @@ namespace MyCode
 		{
 			bool DoesTravelPathCollide(const Rectangle& rectangle, const glm::vec3& targetCenter, const Rectangle& obstacle)
 			{
-				const auto travelPathPolygon = TravelPathBounding::GetTravelPathBounding(rectangle, targetCenter);
+				const std::vector<glm::vec3> targetVertices{ rectangle.A(), rectangle.B(), rectangle.C(), rectangle.D() };
 				const std::vector<glm::vec3> obstacleVertices{ obstacle.A(), obstacle.B(), obstacle.C(), obstacle.D() };
-				bool doTheyOverlap = PolygonIntersection::DoPolygonsIntersect2D(travelPathPolygon, obstacleVertices);
-				return doTheyOverlap;
+				const glm::vec3 directionVector{ targetCenter - rectangle.Center() };
+				const bool doesItCollide = DoesAnyVerticePathCollide(targetVertices, directionVector, obstacleVertices) ||
+					DoesAnyVerticePathCollide(obstacleVertices, -directionVector, targetVertices);
+				return doesItCollide;
+			}
+
+			bool DoesAnyVerticePathCollide(const std::vector<glm::vec3>& targetVertices, const glm::vec3& directionVector,
+				const std::vector<glm::vec3>& obstacleVertices)
+			{
+				bool doesItCollide = false;
+				for (const auto& vertex : targetVertices)
+				{
+					PointType pointType = PointType::CLOSED_ENDED;
+					BoundingPointType boundingType = BoundingPointType::BOUNDED;
+					const MarginPoint<glm::vec3> a{ vertex, boundingType, pointType };
+					const MarginPoint<glm::vec3> b{ vertex + directionVector, boundingType, pointType };
+					const auto intersection = VectorMath::GetIntersectionBetweenLineAndPolygon(a, b, obstacleVertices);
+					if (intersection.second)
+					{
+						doesItCollide = true;
+						break;
+					}
+				}
+				return doesItCollide;
 			}
 
 			std::vector<glm::vec3> GetTravelPathBounding(const Rectangle& rectangle, const glm::vec3& targetCenter)
@@ -518,7 +521,7 @@ namespace MyCode
 				float currentMinDistanceToA = FLT_MAX;
 
 				VectorMath::MarginPoint<glm::vec3> marginA{ a};
-				VectorMath::MarginPoint<glm::vec3> marginB{ b, VectorMath::MarginPoint<glm::vec3>::UNBOUNDED };
+				VectorMath::MarginPoint<glm::vec3> marginB{ b, BoundingPointType::UNBOUNDED };
 
 				const auto lineSegmentPoints = lineSegments.size();
 				for (size_t i = 0; i < lineSegmentPoints; ++i)

@@ -40,11 +40,13 @@ namespace MyCode
 		bool AreSegmentsEqualWithinMargin(const std::pair<glm::vec3, glm::vec3>& ab, const std::pair<glm::vec3, glm::vec3>& cd,
 			const double margin = 1e-6);
 		bool AreVectorsEqualWithinMargin(const glm::vec3& a, const glm::vec3& b, const double margin = 1e-6);
+		bool AreVectorsEqualWithinMargin(const glm::vec4& a, const glm::vec4& b, const double margin = 1e-6);
 
 		float FloorWithPrecision(const float x, const int precision);
 		double FloorWithPrecision(const double x, const int precision);
 		void Floor(glm::vec3& v, const int precision = 5);
 		void Floor(glm::vec4& v, const int precision = 5);
+		bool AreEqualWithMargin(const float a, const float b, const float errorMargin = 1e-5);
 
 		float IsIntersectionFactorOnSegment(const float factor, const bool strictly = false);
 
@@ -59,34 +61,80 @@ namespace MyCode
 			const glm::vec3& planePointC, const glm::vec3& point);
 
 		bool ArePointsCollinear(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c);
+		bool ArePointsCollinear(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, const glm::vec3& d);
+
+		std::pair<float, float> GetMinMaxLengthsPair(const std::vector<glm::vec3>& points);
 
 		template<typename T>
 		float GetColinearSegmentsIntersectionFactor(const T& a, const T& b, const T& c, const T& d)
 		{
-			const glm::vec3 lineDirection = b - a;
-			const glm::vec3::value_type lineDirectionLengthSquared = glm::dot(lineDirection, lineDirection);
+			const T lineDirection = b - a;
+			const T::value_type lineDirectionLengthSquared = glm::dot(lineDirection, lineDirection);
+			const T ac = c - a;
+			const float T::value_type factor = glm::dot(lineDirection, vectorFromLineToPoint) / lineDirectionLengthSquared;
+			return factor;
+		}
 
-			const glm::vec3 ac = c - a;
-			const float glm::vec3::value_type factor = glm::dot(lineDirection, vectorFromLineToPoint) / lineDirectionLengthSquared;
+		template<typename T>
+		std::pair<float, bool> GetIntersectionFactor1D(const T& a, const T& b, const T& c, const T& d)
+		{
+			const auto ab = b - a;
+			const float abDot = glm::dot(ab, ab);
+			const float factorA = 0.0f;
+			const float factorB = 1.0f;
+			
+			const auto ac = c - a;
+			const float factorC = glm::dot(ab, ac) / abDot;
+			
+			const auto ad = d - a;
+			const float factorD = glm::dot(ab, ad) / abDot;
+			
+			const bool isValidFactorA = (factorA >= factorC) && (factorA <= factorD);
+			const bool isValidFactorB = (factorB >= factorC) && (factorB <= factorD);
+			const bool isValidFactorC = (factorC >= factorA) && (factorC <= factorB);
+			const bool isValidFactorD = (factorD >= factorA) && (factorD <= factorB);
+			
+			std::vector<std::pair<float, bool>> factors;
+			factors.emplace_back(factorA, isValidFactorA);
+			factors.emplace_back(factorB, isValidFactorB);
+			factors.emplace_back(factorC, isValidFactorC);
+			factors.emplace_back(factorD, isValidFactorD);
+
+			std::pair<float, bool> result{ FLT_MAX, false};
+			for (const std::pair<float, bool>& factorPair: factors)
+			{
+				if (factorPair.second && factorPair.first < result.first)
+				{
+					result = factorPair;
+				}
+			}
+
+			return result;
 		}
 
 		template<typename T>
 		std::pair<float, bool> GetIntersectionFactor(const T& a, const T& b, const T& c, const T& d)
 		{
-			bool doesIntersectionPointExist = false;
-			float intersectionFactor = FLT_MAX;
+			std::pair<float, bool> intersectionFactor{ FLT_MAX , false };
 			const glm::vec3 ab{ b - a };
 			const glm::vec3 cd{ d - c };
 			const glm::vec3 lineDirectionsCross{ glm::cross(ab, cd) };
 			const auto lineDirectionsCrossLengthSquared = glm::dot(lineDirectionsCross, lineDirectionsCross);
 			if (lineDirectionsCrossLengthSquared)
 			{
-				doesIntersectionPointExist = true;
+				intersectionFactor.second = true;
 				const glm::vec3 ca{ a - c };
-				intersectionFactor = -glm::dot(glm::cross(ca, cd), lineDirectionsCross)
+				intersectionFactor.first = -glm::dot(glm::cross(ca, cd), lineDirectionsCross)
 					/ lineDirectionsCrossLengthSquared;
 			}
-			return std::make_pair(intersectionFactor, doesIntersectionPointExist);
+			else
+			{
+				if (ArePointsCollinear(a, b, c, d))
+				{
+					intersectionFactor = GetIntersectionFactor1D(a, b, c, d);
+				}
+			}
+			return intersectionFactor;
 		}
 
 		template<typename T>
@@ -104,23 +152,23 @@ namespace MyCode
 			return doTheyIntersect;
 		}
 
+		enum class BoundingPointType
+		{
+			UNBOUNDED = 0,
+			BOUNDED,
+		};
+
+		enum class PointType
+		{
+			CLOSED_ENDED = 0,
+			OPEN_ENDED,
+		};
+
 		template<typename T>
 		struct MarginPoint
 		{
-			enum BoundingPointType
-			{
-				UNBOUNDED = 0,
-				BOUNDED,
-			};
-
-			enum PointType
-			{
-				CLOSED_ENDED = 0,
-				OPEN_ENDED,
-			};
-
-			MarginPoint(const T& point, const BoundingPointType boundingType = BOUNDED,
-				const PointType pointType = CLOSED_ENDED)
+			MarginPoint(const T& point, const BoundingPointType boundingType = BoundingPointType::BOUNDED,
+				const PointType pointType = PointType::CLOSED_ENDED)
 				: mPoint(point)
 				, mBoundingPointType(boundingType)
 				, mPointEndType(pointType)
@@ -134,9 +182,9 @@ namespace MyCode
 		bool IsFactorValidForLeftMarginPoint(const float factor, const MarginPoint<T>& a)
 		{
 			bool isValid = true;
-			if (a.mBoundingPointType == MarginPoint<T>::BOUNDED)
+			if (a.mBoundingPointType == BoundingPointType::BOUNDED)
 			{
-				if (a.mPointEndType == MarginPoint<T>::CLOSED_ENDED)
+				if (a.mPointEndType == PointType::CLOSED_ENDED)
 				{
 					isValid = (factor >= 0.0f);
 				}
@@ -152,9 +200,9 @@ namespace MyCode
 		bool IsFactorValidForRightMarginPoint(const float factor, const MarginPoint<T>& b)
 		{
 			bool isValid = true;
-			if (b.mBoundingPointType == MarginPoint<T>::BOUNDED)
+			if (b.mBoundingPointType == BoundingPointType::BOUNDED)
 			{
-				if (b.mPointEndType == MarginPoint<T>::CLOSED_ENDED)
+				if (b.mPointEndType == PointType::CLOSED_ENDED)
 				{
 					isValid = (factor <= 1.0f);
 				}
@@ -288,12 +336,16 @@ namespace MyCode
 			}
 			if (intersection.second == false)
 			{
-				if (IsPointInsidePolygon(polygon, a.mPoint))
+				if (a.mBoundingPointType == BoundingPointType::BOUNDED &&
+					a.mPointEndType == PointType::CLOSED_ENDED &&
+					IsPointInsidePolygon(polygon, a.mPoint))
 				{
 					intersection.first = a.mPoint;
 					intersection.second = true;
 				}
-				else if (IsPointInsidePolygon(polygon, b.mPoint))
+				else if (b.mBoundingPointType == BoundingPointType::BOUNDED &&
+					b.mPointEndType == PointType::CLOSED_ENDED &&
+					IsPointInsidePolygon(polygon, b.mPoint))
 				{
 					intersection.first = b.mPoint;
 					intersection.second = true;
@@ -312,7 +364,7 @@ namespace MyCode
 			const auto lineDirection = b.mPoint - a.mPoint;
 			const auto numerator = glm::dot(planeNormal, vectorPlaneToLine);
 			const auto denominator = glm::dot(planeNormal, lineDirection);
-			if (numerator == 0.0f)
+			if ((numerator == 0.0f) && (a.mBoundingPointType == BoundingPointType::BOUNDED))
 			{
 				// the line is in the plane
 				intersection.first = a.mPoint;

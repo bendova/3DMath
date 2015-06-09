@@ -10,6 +10,7 @@
 #include "programs/PosColorProgram.h"
 #include "control/ControlHelper.h"
 #include "intersection2d/RectangleColider.h"
+#include "intersection3d/CubeCollider.h"
 #include "../framework/MyMesh.h"
 
 namespace glutil
@@ -34,41 +35,118 @@ namespace MyCode
 
 		static Scene* GetInstance() { return mInstance; }
 	private:
-		struct ControlledCube
+		template<typename Bounding, typename Collider>
+		struct ControlledMesh
 		{
-			ControlledCube(const std::string& mesh, const Rectangle& boundingBox, RectangleColider& intersectionHelper)
-				: mCubeMesh(mesh)
-				, mCubeControl(boundingBox, intersectionHelper)
+			ControlledMesh(const std::string& mesh, const Bounding& boundingBox, Collider& collider)
+				: mMesh(mesh)
+				, mControl(BoundingCollider<Bounding, Collider>{ boundingBox, collider })
 			{}
 
-			ControlledCube(ControlledCube&& other)
-				: mCubeMesh{ std::forward<Mesh>(other.mCubeMesh) }
-				, mCubeControl{ std::forward<ControlHelper>(other.mCubeControl) }
+			ControlledMesh(ControlledMesh&& other)
+				: mMesh{ std::forward<Mesh>(other.mMesh) }
+				, mControl{ std::forward<ControlHelper<Bounding, Collider>>(other.mControl) }
 			{}
 
-			Mesh mCubeMesh;
-			ControlHelper mCubeControl;
+			Mesh mMesh;
+			ControlHelper<Bounding, Collider> mControl;
 		};
-		
+		typedef ControlledMesh<Rectangle, RectangleColider> ControlledRectangle;
+		typedef ControlledMesh<Cube, CubeCollider> ControlledCube;
 
-		void InitCubes();
+		void InitScene2D();
+		void InitRectangles();
 		void InitColliderForPolygons2D();
+		
+		void InitScene3D();
+		void InitCubes();
+		void InitColliderForPolygons3D();
 
 		void RenderPlane(glutil::MatrixStack& modelMatrix);
+		void RenderRectangles(glutil::MatrixStack& modelMatrix);
 		void RenderCubes(glutil::MatrixStack& modelMatrix);
-		void RenderCube(glutil::MatrixStack& modelMatrix, ControlledCube& cube);
+
+		template<typename Bounding, typename Collider>
+		void RenderMesh(glutil::MatrixStack& modelMatrix, ControlledMesh<Bounding, Collider>& controlledMesh)
+		{
+			glutil::PushStack push(modelMatrix);
+
+			controlledMesh.mControl.SetWorldToCameraTransfrom(modelMatrix.Top());
+
+			modelMatrix.Translate(controlledMesh.mControl.GetPosition());
+			glUniformMatrix4fv(mPosColorProgram.GetModelToCameraTransformUniform(),
+				1, GL_FALSE, glm::value_ptr(modelMatrix.Top()));
+			controlledMesh.mMesh.Render();
+		}
 
 		void ConfigureOpenGL();
 		void ConfigureInput();
 
-		void UpdateCubeControls();
-		void UpdateCubeControl(ControlledCube& cube);
+		void UpdateControls();
+
+		template<typename Bounding, typename Collider>
+		void UpdateControl(ControlledMesh<Bounding, Collider>& controlledMesh)
+		{
+			controlledMesh.mControl.SetCameraToClipTransfrom(mCameraToClipMatrix);
+			controlledMesh.mControl.SetClipNearZ(mNearZ);
+			controlledMesh.mControl.SetScreenDimensions(mScreenWidth, mScreenHeight);
+		}
 		void UpdateCameraToClipMatrix();
 		void UploadCameraToClipToOpenGL();
 
-		bool ForwardKeyboardInputToCubes(unsigned char key);
-		bool ForwardMouseClickToCubes(int button, int state, int x, int y);
-		bool ForwardMouseMoveToCubes(int x, int y);
+		bool ForwardKeyboardInput(unsigned char key);
+
+		template<typename Bounding, typename Collider>
+		bool ForwardKeybardInput(unsigned char key, std::vector<ControlledMesh<Bounding, Collider>>& meshes)
+		{
+			bool isHandled = false;
+			for (auto& c : meshes)
+			{
+				isHandled = c.mControl.HandleKeyPress(key);
+				if (isHandled)
+				{
+					break;
+				}
+			}
+
+			return isHandled;
+		}
+
+		bool ForwardMouseClick(int button, int state, int x, int y);
+
+		template<typename Bounding, typename Collider>
+		bool ForwardMouseClick(int button, int state, int x, int y, std::vector<ControlledMesh<Bounding, Collider>>& meshes)
+		{
+			bool isHandled = false;
+			for (auto& c : meshes)
+			{
+				isHandled = c.mControl.HandleMouseClick(button, state, x, y);
+				if (isHandled)
+				{
+					break;
+				}
+			}
+
+			return isHandled;
+		}
+
+		bool ForwardMouseMove(int x, int y);
+
+		template<typename Bounding, typename Collider>
+		bool ForwardMouseMove(int x, int y, std::vector<ControlledMesh<Bounding, Collider>>& meshes)
+		{
+			bool isHandled = false;
+			for (auto& c : meshes)
+			{
+				isHandled = c.mControl.HandleMouseMoved(x, y);
+				if (isHandled)
+				{
+					break;
+				}
+			}
+
+			return isHandled;
+		}
 
 		static Scene* mInstance;
 		PosColorProgram mPosColorProgram;
@@ -76,11 +154,10 @@ namespace MyCode
 		GLint mScreenWidth;
 		GLint mScreenHeight;
 		glm::mat4 mCameraToClipMatrix;
+		std::vector<ControlledRectangle> mRectangles;
 		std::vector<ControlledCube> mCubes;
-		RectangleColider mColisionionHelper;
-		const float mCubeSideLength;
-		static const float zNear;
-		static const float zFar;
+		RectangleColider mRectangleCollider;
+		CubeCollider mCubeCollider;
 	};
 }
 

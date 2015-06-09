@@ -19,6 +19,14 @@ namespace MyCode
 				&& (std::abs(a.z - b.z) <= margin));
 		}
 
+		bool AreVectorsEqualWithinMargin(const glm::vec4& a, const glm::vec4& b, const double margin)
+		{
+			return ((std::abs(a.x - b.x) <= margin)
+				&& (std::abs(a.y - b.y) <= margin)
+				&& (std::abs(a.z - b.z) <= margin))
+				&& (std::abs(a.w - b.w) <= margin);
+		}
+
 		float IsIntersectionFactorOnSegment(const float factor, const bool strictly)
 		{
 			const float minFactor = 0.0f;
@@ -62,6 +70,11 @@ namespace MyCode
 			v.y = FloorWithPrecision(v.y, precision);
 			v.z = FloorWithPrecision(v.z, precision);
 			v.w = FloorWithPrecision(v.w, precision);
+		}
+
+		bool AreEqualWithMargin(const float a, const float b, const float errorMargin)
+		{
+			return std::abs(a - b) <= errorMargin;
 		}
 
 		float GetDistanceFromPointToLine(const glm::vec3& p, const glm::vec3& a, const glm::vec3& b)
@@ -118,8 +131,32 @@ namespace MyCode
 			const glm::vec3 ac = c - a;
 			const auto dotValue = glm::dot(ab, ac);
 			const float lengthsProduct = (glm::length(ab) * glm::length(ac));
-			const bool areCollinear = (std::abs(dotValue) == lengthsProduct);
+			const bool areCollinear = (AreEqualWithMargin(std::abs(dotValue), lengthsProduct));
 			return areCollinear;
+		}
+
+		bool ArePointsCollinear(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, const glm::vec3& d)
+		{
+			return ArePointsCollinear(a, b, c) && ArePointsCollinear(a, b, d);
+		}
+
+		std::pair<float, float> GetMinMaxLengthsPair(const std::vector<glm::vec3>& points)
+		{
+			float minLength = FLT_MAX;
+			float maxLength = -FLT_MAX;
+			for (const auto& point: points)
+			{
+				const auto pointLength = glm::length(point);
+				if (pointLength > maxLength)
+				{
+					maxLength = pointLength;
+				}
+				if (pointLength < minLength)
+				{
+					minLength = pointLength;
+				}
+			}
+			return std::make_pair(minLength, maxLength);
 		}
 	}
 }

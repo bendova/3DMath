@@ -37,6 +37,11 @@ namespace MyCode
 			bool IntersectionBetweenLines();
 
 			bool NoIntersectionBetweenColinearLineSegments();
+			bool IntersectionBetweenColinearLineSegmentsA();
+			bool IntersectionBetweenColinearLineSegmentsB();
+			bool IntersectionBetweenColinearLineSegmentsC();
+			bool IntersectionBetweenColinearLineSegmentsD();
+			bool IntersectionBetweenColinearLineSegmentsWithMarginError();
 		};
 
 		class LineSegmentPolygonIntersection
@@ -49,6 +54,7 @@ namespace MyCode
 			bool SegmentIsInPolygon();
 			bool SegmentIntersectsSideOfCoplanarPolygon();
 			bool SegmentIntersectsSideOfPolygon();
+			bool NoIntersectionForTouchingPolygon();
 		};
 	};
 }

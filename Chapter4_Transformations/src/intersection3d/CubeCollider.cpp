@@ -5,11 +5,11 @@
 
 namespace MyCode
 {
-	glm::vec3 CubeCollider::GetPositionThatAvoidCollisions(const Cube& cube, glm::vec3 targetCenter) const
+	glm::vec3 CubeCollider::GetPositionThatAvoidsCollisions(const Cube& cube, glm::vec3 targetCenter) const
 	{
 		using namespace CubeColliderHelpers;
 		using namespace TravelPathIntersection;
-		std::vector<const Cube*> sortedCubes = SortByDistanceFromPoint(mCubes, cube.GetCenter());
+		std::vector<const Cube*> sortedCubes = SortByDistanceFromPoint(mCubes, cube.Center());
 		for (const Cube* const c : sortedCubes)
 		{
 			const Cube& obstacle = *c;
@@ -33,8 +33,8 @@ namespace MyCode
 			std::sort(rectangles.begin(), rectangles.end(),
 				[&point](const Cube* a, const Cube* b)
 			{
-				const auto distanceFromA_toPoint = glm::length(point - a->GetCenter());
-				const auto distanceFromB_toPoint = glm::length(point - b->GetCenter());
+				const auto distanceFromA_toPoint = glm::length(point - a->Center());
+				const auto distanceFromB_toPoint = glm::length(point - b->Center());
 				return distanceFromA_toPoint < distanceFromB_toPoint;
 			});
 
@@ -45,10 +45,35 @@ namespace MyCode
 		{
 			using namespace TravelPathIntersection;
 
+			const glm::vec3 validPosition{ AvoidPathCollision(cube, targetCenter, obstacle) };
+			return validPosition;
+		}
+
+		bool DoCubesIntersect(const Cube& a, const Cube& b)
+		{
+			return false;
+		}
+
+		glm::vec3 StepOutOfCollision(const Cube& cube, const glm::vec3& targetCenter, const Cube& obstacle)
+		{
+			glm::vec3 validCenter{targetCenter};
+
+			const glm::vec3 directionVector{ targetCenter - cube.Center() };
+			const glm::vec3 centersVector{ obstacle.Center() - cube.Center() };
+			const bool isDirectionVectorValid = (glm::dot(directionVector, centersVector) < 0.0f);
+			if (isDirectionVectorValid == false)
+			{
+				// FIXME validCenter = 
+			}
+			return validCenter;
+		}
+
+		glm::vec3 AvoidPathCollision(const Cube& cube, const glm::vec3& targetCenter, const Cube& obstacle)
+		{
 			PolygonCollider polygonCollider;
 			polygonCollider.AddPolygons(obstacle.GetFaces());
 
-			glm::vec3 directionVector = targetCenter - cube.GetCenter();
+			glm::vec3 directionVector = targetCenter - cube.Center();
 			for (int i = 0; i < cube.FacesCount(); ++i)
 			{
 				const Polygon& face = cube[i];
@@ -59,7 +84,7 @@ namespace MyCode
 					directionVector = validTargetCenter - face.Center();
 				}
 			}
-			return cube.GetCenter() + directionVector;
+			return cube.Center() + directionVector;
 		}
 	}
 
@@ -68,7 +93,7 @@ namespace MyCode
 		bool DoesTravelPathCollide(const Cube& cube, const glm::vec3& targetCenter, const Cube& obstacle)
 		{
 			bool doesItCollide = false;
-			const glm::vec3 directionVector = targetCenter - cube.GetCenter();
+			const glm::vec3 directionVector = targetCenter - cube.Center();
 			
 			// FIXME Doing this is horribly expensive!
 			// We should apply the same logic used for 2D polygon intersection - 

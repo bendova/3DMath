@@ -61,14 +61,15 @@ namespace MyCode
 		, mScreenWidth(0)
 		, mScreenHeight(0)
 		, mCameraToClipMatrix()
+		, mRectangles()
 		, mCubes()
-		, mColisionionHelper()
-		, mCubeSideLength(1.0f)
+		, mRectangleCollider()
+		, mCubeCollider()
 	{
 		mInstance = this;
 
-		InitCubes();
-		InitColliderForPolygons2D();
+		InitScene2D();
+		InitScene3D();
 
 		ConfigureOpenGL();
 		ConfigureInput();
@@ -77,14 +78,20 @@ namespace MyCode
 	Scene::~Scene()
 	{}
 
-	void Scene::InitCubes()
+	void Scene::InitScene2D()
+	{
+		InitRectangles();
+		InitColliderForPolygons2D();
+	}
+
+	void Scene::InitRectangles()
 	{
 		const glm::vec3 vectorToA{ -0.5f, 0.0f, 0.5f };
 		const glm::vec3 vectorToB{ 0.5f, 0.0f, 0.5f };
 		const glm::vec3 vectorToC{ 0.5f, 0.0f, -0.5f };
 		const glm::vec3 vectorToD{ -0.5f, 0.0f, -0.5f };
 
-		const int cubesCount = 30;
+		const int cubesCount = 6;
 		const int cubesPerLine = 6;
 		const int linesOfCubes = static_cast<int>(std::ceil(static_cast<float>(cubesCount) / cubesPerLine));
 		const float startX = -4.0f;
@@ -102,25 +109,67 @@ namespace MyCode
 				const float z = startZ + i * incY;
 				const glm::vec3 center{ x, 0.51f, z };
 				const Rectangle boundingRectangle{ center, vectorToA, vectorToB, vectorToC, vectorToD };
-				mCubes.emplace_back("UnitCube.xml", boundingRectangle, mColisionionHelper);
+				mRectangles.emplace_back("UnitCube.xml", boundingRectangle, mRectangleCollider);
 			}
 			cubesRemaining -= count;
 		}
 
 		/*const glm::vec3 center1{ 0.0f, 0.51f, 0.0f };
 		const Rectangle boundingRectangle1{ center1, vectorToA, vectorToB, vectorToC, vectorToD };
-		mCubes.emplace_back("UnitCube.xml", boundingRectangle1, mColisionionHelper);
+		mRectangles.emplace_back("UnitCube.xml", boundingRectangle1, mColisionionHelper);
 
 		const glm::vec3 center2{ -2.0f, 0.51f, 0.0f };
 		const Rectangle boundingRectangle2{ center2, vectorToA, vectorToB, vectorToC, vectorToD };
-		mCubes.emplace_back("UnitCube.xml", boundingRectangle2, mColisionionHelper);*/
+		mRectangles.emplace_back("UnitCube.xml", boundingRectangle2, mColisionionHelper);*/
 	}
 
 	void Scene::InitColliderForPolygons2D()
 	{
-		for (const auto& cube: mCubes)
+		for (const auto& rectangle: mRectangles)
 		{
-			mColisionionHelper.AddRectangle(cube.mCubeControl.GetBoundingBox());
+			mRectangleCollider.AddRectangle(rectangle.mControl.GetBoundingBox());
+		}
+	}
+
+	void Scene::InitScene3D()
+	{
+		InitCubes();
+		InitColliderForPolygons3D();
+	}
+
+	void Scene::InitCubes()
+	{
+		const glm::vec3 bottomA{ -0.5f, -0.5f, 0.5f };
+		const glm::vec3 bottomB{ 0.5f, -0.5f, 0.5f };
+		const glm::vec3 bottomC{ 0.5f, -0.5f, -0.5f };
+		const glm::vec3 bottomD{ -0.5f, -0.5f, -0.5f };
+		const glm::vec3 topA{ -0.5f, 0.5f, 0.5f };
+		const glm::vec3 topB{ 0.5f, 0.5f, 0.5f };
+		const glm::vec3 topC{ 0.5f, 0.5f, -0.5f };
+		const glm::vec3 topD{ -0.5f, 0.5f, -0.5f };
+
+		const std::vector<glm::vec3> cubeVertices{
+			bottomA, bottomB, bottomC, bottomD,
+			topA, topB, topC, topD
+		};
+
+		const float startX = 0.0f;
+		const float incX = 2.0f;
+		const int cubesCount = 2;
+		for (int i = 0; i < cubesCount; ++i)
+		{
+			const float x = startX + i * incX;
+			const glm::vec3 center{ x, 0.51f, 0.0f };
+			const Cube bounding{ center, cubeVertices };
+			mCubes.emplace_back("UnitCube.xml", bounding, mCubeCollider);
+		}
+	}
+
+	void Scene::InitColliderForPolygons3D()
+	{
+		for (const auto& cube : mCubes)
+		{
+			mCubeCollider.AddCube(cube.mControl.GetBoundingBox());
 		}
 	}
 
@@ -160,6 +209,7 @@ namespace MyCode
 		glUseProgram(mPosColorProgram.GetProgramID());
 
 		RenderPlane(modelToCameraTransform);
+		RenderRectangles(modelToCameraTransform);
 		RenderCubes(modelToCameraTransform);
 
 		glUseProgram(GL_NONE);
@@ -178,24 +228,20 @@ namespace MyCode
 		dPlaneMesh.Render();
 	}
 
+	void Scene::RenderRectangles(glutil::MatrixStack& modelMatrix)
+	{
+		for (auto& rectangle: mRectangles)
+		{
+			RenderMesh(modelMatrix, rectangle);
+		}
+	}
+
 	void Scene::RenderCubes(glutil::MatrixStack& modelMatrix)
 	{
 		for (auto& cube: mCubes)
 		{
-			RenderCube(modelMatrix, cube);
+			RenderMesh(modelMatrix, cube);
 		}
-	}
-
-	void Scene::RenderCube(glutil::MatrixStack& modelMatrix, ControlledCube& cube)
-	{
-		glutil::PushStack push(modelMatrix);
-
-		cube.mCubeControl.SetWorldToCameraTransfrom(modelMatrix.Top());
-
-		modelMatrix.Translate(cube.mCubeControl.GetPosition());
-		glUniformMatrix4fv(mPosColorProgram.GetModelToCameraTransformUniform(),
-			1, GL_FALSE, glm::value_ptr(modelMatrix.Top()));
-		cube.mCubeMesh.Render();
 	}
 
 	void Scene::Reshape(GLint width, GLint height)
@@ -213,24 +259,21 @@ namespace MyCode
 		cameraToClipTransform.Perspective(45.0f, aspectRatio, mNearZ, mFarZ);
 		
 		mCameraToClipMatrix = cameraToClipTransform.Top();
-		UpdateCubeControls();
+		UpdateControls();
 		
 		UploadCameraToClipToOpenGL();
 	}
 
-	void Scene::UpdateCubeControls()
+	void Scene::UpdateControls()
 	{
+		for (auto& rectangle : mRectangles)
+		{
+			UpdateControl(rectangle);
+		}
 		for (auto& cube : mCubes)
 		{
-			UpdateCubeControl(cube);
+			UpdateControl(cube);
 		}
-	}
-
-	void Scene::UpdateCubeControl(ControlledCube& cube)
-	{
-		cube.mCubeControl.SetCameraToClipTransfrom(mCameraToClipMatrix);
-		cube.mCubeControl.SetClipNearZ(mNearZ);
-		cube.mCubeControl.SetScreenDimensions(mScreenWidth, mScreenHeight);
 	}
 
 	void Scene::UploadCameraToClipToOpenGL()
@@ -243,7 +286,7 @@ namespace MyCode
 
 	void Scene::HandleInput(unsigned char key, int x, int y)
 	{
-		bool isHandled = ForwardKeyboardInputToCubes(key);
+		bool isHandled = ForwardKeyboardInput(key);
 		if (isHandled == false)
 		{
 			gViewPole.CharPress(key);
@@ -252,7 +295,7 @@ namespace MyCode
 
 	void Scene::OnMouseClick(int button, int state, int x, int y)
 	{
-		bool isHandled = ForwardMouseClickToCubes(button, state, x, y);
+		bool isHandled = ForwardMouseClick(button, state, x, y);
 		if (isHandled == false)
 		{
 			Framework::ForwardMouseButton(gViewPole, button, state, x, y);
@@ -261,55 +304,28 @@ namespace MyCode
 	
 	void Scene::OnMouseMoved(int x, int y)
 	{
-		bool isHandled = ForwardMouseMoveToCubes(x, y);
+		bool isHandled = ForwardMouseMove(x, y);
 		if (isHandled == false)
 		{
 			Framework::ForwardMouseMotion(gViewPole, x, y);
 		}
 	}
 
-	bool Scene::ForwardKeyboardInputToCubes(unsigned char key)
+	bool Scene::ForwardKeyboardInput(unsigned char key)
 	{
-		bool isHandled = false;
-		for (auto& c : mCubes)
-		{
-			isHandled = c.mCubeControl.HandleKeyPress(key);
-			if (isHandled)
-			{
-				break;
-			}
-		}
-
-		return isHandled;
+		return ForwardKeybardInput(key, mRectangles) ||
+			ForwardKeybardInput(key, mCubes);
 	}
 
-	bool Scene::ForwardMouseClickToCubes(int button, int state, int x, int y)
+	bool Scene::ForwardMouseClick(int button, int state, int x, int y)
 	{
-		bool isHandled = false;
-		for (auto& c: mCubes)
-		{
-			isHandled = c.mCubeControl.HandleMouseClick(button, state, x, y);
-			if (isHandled)
-			{
-				break;
-			}
-		}
-
-		return isHandled;
+		return ForwardMouseClick(button, state, x, y, mRectangles) ||
+			ForwardMouseClick(button, state, x, y, mCubes);
 	}
 
-	bool Scene::ForwardMouseMoveToCubes(int x, int y)
+	bool Scene::ForwardMouseMove(int x, int y)
 	{
-		bool isHandled = false;
-		for (auto& c : mCubes)
-		{
-			isHandled = c.mCubeControl.HandleMouseMoved(x, y);
-			if (isHandled)
-			{
-				break;
-			}
-		}
-
-		return isHandled;
+		return ForwardMouseMove(x, y, mRectangles) ||
+			ForwardMouseMove(x, y, mCubes);
 	}
 }

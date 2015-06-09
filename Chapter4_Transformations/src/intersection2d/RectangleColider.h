@@ -66,7 +66,7 @@ namespace MyCode
 					bool DoPolygonToAxisIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2,
 						const glm::vec3& axisA, const glm::vec3& axisB);
 
-					std::pair<float, float> ProjectPolygonToAxis(const std::vector<glm::vec3>& polygon,
+					std::pair<glm::vec3, glm::vec3> ProjectPolygonToAxis(const std::vector<glm::vec3>& polygon,
 						const glm::vec3& axisPointA, const glm::vec3& axisPointB);
 					bool DoColinearLineSegmentsIntersect(const float& factorA, const float& factorB,
 						const float& factorC, const float& factorD);
@@ -79,6 +79,9 @@ namespace MyCode
 		namespace TravelPathBounding
 		{
 			bool DoesTravelPathCollide(const Rectangle& rectangle, const glm::vec3& targetCenter, const Rectangle& obstacle);
+			bool DoesAnyVerticePathCollide(const std::vector<glm::vec3>& targetVertices, const glm::vec3& directionVector,
+				const std::vector<glm::vec3>& obstacleVertices);
+
 			std::vector<glm::vec3> GetTravelPathBounding(const Rectangle& rectangle, const glm::vec3& targetCenter);
 			std::vector<int> GetSortedIndicesByDistanceFromPoint(const std::vector<glm::vec3>& vertices,
 				const glm::vec3& targetPoint);

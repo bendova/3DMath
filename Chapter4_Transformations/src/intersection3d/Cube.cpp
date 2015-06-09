@@ -1,4 +1,5 @@
 #include "Cube.h"
+#include "../framework/VectorMath.h"
 
 namespace MyCode
 {
@@ -11,6 +12,7 @@ namespace MyCode
 		, mBottomTopFacesVectorsCCW(bottomTopFacesVectorsCCW)
 	{
 		GenerateFaces();
+		UpdateBoundingRadiuses();
 	}
 
 	void Cube::GenerateFaces()
@@ -45,5 +47,12 @@ namespace MyCode
 		mCenter = newCenter;
 		mFaces.clear();
 		GenerateFaces();
+	}
+
+	void Cube::UpdateBoundingRadiuses()
+	{
+		std::pair<float, float> minMaxPair = VectorMath::GetMinMaxLengthsPair(mBottomTopFacesVectorsCCW);
+		mInscribedCircleRadius = minMaxPair.first;
+		mCircumscribedCircleRadius = minMaxPair.second;
 	}
 }
