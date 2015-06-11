@@ -50,8 +50,19 @@ namespace MyCode
 		namespace CollisionDetection
 		{
 			bool DoesPathCollide(const Polygon& target, const glm::vec3& targetCenter, const Polygon& obstacle);
-			bool DoesAnyVerticePathCollide(const std::vector<glm::vec3>& targetVertices, const glm::vec3& directionVector,
-				const std::vector<glm::vec3>& obstacleVertices);
+			bool DoesAnyVerticePathCollide(const Polygon& target, const glm::vec3& directionVector,
+				const Polygon& obstacle);
+		}
+
+		namespace TravelPathBounding
+		{
+			std::vector<Polygon> GetBoundingPath(const Polygon& target, const glm::vec3& destination);
+
+			namespace Detail
+			{
+				Polygon GetBoundingPath2D(const Polygon& target, const glm::vec3& destination);
+				std::vector<Polygon> GetBoundingPath3D(const Polygon& target, const glm::vec3& destination);
+			}
 		}
 
 		namespace CollisionAvoidance

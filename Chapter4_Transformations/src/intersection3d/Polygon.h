@@ -20,6 +20,12 @@ namespace MyCode
 			CalculateCenter();
 		}
 
+		Polygon(const std::vector<glm::vec3>& vertices)
+			: mVertices(vertices)
+		{
+			CalculateCenter();
+		}
+
 		void SetCenter(const glm::vec3& center)
 		{
 			UpdateVertices(center);

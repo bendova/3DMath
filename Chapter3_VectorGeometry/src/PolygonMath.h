@@ -89,34 +89,6 @@ namespace MyCode
 
 		bool ContainsStrictly(const Triangle& t, const glm::vec4& p);
 		bool ContainsStrictly(const Quadrilateral& q, const glm::vec4& p);
-
-		template<typename T>
-		bool DoesLineSegmentIntersectQuad(const Quadrilateral& q, const T& lineSegmentPointA, const T& lineSegmentPointB)
-		{
-			const auto& a = q[0];
-			const auto& b = q[1];
-			const auto& c = q[2];
-			const auto& d = q[3];
-
-			return DoLineSegmentsIntersect(a, b, lineSegmentPointA, lineSegmentPointB)
-				|| DoLineSegmentsIntersect(b, c, lineSegmentPointA, lineSegmentPointB)
-				|| DoLineSegmentsIntersect(c, d, lineSegmentPointA, lineSegmentPointB)
-				|| DoLineSegmentsIntersect(d, a, lineSegmentPointA, lineSegmentPointB);
-		}
-
-		template<typename T>
-		bool DoesLineSegmentIntersectQuadStrictly(const Quadrilateral& q, const T& lineSegmentPointA, const T& lineSegmentPointB)
-		{
-			const auto& a = q[0];
-			const auto& b = q[1];
-			const auto& c = q[2];
-			const auto& d = q[3];
-
-			return DoLineSegmentsIntersect(a, b, lineSegmentPointA, lineSegmentPointB)
-				|| DoLineSegmentsIntersect(b, c, lineSegmentPointA, lineSegmentPointB)
-				|| DoLineSegmentsIntersect(c, d, lineSegmentPointA, lineSegmentPointB)
-				|| DoLineSegmentsIntersect(d, a, lineSegmentPointA, lineSegmentPointB);
-		}
 	}
 }
 

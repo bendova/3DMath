@@ -8,8 +8,9 @@ namespace MyCode
 	{
 		return CubeRepresentation()
 			&& AvoidCollision()
-			&& AvoidCollision2()
-			&& MoveAwayTouchingCubes();
+			&& AvoidCollisionOfTouchingCubes()
+			&& MoveAwayTouchingCubes()
+			&& SlideCubeAlongsideAnotherCube();
 	}
 
 	bool UT_CubeCollider::CubeRepresentation()
@@ -65,7 +66,7 @@ namespace MyCode
 		return CHECK_EQUALS(returnedDestination, expectedDestination);
 	}
 
-	bool UT_CubeCollider::AvoidCollision2()
+	bool UT_CubeCollider::AvoidCollisionOfTouchingCubes()
 	{
 		const glm::vec3 cubeCenterA{ 0.0f, 0.0f, 0.0f };
 		const glm::vec3 cubeCenterB{ 2.0f, 0.0f, 0.0f };
@@ -85,6 +86,19 @@ namespace MyCode
 
 		Setup setup{ cubeCenterA, cubeCenterB };
 		const glm::vec3 destination{ -10.0f, 0.0f, 0.0f };
+		const glm::vec3 returnedDestination = setup.Collider().GetPositionThatAvoidsCollisions(setup[0], destination);
+		const glm::vec3 expectedDestination{ destination };
+
+		return CHECK_EQUALS(returnedDestination, expectedDestination);
+	}
+
+	bool UT_CubeCollider::SlideCubeAlongsideAnotherCube()
+	{
+		const glm::vec3 cubeCenterA{ 0.0f, 0.0f, 0.0f };
+		const glm::vec3 cubeCenterB{ 2.0f, 0.0f, 0.0f };
+
+		Setup setup{ cubeCenterA, cubeCenterB };
+		const glm::vec3 destination{ 0.0f, 0.0f, 1.0f };
 		const glm::vec3 returnedDestination = setup.Collider().GetPositionThatAvoidsCollisions(setup[0], destination);
 		const glm::vec3 expectedDestination{ destination };
 

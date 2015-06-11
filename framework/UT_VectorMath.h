@@ -56,6 +56,15 @@ namespace MyCode
 			bool SegmentIntersectsSideOfPolygon();
 			bool NoIntersectionForTouchingPolygon();
 		};
+
+		class CoplanarityTest
+		{
+		public:
+			bool Run();
+		private:
+			bool PointIsNotInPlane();
+			bool PointIsInPlane();
+		};
 	};
 }
 

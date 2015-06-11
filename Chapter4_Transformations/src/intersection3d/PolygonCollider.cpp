@@ -82,15 +82,16 @@ namespace MyCode
 			glm::vec3 validCenter{ targetCenter };
 			if (PolygonIntersection::DoPolygonsIntersect3D(targetVertices, obstacleVertices))
 			{
-				const glm::vec3 directionVector{ targetCenter - currentCenter };
 				if (currentCenter != obstacle.Center())
 				{
-					const glm::vec3 centersVector{ currentCenter - obstacle.Center() };
-					const bool isTargetDirectionCorrect = (glm::dot(directionVector, centersVector) > 0.0f);
+					const glm::vec3 centersVector{ obstacle.Center() - currentCenter };
+					const glm::vec3 directionVector{ targetCenter - currentCenter };
+					const auto dotValue = glm::dot(directionVector, centersVector);
+					const bool isTargetDirectionCorrect = (dotValue <= 0.0f);
 					if (isTargetDirectionCorrect == false)
 					{
 						const glm::vec3 inverseTarget = currentCenter - directionVector;
-						validCenter = GetPositionOnNearEdge(target, inverseTarget, 
+						validCenter = GetPositionOnNearEdge(target, inverseTarget,
 							obstacle, Avoidance::INSIDE_OUT);
 					}
 				}
@@ -106,16 +107,20 @@ namespace MyCode
 			return validCenter;
 		}
 
+		float GetInscribedCircleRadius(const Polygon& polygon)
+		{
+			const auto& vertices = polygon.Vertices();
+			const float halfSideLength = glm::length(vertices[1] - vertices[0]) / 2.0f;
+			const float halfDiagonalLength = glm::length(vertices[0] - polygon.Center()) / 2.0f;
+			const float radius = std::sqrt(halfDiagonalLength * halfDiagonalLength - 
+				halfSideLength * halfSideLength);
+			return radius;
+		}
+
 		void CollisionSanityCheck(const Polygon& target, const glm::vec3& newTargetCenter, const Polygon& obstacle)
 		{
-			// The assumption here is that these polygons are square.
-			// This makes it easy to determine their inscribed circles and do
-			// sanity checks based on them.
-			const auto& targetVertices = target.Vertices();
-			const float targetInscribedCircleRadius = glm::length(targetVertices[0] - targetVertices[1]) / 2.0f;
-
-			const auto& obstacleVertices = target.Vertices();
-			const float obstacleInscribedCircleRadius = glm::length(obstacleVertices[0] - obstacleVertices[1]) / 2.0f;
+			const float targetInscribedCircleRadius = GetInscribedCircleRadius(target);
+			const float obstacleInscribedCircleRadius = GetInscribedCircleRadius(obstacle);
 
 			const float minDistanceBetweenCenters = targetInscribedCircleRadius + obstacleInscribedCircleRadius;
 			const float targetDistanceBetweenCenters = glm::length(obstacle.Center() - newTargetCenter);
@@ -196,32 +201,106 @@ namespace MyCode
 		{
 			bool DoesPathCollide(const Polygon& target, const glm::vec3& targetCenter, const Polygon& obstacle)
 			{
-				const auto& targetVertices = target.Vertices();
-				const auto& obstacleVertices = obstacle.Vertices();
+				//TODO
+				// const std::vector<Polygon> boundingPath = TravelPathBounding::GetBoundingPath(target, targetCenter);
+				// const bool doesItCollide = VectorMath::DoesItIntersect(boundingPath, obstacle, NO_TOUCHING);
+				// return doesItCollide;
+
 				const glm::vec3 directionVector{targetCenter - target.Center()};
-				const bool doesItCollide = DoesAnyVerticePathCollide(targetVertices, directionVector, obstacleVertices) ||
-					DoesAnyVerticePathCollide(obstacleVertices, -directionVector, targetVertices);
+
+				const bool doesItCollide = DoesAnyVerticePathCollide(target, directionVector, obstacle) ||
+					DoesAnyVerticePathCollide(obstacle, -directionVector, target);
 				return doesItCollide;
 			}
 
-			bool DoesAnyVerticePathCollide(const std::vector<glm::vec3>& targetVertices, const glm::vec3& directionVector,
-				const std::vector<glm::vec3>& obstacleVertices)
+			bool DoesAnyVerticePathCollide(const Polygon& target, const glm::vec3& directionVector,
+				const Polygon& obstacle)
 			{
+				const auto& targetVertices = target.Vertices();
+				const auto& obstacleVertices = obstacle.Vertices();
+
 				bool doesItCollide = false;
 				for (const auto& vertex : targetVertices)
 				{
-					PointType pointType = PointType::CLOSED_ENDED;
-					BoundingPointType boundingType = BoundingPointType::BOUNDED;
+					const BoundingPointType boundingType = BoundingPointType::BOUNDED;
+					const PointType pointType = PointType::CLOSED_ENDED;
 					const MarginPoint<glm::vec3> a{ vertex, boundingType, pointType };
 					const MarginPoint<glm::vec3> b{ vertex + directionVector, boundingType, pointType };
-					const auto intersection = VectorMath::GetIntersectionBetweenLineAndPolygon(a, b, obstacleVertices);
-					if (intersection.second)
+					//FIXME
+					doesItCollide = VectorMath::DoesVectorCrossThroughPolygon(a, b, obstacleVertices, obstacle.Center());
+					if (doesItCollide)
 					{
-						doesItCollide = true;
 						break;
 					}
 				}
 				return doesItCollide;
+			}
+		}
+
+		namespace TravelPathBounding
+		{
+			std::vector<Polygon> GetBoundingPath(const Polygon& target, const glm::vec3& destination)
+			{
+				/*
+					We have 2 cases here:
+					1. If the targetCenter is coplanar with target
+					we then apply the 2D bounding path algorithm.
+					The bounding path is 1 Polygon.
+					2. Else all the vertices and their displacements determine the
+					bounding path.
+					The bounding path is 1 Polyhedron (n Polygons).
+				*/
+				std::vector<Polygon> boundingPath;
+				if (VectorMath::IsPointCoplanarWithPolygon(destination, target.Vertices()))
+				{
+					boundingPath.push_back(Detail::GetBoundingPath2D(target, destination));
+				}
+				else
+				{
+					boundingPath = Detail::GetBoundingPath3D(target, destination);
+				}
+				return boundingPath;
+			}
+
+			namespace Detail
+			{
+				Polygon GetBoundingPath2D(const Polygon& target, const glm::vec3& destination)
+				{
+					using namespace VectorMath;
+
+					std::vector<glm::vec3> boundingVertices;
+
+					const auto& targetVertices = target.Vertices();
+
+					const auto& center = target.Center();
+					const glm::vec3 directionVector = destination - target.Center();
+					const glm::vec3 normalToPolygonPlane = GetNormalToPolygonPlane(targetVertices);
+					const glm::vec3 orthoToDirectionVector = glm::cross(normalToPolygonPlane, directionVector);
+
+					const float distanceBetweenCenters = glm::length(directionVector);
+					const size_t verticesCount = targetVertices.size();
+					for (size_t i = 0; i < verticesCount; ++i)
+					{
+						const auto& a = targetVertices[i];
+						const glm::vec3 aDisplaced = a + directionVector;
+
+						const float distance = GetDistanceFromPointToLine(aDisplaced, center, orthoToDirectionVector);
+						if (distance > distanceBetweenCenters)
+						{
+							boundingVertices.push_back(aDisplaced);
+						}
+						else
+						{
+							boundingVertices.push_back(a);
+						}
+					}
+					return Polygon{ boundingVertices };
+				}
+
+				std::vector<Polygon> GetBoundingPath3D(const Polygon& target, const glm::vec3& destination)
+				{
+					return std::vector<Polygon>{};
+				}
 			}
 		}
 
@@ -232,7 +311,7 @@ namespace MyCode
 				const Avoidance avoidance)
 			{
 				CollisionAvoider avoider{ target.Vertices(), obstacle.Vertices(), target.Center(), targetCenter, avoidance };
-				glm::vec3 validCenter = avoider.GetValidCenter();
+				const glm::vec3 validCenter = avoider.GetValidCenter();
 				return validCenter;
 			}
 
@@ -302,12 +381,12 @@ namespace MyCode
 				std::vector<Collision> collisions;
 				for (const auto& vertex : verticesR1)
 				{
-					if (insidePointsOnly && (IsPointInsidePolygon(verticesR2, vertex) == false))
+					MarginPoint<glm::vec3> a{ vertex };
+					if (insidePointsOnly && (IsPointInsidePolygon(verticesR2, a) == false))
 					{
 						continue;
 					}
 
-					MarginPoint<glm::vec3> a{ vertex };
 					MarginPoint<glm::vec3> b{ vertex + directionVector, BoundingPointType::UNBOUNDED };
 
 					const auto intersection = GetIntersectionBetweenLineAndPolygon(a, b, verticesR2);

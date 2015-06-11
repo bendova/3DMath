@@ -80,6 +80,27 @@ namespace MyCode
 			bool NoCollision();
 			bool NearSideCollision();
 			bool FarSideCollision();
+			bool NoCollisionForSlidingPolygons();
+			bool PointCollision();
+		};
+
+		class TravelPathBoundingTest2D
+		{
+		public:
+			bool Run();
+		private:
+			bool BoundingPathForTriangle();
+			bool BoundingPathForRectangle();
+			bool BoundingPathForRotatedRectangle();
+		};
+
+		class TravelPathBoundingTest3D
+		{
+		public:
+			bool Run();
+		private:
+			bool BoundingPathForRectangle();
+			bool BoundingPathForRotatedRectangle();
 		};
 
 		class CollisionAvoidanceTest
@@ -90,9 +111,12 @@ namespace MyCode
 			bool ValidPositionForNoCollision();
 			bool ValidPositionForPointCollision();
 			bool ValidPositionForSideCollision();
+			bool ValidPositionForTouchingSideCollision();
 			bool MoveAwayOverlappingPolygons();
-			bool MoveAwayTouchingPolygons();
 			bool MoveAwayFullyOverlappedPolygons();
+			bool MoveAwayTouchingPolygons();
+			bool SlideTouchingPolygons();
+			bool SlideTouchingPolygons2();
 		};
 	};
 }

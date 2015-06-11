@@ -27,16 +27,6 @@ namespace MyCode
 				&& (std::abs(a.w - b.w) <= margin);
 		}
 
-		float IsIntersectionFactorOnSegment(const float factor, const bool strictly)
-		{
-			const float minFactor = 0.0f;
-			const float maxFactor = 1.0f;
-			
-			const bool isOnSegment = (strictly) ? ((minFactor < factor) && (factor < maxFactor))
-												: ((minFactor <= factor) && (factor <= maxFactor));
-			return isOnSegment;
-		}
-
 		float FloorWithPrecision(const float x, const int precision)
 		{
 			const int scale = static_cast<int>(pow(10, precision));
@@ -77,12 +67,10 @@ namespace MyCode
 			return std::abs(a - b) <= errorMargin;
 		}
 
-		float GetDistanceFromPointToLine(const glm::vec3& p, const glm::vec3& a, const glm::vec3& b)
+		float GetDistanceFromPointToLine(const glm::vec3& p, const glm::vec3& pointOnLine, const glm::vec3& lineDirection)
 		{
-			glm::vec3 lineDirection = b - a;
-
 			const float lineDirectionLength = glm::length(lineDirection);
-			glm::vec3 ap = p - a;
+			glm::vec3 ap = p - pointOnLine;
 			float shadowLength = glm::dot(lineDirection, ap) / lineDirectionLength;
 			shadowLength = FloorWithPrecision(shadowLength, 6);
 			const float apLength = glm::length(ap);
@@ -125,21 +113,6 @@ namespace MyCode
 			return isInPlane;
 		}
 
-		bool ArePointsCollinear(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c)
-		{
-			const glm::vec3 ab = b - a;
-			const glm::vec3 ac = c - a;
-			const auto dotValue = glm::dot(ab, ac);
-			const float lengthsProduct = (glm::length(ab) * glm::length(ac));
-			const bool areCollinear = (AreEqualWithMargin(std::abs(dotValue), lengthsProduct));
-			return areCollinear;
-		}
-
-		bool ArePointsCollinear(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, const glm::vec3& d)
-		{
-			return ArePointsCollinear(a, b, c) && ArePointsCollinear(a, b, d);
-		}
-
 		std::pair<float, float> GetMinMaxLengthsPair(const std::vector<glm::vec3>& points)
 		{
 			float minLength = FLT_MAX;
@@ -157,6 +130,23 @@ namespace MyCode
 				}
 			}
 			return std::make_pair(minLength, maxLength);
+		}
+
+		glm::vec3 GetNormalToPolygonPlane(const std::vector<glm::vec3>& polygon)
+		{
+			const auto& a = polygon[0];
+			const auto& b = polygon[1];
+			const auto& c = polygon[2];
+			return glm::cross(b - a, c - a);
+		}
+
+		bool IsPointCoplanarWithPolygon(const glm::vec3& p, const std::vector<glm::vec3>& polygon)
+		{
+			const auto& a = polygon[0];
+			const glm::vec3 normalToPlane{ GetNormalToPolygonPlane(polygon) };
+			const glm::vec3 ap = p - a;
+			const bool isInPlane = AreEqualWithMargin(glm::dot(normalToPlane, ap), 0.0f);
+			return isInPlane;
 		}
 	}
 }

@@ -49,25 +49,6 @@ namespace MyCode
 			return validPosition;
 		}
 
-		bool DoCubesIntersect(const Cube& a, const Cube& b)
-		{
-			return false;
-		}
-
-		glm::vec3 StepOutOfCollision(const Cube& cube, const glm::vec3& targetCenter, const Cube& obstacle)
-		{
-			glm::vec3 validCenter{targetCenter};
-
-			const glm::vec3 directionVector{ targetCenter - cube.Center() };
-			const glm::vec3 centersVector{ obstacle.Center() - cube.Center() };
-			const bool isDirectionVectorValid = (glm::dot(directionVector, centersVector) < 0.0f);
-			if (isDirectionVectorValid == false)
-			{
-				// FIXME validCenter = 
-			}
-			return validCenter;
-		}
-
 		glm::vec3 AvoidPathCollision(const Cube& cube, const glm::vec3& targetCenter, const Cube& obstacle)
 		{
 			PolygonCollider polygonCollider;

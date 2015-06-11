@@ -69,8 +69,9 @@ namespace MyCode
 
 		bool CubeRepresentation();
 		bool AvoidCollision();
-		bool AvoidCollision2();
+		bool AvoidCollisionOfTouchingCubes();
 		bool MoveAwayTouchingCubes();
+		bool SlideCubeAlongsideAnotherCube();
 	};
 }
 

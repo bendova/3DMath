@@ -86,8 +86,9 @@ namespace MyCode
 			if (PolygonIntersection::DoPolygonsIntersect2D(verticesOfR1, verticesOfR2))
 			{
 				const glm::vec3 directionVector{ targetCenter - currentCenter };
-				const glm::vec3 centersVector{ currentCenter - obstacle.Center() };
-				const bool isTargetDirectionCorrect = (glm::dot(directionVector, centersVector) > 0.0f);
+				const glm::vec3 centersVector{ obstacle.Center() - currentCenter };
+				const float dotValue = glm::dot(directionVector, centersVector);
+				const bool isTargetDirectionCorrect = (dotValue <= 0.0f);
 				if (isTargetDirectionCorrect == false)
 				{
 					const glm::vec3 inverseTarget = currentCenter - directionVector;
@@ -216,8 +217,8 @@ namespace MyCode
 					const std::vector<glm::vec3>& collinearPoints)
 				{
 					const auto lineSegment = GetLineSegmentFromCollinearPoints(collinearPoints);
-					const VectorMath::MarginPoint<glm::vec3> a{ lineSegment.first,};
-					const VectorMath::MarginPoint<glm::vec3> b{ lineSegment.second};
+					const VectorMath::MarginPoint<glm::vec3> a{ lineSegment.first };
+					const VectorMath::MarginPoint<glm::vec3> b{ lineSegment.second };
 					const bool doTheyIntersect = VectorMath::GetIntersectionOfLineWithPolygon2D(a, b, polygon).second;
 					return doTheyIntersect;
 				}
@@ -225,11 +226,19 @@ namespace MyCode
 				bool DoLineSegmentsIntersection(const std::vector<glm::vec3>& collinearPointsA, 
 					const std::vector<glm::vec3>& collinearPointsB)
 				{
+					using namespace VectorMath;
+
 					const auto lineSegmentA = GetLineSegmentFromCollinearPoints(collinearPointsA);
 					const auto lineSegmentB = GetLineSegmentFromCollinearPoints(collinearPointsB);
-					const bool doTheyIntersect = VectorMath::DoLineSegmentsIntersect(lineSegmentA.first, lineSegmentA.second,
-						lineSegmentB.first, lineSegmentB.second);
-					return doTheyIntersect;
+					
+					const BoundingPointType boundingType = BoundingPointType::BOUNDED;
+					const PointType pointType = PointType::CLOSED_ENDED;
+					const MarginPoint<glm::vec3> a{ lineSegmentA.first, boundingType, pointType };
+					const MarginPoint<glm::vec3> b{ lineSegmentA.second, boundingType, pointType };
+					const MarginPoint<glm::vec3> c{ lineSegmentB.first, boundingType, pointType };
+					const MarginPoint<glm::vec3> d{ lineSegmentB.second, boundingType, pointType };
+					const auto intersection = GetLinesIntersection(a, b, c, d);
+					return intersection.second;
 				}
 
 				namespace PolygonsIntersection
@@ -270,9 +279,13 @@ namespace MyCode
 						const auto projPolygon1 = ProjectPolygonToAxis(polygon1, axisA, axisB);
 						const auto projPolygon2 = ProjectPolygonToAxis(polygon2, axisA, axisB);
 
-						const bool doTheyIntersect = VectorMath::DoLineSegmentsIntersect(projPolygon1.first, 
-							projPolygon1.second, projPolygon2.first, projPolygon2.second);
-
+						const BoundingPointType boundingType = BoundingPointType::BOUNDED;
+						const PointType pointType = PointType::CLOSED_ENDED;
+						const MarginPoint<glm::vec3> a{ projPolygon1.first, boundingType, pointType };
+						const MarginPoint<glm::vec3> b{ projPolygon1.second, boundingType, pointType };
+						const MarginPoint<glm::vec3> c{ projPolygon2.first, boundingType, pointType };
+						const MarginPoint<glm::vec3> d{ projPolygon2.second, boundingType, pointType };
+						const bool doTheyIntersect = DoCollinearLineSegmentsIntersect(a, b, c, d);
 						return doTheyIntersect;
 					}
 
@@ -497,7 +510,8 @@ namespace MyCode
 				std::vector<Collision> collisions;
 				for (const auto& vertex : verticesR1)
 				{
-					if (insidePointsOnly && (VectorMath::IsPointInsidePolygon(verticesR2, vertex) == false))
+					if (insidePointsOnly && (VectorMath::IsPointInsidePolygon(verticesR2, 
+						MarginPoint<glm::vec3>{ vertex }) == false))
 					{
 						continue;
 					}

@@ -48,9 +48,7 @@ namespace MyCode
 		void Floor(glm::vec4& v, const int precision = 5);
 		bool AreEqualWithMargin(const float a, const float b, const float errorMargin = 1e-5);
 
-		float IsIntersectionFactorOnSegment(const float factor, const bool strictly = false);
-
-		float GetDistanceFromPointToLine(const glm::vec3& p, const glm::vec3& a, const glm::vec3& b);
+		float GetDistanceFromPointToLine(const glm::vec3& p, const glm::vec3& pointOnLine, const glm::vec3& lineDirection);
 		
 		glm::vec3 GetProjectionPointOnPlane(const glm::vec3& pointToProject, const glm::vec3& pointInPlane, const glm::vec3& planeNormal);
 		float GetDistanceBetweenPointAndPlane(const glm::vec3& pointToProject, const glm::vec3& pointInPlane, const glm::vec3& planeNormal);
@@ -60,8 +58,36 @@ namespace MyCode
 		bool IsPointInPlane(const glm::vec3& planePointA, const glm::vec3& planePointB,
 			const glm::vec3& planePointC, const glm::vec3& point);
 
-		bool ArePointsCollinear(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c);
-		bool ArePointsCollinear(const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, const glm::vec3& d);
+		glm::vec3 GetNormalToPolygonPlane(const std::vector<glm::vec3>& polygon);
+		bool IsPointCoplanarWithPolygon(const glm::vec3& point, const std::vector<glm::vec3>& polygon);
+
+		template<typename T>
+		bool ArePointsCollinear(const T& a, const T& b, const T& c)
+		{
+			const T ab = b - a;
+			const T ac = c - a;
+			const auto dotValue = glm::dot(ab, ac);
+			const auto lengthsProduct = (glm::length(ab) * glm::length(ac));
+			const bool areCollinear = (AreEqualWithMargin(std::abs(dotValue), lengthsProduct));
+			return areCollinear;
+		}
+		template<typename T>
+		bool ArePointsCollinear(const std::vector<T>& points)
+		{
+			const auto& a = points[0];
+			const auto& b = points[1];
+			bool areCollinear = true;
+			for (size_t i = 2; i < points.size(); ++i)
+			{
+				const auto& c = points[i];
+				if (ArePointsCollinear(a, b, c) == false)
+				{
+					areCollinear = false;
+					break;
+				}
+			}
+			return areCollinear;
+		}
 
 		std::pair<float, float> GetMinMaxLengthsPair(const std::vector<glm::vec3>& points);
 
@@ -122,34 +148,19 @@ namespace MyCode
 			const auto lineDirectionsCrossLengthSquared = glm::dot(lineDirectionsCross, lineDirectionsCross);
 			if (lineDirectionsCrossLengthSquared)
 			{
-				intersectionFactor.second = true;
 				const glm::vec3 ca{ a - c };
 				intersectionFactor.first = -glm::dot(glm::cross(ca, cd), lineDirectionsCross)
 					/ lineDirectionsCrossLengthSquared;
+				intersectionFactor.second = true;
 			}
 			else
 			{
-				if (ArePointsCollinear(a, b, c, d))
+				if (ArePointsCollinear(std::vector<T>{ a, b, c, d }))
 				{
 					intersectionFactor = GetIntersectionFactor1D(a, b, c, d);
 				}
 			}
 			return intersectionFactor;
-		}
-
-		template<typename T>
-		bool DoLineSegmentsIntersect(const T& a, const T& b, const T& c, const T& d, const bool strictly = false)
-		{
-			bool doTheyIntersect = false;
-
-			const auto factorAB = GetIntersectionFactor(a, b, c, d);
-			const auto factorCD = GetIntersectionFactor(c, d, a, b);
-			if (factorAB.second && IsIntersectionFactorOnSegment(factorAB.first, strictly) &&
-				factorCD.second && IsIntersectionFactorOnSegment(factorCD.first, strictly))
-			{
-				doTheyIntersect = true;
-			}
-			return doTheyIntersect;
 		}
 
 		enum class BoundingPointType
@@ -223,6 +234,22 @@ namespace MyCode
 		}
 
 		template<typename T>
+		bool DoCollinearLineSegmentsIntersect(const MarginPoint<T>& a, const MarginPoint<T>& b,
+			const MarginPoint<T>& c, const MarginPoint<T>& d)
+		{
+			bool doTheyIntersect = false;
+
+			const auto factorAB = GetIntersectionFactor1D(a.mPoint, b.mPoint, c.mPoint, d.mPoint);
+			const auto factorCD = GetIntersectionFactor1D(c.mPoint, d.mPoint, a.mPoint, b.mPoint);
+			if (factorAB.second && IsFactorValidForMarginPoints(factorAB.first, a, b) &&
+				factorCD.second && IsFactorValidForMarginPoints(factorCD.first, c, d))
+			{
+				doTheyIntersect = true;
+			}
+			return doTheyIntersect;
+		}
+
+		template<typename T>
 		std::pair<T, bool> GetLinesIntersection(const MarginPoint<T>& a, const MarginPoint<T>& b, 
 			const MarginPoint<T>& c, const MarginPoint<T>& d)
 		{
@@ -291,22 +318,25 @@ namespace MyCode
 		}
 
 		template<typename T>
-		bool IsPointInsidePolygon(const std::vector<T>& polygon, const T& point)
+		bool IsPointInsidePolygon(const std::vector<T>& polygon, const MarginPoint<T>& point)
 		{
 			bool isInsidePolygon = false;
 			const auto pointsCount = polygon.size();
 			if (pointsCount > 2)
 			{
-				const bool isInSamePlane = IsPointInPlane(point, polygon[0], polygon[1], polygon[2]);
+				const bool isInSamePlane = IsPointInPlane(point.mPoint, polygon[0], polygon[1], polygon[2]);
 				if (isInSamePlane)
 				{
+					const bool strictlyInside = ((point.mBoundingPointType == BoundingPointType::BOUNDED) &&
+						(point.mPointEndType == PointType::OPEN_ENDED));
 					isInsidePolygon = true;
 					for (size_t i = 0; i < pointsCount; ++i)
 					{
 						const auto& a = polygon[i];
 						const auto& b = polygon[(i + 1) % pointsCount];
 						const auto& c = polygon[(i + 2) % pointsCount];
-						isInsidePolygon = IsPointInsideOfSide(a, b, c, point);
+						isInsidePolygon = strictlyInside ? IsPointInsideOfSideStrictly(a, b, c, point.mPoint)
+														: IsPointInsideOfSide(a, b, c, point.mPoint);
 						if (isInsidePolygon == false)
 						{
 							break;
@@ -336,16 +366,12 @@ namespace MyCode
 			}
 			if (intersection.second == false)
 			{
-				if (a.mBoundingPointType == BoundingPointType::BOUNDED &&
-					a.mPointEndType == PointType::CLOSED_ENDED &&
-					IsPointInsidePolygon(polygon, a.mPoint))
+				if (IsPointInsidePolygon(polygon, a))
 				{
 					intersection.first = a.mPoint;
 					intersection.second = true;
 				}
-				else if (b.mBoundingPointType == BoundingPointType::BOUNDED &&
-					b.mPointEndType == PointType::CLOSED_ENDED &&
-					IsPointInsidePolygon(polygon, b.mPoint))
+				else if (IsPointInsidePolygon(polygon, b))
 				{
 					intersection.first = b.mPoint;
 					intersection.second = true;
@@ -364,7 +390,9 @@ namespace MyCode
 			const auto lineDirection = b.mPoint - a.mPoint;
 			const auto numerator = glm::dot(planeNormal, vectorPlaneToLine);
 			const auto denominator = glm::dot(planeNormal, lineDirection);
-			if ((numerator == 0.0f) && (a.mBoundingPointType == BoundingPointType::BOUNDED))
+			if ((numerator == 0.0f) && 
+				(a.mBoundingPointType == BoundingPointType::BOUNDED) &&
+				(a.mPointEndType == PointType::CLOSED_ENDED))
 			{
 				// the line is in the plane
 				intersection.first = a.mPoint;
@@ -393,7 +421,7 @@ namespace MyCode
 			const T lineDirection = b.mPoint - a.mPoint;
 			const T& polygonPoint = polygon[0];
 			const T normalToPolygonPlane = T{ glm::cross(polygon[1] - polygonPoint, polygon[2] - polygonPoint) };
-			bool isSegmentInPolygonPlane = (glm::dot(normalToPolygonPlane, lineDirection) == 0);
+			const bool isSegmentInPolygonPlane = (glm::dot(normalToPolygonPlane, lineDirection) == 0);
 			
 			std::pair<glm::vec3, bool> intersection{ T{0.0f}, false };
 			if (isSegmentInPolygonPlane)
@@ -405,11 +433,28 @@ namespace MyCode
 				intersection = GetIntersectionOfLineWithPlane3D(a, b, polygonPoint, normalToPolygonPlane);
 				if (intersection.second)
 				{
-					intersection.second = IsPointInsidePolygon(polygon, intersection.first);
+					intersection.second = IsPointInsidePolygon(polygon, MarginPoint<T>{intersection.first});
 				}
 			}
 			
 			return intersection;
+		}
+
+		template<typename T>
+		bool DoesVectorCrossThroughPolygon(const MarginPoint<T>& a, const MarginPoint<T>& b,
+			const std::vector<T>& polygon, const T& polygonCenter)
+		{
+			bool doesItCrossThrough = false;
+			const auto vectorIntersection = GetIntersectionBetweenLineAndPolygon(a, b, polygon);
+			if (vectorIntersection.second)
+			{
+				const T centerProjection = GetProjectionPointOnLine(a.mPoint, b.mPoint, polygonCenter);
+				const auto centerIntersection = GetIntersectionBetweenLineAndPolygon(MarginPoint<T>{polygonCenter},
+					MarginPoint<T>{centerProjection}, polygon);
+				const bool doesItTouchThePolygon = (centerIntersection.second);
+				doesItCrossThrough = (doesItTouchThePolygon == false);
+			}
+			return doesItCrossThrough;
 		}
 	}
 }

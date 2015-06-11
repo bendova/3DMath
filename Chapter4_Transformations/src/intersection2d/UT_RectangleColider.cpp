@@ -53,12 +53,16 @@ namespace MyCode
 
 	bool UT_RectangleColider::CollisionTest2D::TouchingInOnePoint()
 	{
-		const std::vector<glm::vec3> rectangle1{
+		const std::vector<glm::vec3> rectangle1
+		{
 			glm::vec3{ -1.0f, 0.0f, 1.0f }, glm::vec3{ 1.0f, 0.0f, 1.0f },
-			glm::vec3{ 1.0f, 0.0f, -1.0f }, glm::vec3{ -1.0f, 0.0f, -1.0f } };
-		const std::vector<glm::vec3> rectangle2{
+			glm::vec3{ 1.0f, 0.0f, -1.0f }, glm::vec3{ -1.0f, 0.0f, -1.0f } 
+		};
+		const std::vector<glm::vec3> rectangle2
+		{
 			glm::vec3{ 1.0f, 0.0f, 1.0f }, glm::vec3{ 1.0f, 0.0f, 2.0f },
-			glm::vec3{ 2.0f, 0.0f, 2.0f }, glm::vec3{ 2.0f, 0.0f, 1.0f } };
+			glm::vec3{ 2.0f, 0.0f, 2.0f }, glm::vec3{ 2.0f, 0.0f, 1.0f } 
+		};
 
 		const bool collision = PolygonIntersection::DoPolygonsIntersect2D(rectangle1, rectangle2);
 		const bool collisionExpected = true;
