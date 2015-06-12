@@ -92,6 +92,7 @@ namespace MyCode
 			bool BoundingPathForTriangle();
 			bool BoundingPathForRectangle();
 			bool BoundingPathForRotatedRectangle();
+			bool BoundingPathForConvexIrregularPolygon();
 		};
 
 		class TravelPathBoundingTest3D

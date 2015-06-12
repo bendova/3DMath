@@ -61,6 +61,9 @@ namespace MyCode
 		glm::vec3 GetNormalToPolygonPlane(const std::vector<glm::vec3>& polygon);
 		bool IsPointCoplanarWithPolygon(const glm::vec3& point, const std::vector<glm::vec3>& polygon);
 
+		bool DoesRayIntersectPolygon(const glm::vec3& origin, const glm::vec3& direction,
+			const std::vector<glm::vec3>& polygon);
+
 		template<typename T>
 		bool ArePointsCollinear(const T& a, const T& b, const T& c)
 		{

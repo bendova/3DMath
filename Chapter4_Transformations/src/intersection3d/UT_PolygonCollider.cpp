@@ -78,7 +78,8 @@ namespace MyCode
 	{
 		return BoundingPathForTriangle()
 			&& BoundingPathForRectangle()
-			&& BoundingPathForRotatedRectangle();
+			&& BoundingPathForRotatedRectangle()
+			&& BoundingPathForConvexIrregularPolygon();
 	}
 
 	bool UT_PolygonCollider::TravelPathBoundingTest2D::BoundingPathForTriangle()
@@ -94,8 +95,8 @@ namespace MyCode
 
 		const Polygon expected
 		{
-			glm::vec3{ 1.0f, 0.0f, -1.0f }, glm::vec3{ 2.0f, 0.0f, 0.0f },
-			glm::vec3{ 1.0f, 0.0f, 2.0f }, glm::vec3{ 2.0f, 0.0f, 2.0f }
+			glm::vec3{ 1.0f, 0.0f, -1.0f }, glm::vec3{ 1.0f, 0.0f, 2.0f },
+			glm::vec3{ 2.0f, 0.0f, 2.0f }, glm::vec3{ 2.0f, 0.0f, 0.0f }
 		};
 
 		return CHECK_IS_TRUE(bounding.size() == 1)
@@ -124,19 +125,45 @@ namespace MyCode
 
 	bool UT_PolygonCollider::TravelPathBoundingTest2D::BoundingPathForRotatedRectangle()
 	{
-		const Polygon polygon
+		const Polygon polygonXZ
 		{
 			glm::vec3{ 0.0f, 0.0f, 1.0f }, glm::vec3{ 1.0f, 0.0f, 0.0f },
 			glm::vec3{ 0.0f, 0.0f, -1.0f }, glm::vec3{ -1.0f, 0.0f, 0.0f }
 		};
 		const glm::vec3 destination{ 0.0f, 0.0f, 3.0f };
+		const std::vector<Polygon> bounding = TravelPathBounding::GetBoundingPath(polygonXZ, destination);
+
+		const Polygon expected
+		{
+			glm::vec3{ 0.0f, 0.0f, 4.0f }, glm::vec3{ 1.0f, 0.0f, 3.0f },
+			glm::vec3{ 1.0f, 0.0f, 0.0f }, glm::vec3{ 0.0f, 0.0f, -1.0f }, 
+			glm::vec3{ -1.0f, 0.0f, 0.0f }, glm::vec3{ -1.0f, 0.0f, 3.0f }
+		};
+
+		return CHECK_IS_TRUE(bounding.size() == 1)
+			&& CHECK_EQUALS(bounding[0], expected);
+	}
+
+	bool UT_PolygonCollider::TravelPathBoundingTest2D::BoundingPathForConvexIrregularPolygon()
+	{
+		const Polygon polygon
+		{
+			glm::vec3{ -3.0f, 0.0f, 4.0f }, glm::vec3{ 1.0f, 0.0f, 4.0f },
+			glm::vec3{ 3.0f, 0.0f, 0.0f }, glm::vec3{ 3.0f, 0.0f, -1.0f },
+			glm::vec3{ 2.0f, 0.0f, -3.0f }, glm::vec3{ -1.0f, 0.0f, -4.0f },
+			glm::vec3{ -4.0f, 0.0f, -2.0f }, glm::vec3{ -4.0f, 0.0f, 0.0f },
+		};
+		const glm::vec3 directionVector{ 10.0f, 0.0f, 0.0f };
+		const glm::vec3 destination{ polygon.Center() + directionVector };
 		const std::vector<Polygon> bounding = TravelPathBounding::GetBoundingPath(polygon, destination);
 
 		const Polygon expected
 		{
-			glm::vec3{ 1.0f, 0.0f, 0.0f }, glm::vec3{ 0.0f, 0.0f, -1.0f },
-			glm::vec3{ -1.0f, 0.0f, 0.0f }, glm::vec3{ -1.0f, 0.0f, 3.0f },
-			glm::vec3{ 4.0f, 0.0f, 0.0f }, glm::vec3{ 1.0f, 0.0f, 3.0f }
+			glm::vec3{ -3.0f, 0.0f, 4.0f }, glm::vec3{ 11.0f, 0.0f, 4.0f },
+			glm::vec3{ 13.0f, 0.0f, 0.0f }, glm::vec3{ 13.0f, 0.0f, -1.0f },
+			glm::vec3{ 12.0f, 0.0f, -3.0f }, glm::vec3{ 9.0f, 0.0f, -4.0f },
+			glm::vec3{ -1.0f, 0.0f, -4.0f }, glm::vec3{ -4.0f, 0.0f, -2.0f }, 
+			glm::vec3{ -4.0f, 0.0f, 0.0f },
 		};
 
 		return CHECK_IS_TRUE(bounding.size() == 1)

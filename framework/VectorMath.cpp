@@ -148,5 +148,15 @@ namespace MyCode
 			const bool isInPlane = AreEqualWithMargin(glm::dot(normalToPlane, ap), 0.0f);
 			return isInPlane;
 		}
+
+		bool DoesRayIntersectPolygon(const glm::vec3& origin, const glm::vec3& direction,
+			const std::vector<glm::vec3>& polygon)
+		{
+			const MarginPoint<glm::vec3> originPoint{origin, BoundingPointType::BOUNDED, PointType::OPEN_ENDED};
+			const MarginPoint<glm::vec3> directionVector{direction, BoundingPointType::UNBOUNDED};
+
+			const auto vectorIntersection = GetIntersectionBetweenLineAndPolygon(originPoint, directionVector, polygon);
+			return vectorIntersection.second;
+		}
 	}
 }

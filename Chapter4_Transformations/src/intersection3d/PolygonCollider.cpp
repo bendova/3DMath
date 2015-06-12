@@ -271,25 +271,53 @@ namespace MyCode
 					std::vector<glm::vec3> boundingVertices;
 
 					const auto& targetVertices = target.Vertices();
-
 					const auto& center = target.Center();
 					const glm::vec3 directionVector = destination - target.Center();
-					const glm::vec3 normalToPolygonPlane = GetNormalToPolygonPlane(targetVertices);
-					const glm::vec3 orthoToDirectionVector = glm::cross(normalToPolygonPlane, directionVector);
-
-					const float distanceBetweenCenters = glm::length(directionVector);
 					const size_t verticesCount = targetVertices.size();
+					
+					const glm::vec3 lastSide = targetVertices[verticesCount - 1] - targetVertices[verticesCount - 2];
+					const glm::vec3 secondToLastSide = targetVertices[verticesCount - 2] - targetVertices[verticesCount - 3];
+					float previousDotValue = glm::dot(lastSide, secondToLastSide);
+					
 					for (size_t i = 0; i < verticesCount; ++i)
 					{
 						const auto& a = targetVertices[i];
-						const glm::vec3 aDisplaced = a + directionVector;
+						const glm::vec3 aForward = a + directionVector;
+						const glm::vec3 aBackward = a - directionVector;
+						const bool isCoveredFromFront = DoesRayIntersectPolygon(a, aForward, targetVertices);
+						const bool isCoveredFromBehind = DoesRayIntersectPolygon(a, aBackward, targetVertices);
 
-						const float distance = GetDistanceFromPointToLine(aDisplaced, center, orthoToDirectionVector);
-						if (distance > distanceBetweenCenters)
+						if ((isCoveredFromFront == false) && 
+							(isCoveredFromBehind == false))
 						{
-							boundingVertices.push_back(aDisplaced);
+							const auto& b = targetVertices[(i + 1) % verticesCount];
+							float dotValue = glm::dot(b - a, directionVector);
+							
+							// TODO We need to decide here the order
+							// in which to put the points so that the 
+							// CCW order is maintained.
+							if (dotValue == 0)
+							{
+								// and here what? we have both possibilities here.
+								dotValue = previousDotValue;
+							}
+							if (dotValue < 0)
+							{
+								boundingVertices.push_back(aForward);
+								boundingVertices.push_back(a);
+							}
+							else
+							{
+								boundingVertices.push_back(a);
+								boundingVertices.push_back(aForward);
+							}
+							previousDotValue = dotValue;
 						}
-						else
+						else if (isCoveredFromFront == false)
+						{
+							boundingVertices.push_back(aForward);
+						}
+						else if (isCoveredFromBehind == false)
 						{
 							boundingVertices.push_back(a);
 						}
