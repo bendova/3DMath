@@ -4,6 +4,11 @@ namespace MyCode
 {
 	namespace VectorMath
 	{
+		bool operator==(const Plane& a, const Plane& b)
+		{
+			return (a.mNormalToPlane == b.mNormalToPlane)
+				&& (a.mPointInPlane == b.mPointInPlane);
+		}
 
 		bool AreSegmentsEqualWithinMargin(const std::pair<glm::vec3, glm::vec3>& ab, const std::pair<glm::vec3, glm::vec3>& cd,
 			const double margin)
@@ -149,6 +154,15 @@ namespace MyCode
 			return isInPlane;
 		}
 
+		bool IsLineInPlane(const glm::vec3& a, const glm::vec3& b, const Plane& plane)
+		{
+			const glm::vec3 ap = plane.mPointInPlane - a;
+			const glm::vec3 bp = plane.mPointInPlane - b;
+			const bool isInPlane = (AreEqualWithMargin(glm::dot(plane.mNormalToPlane, ap), 0.0f) &&
+									AreEqualWithMargin(glm::dot(plane.mNormalToPlane, bp), 0.0f));
+			return isInPlane;
+		}
+
 		bool DoesRayIntersectPolygon(const glm::vec3& origin, const glm::vec3& direction,
 			const std::vector<glm::vec3>& polygon)
 		{
@@ -157,6 +171,19 @@ namespace MyCode
 
 			const auto vectorIntersection = GetIntersectionBetweenLineAndPolygon(originPoint, directionVector, polygon);
 			return vectorIntersection.second;
+		}
+
+		Plane GetPolygonPlane(const std::vector<glm::vec3>& polygon)
+		{
+			return Plane{ polygon[0], GetNormalToPolygonPlane(polygon) };
+		}
+
+		bool ArePolygonsCoplanar(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2)
+		{
+			const Plane plane1 = GetPolygonPlane(polygon1);
+			const glm::vec3 vectorBetweenPolygonPlanes = polygon2[0] - plane1.mPointInPlane;
+			const bool areCoplanar = AreEqualWithMargin(glm::dot(vectorBetweenPolygonPlanes, plane1.mNormalToPlane), 0.0f);
+			return areCoplanar;
 		}
 	}
 }

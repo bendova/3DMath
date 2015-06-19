@@ -4,9 +4,15 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include "Polygon.h"
+#include "../intersection2d/RectangleColider.h"
 
 namespace MyCode
 {
+	namespace VectorMath
+	{
+		struct Plane;
+	}
+
 	class PolygonCollider
 	{
 	public:
@@ -30,28 +36,17 @@ namespace MyCode
 	{
 		namespace PolygonIntersection
 		{
-			struct Plane
-			{
-				Plane(const glm::vec3& point, const glm::vec3& normal)
-					: mPoint(point)
-					, mNormal(normal)
-				{}
-
-				glm::vec3 mPoint;
-				glm::vec3 mNormal;
-			};
-
 			bool DoPolygonsIntersect3D(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b);
 			bool DoPolygonProjectionsIntersect(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b);
-			std::vector<Plane> GetCoordinatePlanesRelativeToPlane(const std::vector<glm::vec3>& a);
-			std::vector<glm::vec3> GetPolygonProjectionToPlane(const std::vector<glm::vec3>& polygon, const Plane& plane);
+			std::vector<VectorMath::Plane> GetCoordinatePlanesRelativeToPlane(const std::vector<glm::vec3>& a);
+			std::vector<glm::vec3> GetPolygonProjectionToPlane(const std::vector<glm::vec3>& polygon, const VectorMath::Plane& plane);
 		}
 
 		namespace CollisionDetection
 		{
 			bool DoesPathCollide(const Polygon& target, const glm::vec3& targetCenter, const Polygon& obstacle);
-			bool DoesAnyVerticePathCollide(const Polygon& target, const glm::vec3& directionVector,
-				const Polygon& obstacle);
+			bool DoesItCollide2D(const Polygon& target, const glm::vec3& destination, const Polygon& obstacle);
+			bool DoesItCollide3D(const Polygon& target, const glm::vec3& destination, const Polygon& obstacle);
 		}
 
 		namespace TravelPathBounding
@@ -61,7 +56,11 @@ namespace MyCode
 			namespace Detail
 			{
 				Polygon GetBoundingPath2D(const Polygon& target, const glm::vec3& destination);
+				float GetDotWithLastSideOfPolygon(const std::vector<glm::vec3>& polygon, const glm::vec3& direction);
+				
 				std::vector<Polygon> GetBoundingPath3D(const Polygon& target, const glm::vec3& destination);
+				Polygon GetBoundingPolygonForLineSegment(const glm::vec3& a, const glm::vec3& b,
+					const glm::vec3& polygonNormal, const glm::vec3& directionVector);
 			}
 		}
 

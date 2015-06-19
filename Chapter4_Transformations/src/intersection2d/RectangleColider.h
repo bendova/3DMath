@@ -8,6 +8,11 @@
 
 namespace MyCode
 {
+	namespace VectorMath
+	{
+		enum class PointType;
+	}
+
 	class RectangleColider
 	{
 	public:
@@ -54,17 +59,20 @@ namespace MyCode
 				std::pair<glm::vec3, glm::vec3> GetLineSegmentFromCollinearPoints(const std::vector<glm::vec3>& collinearPoints);
 				std::vector<glm::vec3> GetPairwiseDistinctPoints(const std::vector<glm::vec3>& points, const int count);
 				bool DoPolygonWithLineSegmentIntersection(const std::vector<glm::vec3>& polygon,
-					const std::vector<glm::vec3>& collinearPoints);
+					const std::vector<glm::vec3>& collinearPoints, const VectorMath::PointType pointType);
 				bool DoLineSegmentsIntersection(const std::vector<glm::vec3>& collinearPointsA,
-					const std::vector<glm::vec3>& collinearPointsB);
+					const std::vector<glm::vec3>& collinearPointsB, const VectorMath::PointType pointType);
 
-				namespace PolygonsIntersection
+				namespace CoplanarPolygons
 				{
-					bool DoCoplanarPolygonsIntersect(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2);
-					bool DoPolygonsSideIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2);
+					bool DoCoplanarPolygonsIntersect(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2, 
+						const VectorMath::PointType pointType);
+					bool DoPolygonsSideIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2,
+						const VectorMath::PointType pointType);
 
 					bool DoPolygonToAxisIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2,
-						const glm::vec3& axisA, const glm::vec3& axisB);
+						const glm::vec3& axisA, const glm::vec3& axisB,
+						const VectorMath::PointType pointType);
 
 					std::pair<glm::vec3, glm::vec3> ProjectPolygonToAxis(const std::vector<glm::vec3>& polygon,
 						const glm::vec3& axisPointA, const glm::vec3& axisPointB);

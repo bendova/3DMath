@@ -64,6 +64,24 @@ namespace MyCode
 		bool DoesRayIntersectPolygon(const glm::vec3& origin, const glm::vec3& direction,
 			const std::vector<glm::vec3>& polygon);
 
+		struct Plane
+		{
+			Plane(const glm::vec3& point, const glm::vec3& normal)
+				: mPointInPlane(point)
+				, mNormalToPlane(normal)
+			{
+			}
+
+			glm::vec3 mPointInPlane;
+			glm::vec3 mNormalToPlane;
+		};
+		bool operator==(const Plane& a, const Plane& b);
+
+		Plane GetPolygonPlane(const std::vector<glm::vec3>& polygon);
+		bool ArePolygonsCoplanar(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2);
+
+		bool IsLineInPlane(const glm::vec3& a, const glm::vec3& b, const Plane& plane);
+		
 		template<typename T>
 		bool ArePointsCollinear(const T& a, const T& b, const T& c)
 		{
@@ -441,23 +459,6 @@ namespace MyCode
 			}
 			
 			return intersection;
-		}
-
-		template<typename T>
-		bool DoesVectorCrossThroughPolygon(const MarginPoint<T>& a, const MarginPoint<T>& b,
-			const std::vector<T>& polygon, const T& polygonCenter)
-		{
-			bool doesItCrossThrough = false;
-			const auto vectorIntersection = GetIntersectionBetweenLineAndPolygon(a, b, polygon);
-			if (vectorIntersection.second)
-			{
-				const T centerProjection = GetProjectionPointOnLine(a.mPoint, b.mPoint, polygonCenter);
-				const auto centerIntersection = GetIntersectionBetweenLineAndPolygon(MarginPoint<T>{polygonCenter},
-					MarginPoint<T>{centerProjection}, polygon);
-				const bool doesItTouchThePolygon = (centerIntersection.second);
-				doesItCrossThrough = (doesItTouchThePolygon == false);
-			}
-			return doesItCrossThrough;
 		}
 	}
 }

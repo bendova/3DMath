@@ -64,6 +64,7 @@ namespace MyCode
 		private:
 			bool PointIsNotInPlane();
 			bool PointIsInPlane();
+			bool PlaneDescription();
 		};
 	};
 }

@@ -133,20 +133,21 @@ namespace MyCode
 
 				bool doTheyOverlap = false;
 
+				const PointType pointType = PointType::CLOSED_ENDED;
 				const IntersectionType intersectionType = GetIntersectionType(a, b);
 				switch (intersectionType)
 				{
 				case IntersectionType::POLYGON_WITH_POLYGON:
-					doTheyOverlap = PolygonsIntersection::DoCoplanarPolygonsIntersect(a, b);
+					doTheyOverlap = CoplanarPolygons::DoCoplanarPolygonsIntersect(a, b, pointType);
 					break;
 				case IntersectionType::POLYGON_WITH_LINE_SEGMENT:
-					doTheyOverlap = DoPolygonWithLineSegmentIntersection(a, b);
+					doTheyOverlap = DoPolygonWithLineSegmentIntersection(a, b, pointType);
 					break;
 				case IntersectionType::LINE_SEGMENT_WITH_POLYGON:
-					doTheyOverlap = DoPolygonWithLineSegmentIntersection(b, a);
+					doTheyOverlap = DoPolygonWithLineSegmentIntersection(b, a, pointType);
 					break;
 				case IntersectionType::LINE_SEGMENT_WITH_LINE_SEGMENT:
-					doTheyOverlap = DoLineSegmentsIntersection(a, b);
+					doTheyOverlap = DoLineSegmentsIntersection(a, b, pointType);
 					break;
 				}
 
@@ -209,22 +210,23 @@ namespace MyCode
 				std::pair<glm::vec3, glm::vec3> GetLineSegmentFromCollinearPoints(const std::vector<glm::vec3>& collinearPoints)
 				{
 					std::vector<glm::vec3> distinctPoints{ GetPairwiseDistinctPoints(collinearPoints, 2) };
-					return PolygonsIntersection::ProjectPolygonToAxis(collinearPoints,
+					return CoplanarPolygons::ProjectPolygonToAxis(collinearPoints,
 						distinctPoints[0], distinctPoints[1]);
 				}
 
 				bool DoPolygonWithLineSegmentIntersection(const std::vector<glm::vec3>& polygon, 
-					const std::vector<glm::vec3>& collinearPoints)
+					const std::vector<glm::vec3>& collinearPoints, const PointType pointType)
 				{
 					const auto lineSegment = GetLineSegmentFromCollinearPoints(collinearPoints);
-					const VectorMath::MarginPoint<glm::vec3> a{ lineSegment.first };
-					const VectorMath::MarginPoint<glm::vec3> b{ lineSegment.second };
+					const BoundingPointType boundingType = BoundingPointType::BOUNDED;
+					const VectorMath::MarginPoint<glm::vec3> a{ lineSegment.first, boundingType, pointType };
+					const VectorMath::MarginPoint<glm::vec3> b{ lineSegment.second, boundingType, pointType };
 					const bool doTheyIntersect = VectorMath::GetIntersectionOfLineWithPolygon2D(a, b, polygon).second;
 					return doTheyIntersect;
 				}
 
 				bool DoLineSegmentsIntersection(const std::vector<glm::vec3>& collinearPointsA, 
-					const std::vector<glm::vec3>& collinearPointsB)
+					const std::vector<glm::vec3>& collinearPointsB, const PointType pointType)
 				{
 					using namespace VectorMath;
 
@@ -232,7 +234,6 @@ namespace MyCode
 					const auto lineSegmentB = GetLineSegmentFromCollinearPoints(collinearPointsB);
 					
 					const BoundingPointType boundingType = BoundingPointType::BOUNDED;
-					const PointType pointType = PointType::CLOSED_ENDED;
 					const MarginPoint<glm::vec3> a{ lineSegmentA.first, boundingType, pointType };
 					const MarginPoint<glm::vec3> b{ lineSegmentA.second, boundingType, pointType };
 					const MarginPoint<glm::vec3> c{ lineSegmentB.first, boundingType, pointType };
@@ -241,19 +242,20 @@ namespace MyCode
 					return intersection.second;
 				}
 
-				namespace PolygonsIntersection
+				namespace CoplanarPolygons
 				{
-					bool DoCoplanarPolygonsIntersect(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b)
+					bool DoCoplanarPolygonsIntersect(const std::vector<glm::vec3>& a, const std::vector<glm::vec3>& b, const PointType pointType)
 					{
-						bool doTheyOverlap = DoPolygonsSideIntersection(a, b);
+						bool doTheyOverlap = DoPolygonsSideIntersection(a, b, pointType);
 						if (doTheyOverlap)
 						{
-							doTheyOverlap = DoPolygonsSideIntersection(b, a);
+							doTheyOverlap = DoPolygonsSideIntersection(b, a, pointType);
 						}
 						return doTheyOverlap;
 					}
 
-					bool DoPolygonsSideIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2)
+					bool DoPolygonsSideIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2, 
+						const PointType pointType)
 					{
 						bool doTheyIntersect = true;
 						const auto pointsCount = polygon1.size();
@@ -262,7 +264,7 @@ namespace MyCode
 							const auto& a = polygon1[i];
 							const auto& b = polygon1[(i + 1) % pointsCount];
 
-							doTheyIntersect = DoPolygonToAxisIntersection(polygon1, polygon2, a, b);
+							doTheyIntersect = DoPolygonToAxisIntersection(polygon1, polygon2, a, b, pointType);
 
 							if (doTheyIntersect == false)
 							{
@@ -274,13 +276,13 @@ namespace MyCode
 					}
 
 					bool DoPolygonToAxisIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2,
-						const glm::vec3& axisA, const glm::vec3& axisB)
+						const glm::vec3& axisA, const glm::vec3& axisB, 
+						const PointType pointType)
 					{
 						const auto projPolygon1 = ProjectPolygonToAxis(polygon1, axisA, axisB);
 						const auto projPolygon2 = ProjectPolygonToAxis(polygon2, axisA, axisB);
 
 						const BoundingPointType boundingType = BoundingPointType::BOUNDED;
-						const PointType pointType = PointType::CLOSED_ENDED;
 						const MarginPoint<glm::vec3> a{ projPolygon1.first, boundingType, pointType };
 						const MarginPoint<glm::vec3> b{ projPolygon1.second, boundingType, pointType };
 						const MarginPoint<glm::vec3> c{ projPolygon2.first, boundingType, pointType };
@@ -323,32 +325,10 @@ namespace MyCode
 		{
 			bool DoesTravelPathCollide(const Rectangle& rectangle, const glm::vec3& targetCenter, const Rectangle& obstacle)
 			{
-				const std::vector<glm::vec3> targetVertices{ rectangle.A(), rectangle.B(), rectangle.C(), rectangle.D() };
+				const auto travelPathPolygon = TravelPathBounding::GetTravelPathBounding(rectangle, targetCenter);
 				const std::vector<glm::vec3> obstacleVertices{ obstacle.A(), obstacle.B(), obstacle.C(), obstacle.D() };
-				const glm::vec3 directionVector{ targetCenter - rectangle.Center() };
-				const bool doesItCollide = DoesAnyVerticePathCollide(targetVertices, directionVector, obstacleVertices) ||
-					DoesAnyVerticePathCollide(obstacleVertices, -directionVector, targetVertices);
-				return doesItCollide;
-			}
-
-			bool DoesAnyVerticePathCollide(const std::vector<glm::vec3>& targetVertices, const glm::vec3& directionVector,
-				const std::vector<glm::vec3>& obstacleVertices)
-			{
-				bool doesItCollide = false;
-				for (const auto& vertex : targetVertices)
-				{
-					PointType pointType = PointType::CLOSED_ENDED;
-					BoundingPointType boundingType = BoundingPointType::BOUNDED;
-					const MarginPoint<glm::vec3> a{ vertex, boundingType, pointType };
-					const MarginPoint<glm::vec3> b{ vertex + directionVector, boundingType, pointType };
-					const auto intersection = VectorMath::GetIntersectionBetweenLineAndPolygon(a, b, obstacleVertices);
-					if (intersection.second)
-					{
-						doesItCollide = true;
-						break;
-					}
-				}
-				return doesItCollide;
+				const bool doTheyOverlap = PolygonIntersection::DoPolygonsIntersect2D(travelPathPolygon, obstacleVertices);
+				return doTheyOverlap;
 			}
 
 			std::vector<glm::vec3> GetTravelPathBounding(const Rectangle& rectangle, const glm::vec3& targetCenter)

@@ -381,8 +381,26 @@ namespace MyCode
 
 	bool UT_VectorMath::CoplanarityTest::Run()
 	{
-		return PointIsNotInPlane() &&
-			PointIsInPlane();
+		return PlaneDescription()
+			&& PointIsNotInPlane() 
+			&& PointIsInPlane();
+	}
+
+	bool UT_VectorMath::CoplanarityTest::PlaneDescription()
+	{
+		const std::vector<glm::vec3> polygonXZ
+		{
+			glm::vec3{ -1.0f, 0.0f, 1.0f }, glm::vec3{ 1.0f, 0.0f, 1.0f },
+			glm::vec3{ 1.0f, 0.0f, -1.0f }, glm::vec3{ -1.0f, 0.0f, 1.0f }
+		};
+		const Plane plane = VectorMath::GetPolygonPlane(polygonXZ);
+		const Plane expected
+		{
+			glm::vec3{ -1.0f, 0.0f, 1.0f },
+			glm::vec3{ 0.0f, 4.0f, 0.0f }
+		};
+
+		return CHECK_EQUALS(plane, expected);
 	}
 
 	bool UT_VectorMath::CoplanarityTest::PointIsNotInPlane()

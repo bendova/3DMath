@@ -4,6 +4,8 @@
 #include <vector>
 #include <initializer_list>
 #include <glm/glm.hpp>
+#include <cassert>
+#include <../framework/VectorMath.h>
 
 namespace MyCode
 {
@@ -15,16 +17,29 @@ namespace MyCode
 
 	public:
 		Polygon(const std::initializer_list<glm::vec3>& vertices)
-			: mVertices(vertices)
+			: mCenter(0.0f)
+			, mVertices(vertices)
 		{
-			CalculateCenter();
+			Init();
 		}
 
 		Polygon(const std::vector<glm::vec3>& vertices)
-			: mVertices(vertices)
+			: mCenter(0.0f)
+			, mVertices(vertices)
 		{
-			CalculateCenter();
+			Init();
 		}
+
+		Polygon(std::vector<glm::vec3>&& vertices)
+			: mCenter(0.0f)
+			, mVertices(std::forward<std::vector<glm::vec3>>(vertices))
+		{
+			Init();
+		}
+
+		void Init();
+		void DoSanityCheck();
+		void AssertVerticesAreCoplanar();
 
 		void SetCenter(const glm::vec3& center)
 		{
@@ -53,24 +68,8 @@ namespace MyCode
 		}
 
 	private:
-		void CalculateCenter()
-		{
-			glm::vec3 sum{ 0.0f };
-			for (const glm::vec3& vertice : mVertices)
-			{
-				sum += vertice;
-			}
-			mCenter = sum / static_cast<float>(mVertices.size());
-		}
-
-		void UpdateVertices(const glm::vec3& newCenter)
-		{
-			for (glm::vec3& vertice : mVertices)
-			{
-				const glm::vec3 verticeOffset = vertice - mCenter;
-				vertice = newCenter + verticeOffset;
-			}
-		}
+		void CalculateCenter();
+		void UpdateVertices(const glm::vec3& newCenter);
 	};
 }
 

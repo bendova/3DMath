@@ -78,7 +78,10 @@ namespace MyCode
 			bool Run();
 		private:
 			bool NoCollision();
+			bool NoCollisionForTouchingPolygons();
+			bool NoCollisionForOverlappingPolygons();
 			bool NearSideCollision();
+			bool NearSideCollision2();
 			bool FarSideCollision();
 			bool NoCollisionForSlidingPolygons();
 			bool PointCollision();
@@ -92,6 +95,7 @@ namespace MyCode
 			bool BoundingPathForTriangle();
 			bool BoundingPathForRectangle();
 			bool BoundingPathForRotatedRectangle();
+			bool BoundingPathFoParalelogram();
 			bool BoundingPathForConvexIrregularPolygon();
 		};
 
@@ -100,6 +104,9 @@ namespace MyCode
 		public:
 			bool Run();
 		private:
+			bool BoundingPathForLineMovedLeft();
+			bool BoundingPathForLineMovedRight();
+			bool BoundingPathForTriangle();
 			bool BoundingPathForRectangle();
 			bool BoundingPathForRotatedRectangle();
 		};

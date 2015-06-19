@@ -170,7 +170,7 @@ namespace MyCode
 				return doTheyIntersect;
 			}
 
-			std::vector<Plane> GetCoordinatePlanesRelativeToPlane(const std::vector<glm::vec3>& a)
+			std::vector<VectorMath::Plane> GetCoordinatePlanesRelativeToPlane(const std::vector<glm::vec3>& a)
 			{
 				const glm::vec3& pointA = a[0];
 				const glm::vec3& pointB = a[1];
@@ -179,19 +179,19 @@ namespace MyCode
 				const glm::vec3 normal2 = glm::cross(normal1, (pointC - pointA));
 				const glm::vec3 normal3 = glm::cross(normal1, normal2);
 
-				std::vector<Plane> axes;
+				std::vector<VectorMath::Plane> axes;
 				axes.emplace_back(pointA, normal1);
 				axes.emplace_back(pointA, normal2);
 				axes.emplace_back(pointA, normal3);
 				return axes;
 			}
 
-			std::vector<glm::vec3> GetPolygonProjectionToPlane(const std::vector<glm::vec3>& polygon, const Plane& plane)
+			std::vector<glm::vec3> GetPolygonProjectionToPlane(const std::vector<glm::vec3>& polygon, const VectorMath::Plane& plane)
 			{
 				std::vector<glm::vec3> projection;
 				for (const auto& vertice : polygon)
 				{
-					projection.push_back(GetProjectionPointOnPlane(vertice, plane.mPoint, plane.mNormal));
+					projection.push_back(GetProjectionPointOnPlane(vertice, plane.mPointInPlane, plane.mNormalToPlane));
 				}
 				return projection;
 			}
@@ -199,40 +199,45 @@ namespace MyCode
 
 		namespace CollisionDetection
 		{
-			bool DoesPathCollide(const Polygon& target, const glm::vec3& targetCenter, const Polygon& obstacle)
+			bool DoesPathCollide(const Polygon& target, const glm::vec3& destination, const Polygon& obstacle)
 			{
-				//TODO
-				// const std::vector<Polygon> boundingPath = TravelPathBounding::GetBoundingPath(target, targetCenter);
-				// const bool doesItCollide = VectorMath::DoesItIntersect(boundingPath, obstacle, NO_TOUCHING);
-				// return doesItCollide;
+				bool doesItCollide = false;
 
-				const glm::vec3 directionVector{targetCenter - target.Center()};
+				using namespace Intersection2D::PolygonIntersection;
+				if (VectorMath::IsPointCoplanarWithPolygon(destination, target.Vertices()))
+				{
+					doesItCollide = DoesItCollide2D(target, destination, obstacle);
+				}
+				else
+				{
+					doesItCollide = DoesItCollide3D(target, destination, obstacle);
+				}
 
-				const bool doesItCollide = DoesAnyVerticePathCollide(target, directionVector, obstacle) ||
-					DoesAnyVerticePathCollide(obstacle, -directionVector, target);
 				return doesItCollide;
 			}
 
-			bool DoesAnyVerticePathCollide(const Polygon& target, const glm::vec3& directionVector,
-				const Polygon& obstacle)
+			bool DoesItCollide2D(const Polygon& target, const glm::vec3& destination, const Polygon& obstacle)
 			{
-				const auto& targetVertices = target.Vertices();
-				const auto& obstacleVertices = obstacle.Vertices();
+				using namespace PolygonIntersection;
+				using namespace TravelPathBounding::Detail;
 
-				bool doesItCollide = false;
-				for (const auto& vertex : targetVertices)
+				const Polygon boundingPath = GetBoundingPath2D(target, destination);
+				const bool doesItCollide = DoPolygonsIntersect3D(boundingPath.Vertices(), obstacle.Vertices());
+				return doesItCollide;
+			}
+
+			bool DoesItCollide3D(const Polygon& target, const glm::vec3& destination, const Polygon& obstacle)
+			{
+				using namespace PolygonIntersection;
+
+				const glm::vec3 directionVector = destination - target.Center();
+				std::vector<glm::vec3> boundingPath;
+				for (const auto& vertex : target.Vertices())
 				{
-					const BoundingPointType boundingType = BoundingPointType::BOUNDED;
-					const PointType pointType = PointType::CLOSED_ENDED;
-					const MarginPoint<glm::vec3> a{ vertex, boundingType, pointType };
-					const MarginPoint<glm::vec3> b{ vertex + directionVector, boundingType, pointType };
-					//FIXME
-					doesItCollide = VectorMath::DoesVectorCrossThroughPolygon(a, b, obstacleVertices, obstacle.Center());
-					if (doesItCollide)
-					{
-						break;
-					}
+					boundingPath.push_back(vertex + directionVector);
 				}
+				const Plane boundingPathPlane = VectorMath::GetPolygonPlane(boundingPath);
+				const bool doesItCollide = DoPolygonsIntersect3D(boundingPath, obstacle.Vertices());
 				return doesItCollide;
 			}
 		}
@@ -271,47 +276,41 @@ namespace MyCode
 					std::vector<glm::vec3> boundingVertices;
 
 					const auto& targetVertices = target.Vertices();
-					const auto& center = target.Center();
 					const glm::vec3 directionVector = destination - target.Center();
+					float previousDotValue = GetDotWithLastSideOfPolygon(targetVertices, directionVector);
+					
 					const size_t verticesCount = targetVertices.size();
-					
-					const glm::vec3 lastSide = targetVertices[verticesCount - 1] - targetVertices[verticesCount - 2];
-					const glm::vec3 secondToLastSide = targetVertices[verticesCount - 2] - targetVertices[verticesCount - 3];
-					float previousDotValue = glm::dot(lastSide, secondToLastSide);
-					
 					for (size_t i = 0; i < verticesCount; ++i)
 					{
 						const auto& a = targetVertices[i];
+						const auto& b = targetVertices[(i + 1) % verticesCount];
+						float dotValue = glm::dot(b - a, directionVector);
+
+						// We must be careful now to add the vertices
+						// to the bounding in CCW order.
 						const glm::vec3 aForward = a + directionVector;
 						const glm::vec3 aBackward = a - directionVector;
 						const bool isCoveredFromFront = DoesRayIntersectPolygon(a, aForward, targetVertices);
 						const bool isCoveredFromBehind = DoesRayIntersectPolygon(a, aBackward, targetVertices);
-
 						if ((isCoveredFromFront == false) && 
 							(isCoveredFromBehind == false))
 						{
-							const auto& b = targetVertices[(i + 1) % verticesCount];
-							float dotValue = glm::dot(b - a, directionVector);
-							
-							// TODO We need to decide here the order
-							// in which to put the points so that the 
-							// CCW order is maintained.
 							if (dotValue == 0)
 							{
-								// and here what? we have both possibilities here.
 								dotValue = previousDotValue;
 							}
-							if (dotValue < 0)
+
+							const bool isAngleAcute = (dotValue > 0);
+							if (isAngleAcute)
 							{
-								boundingVertices.push_back(aForward);
 								boundingVertices.push_back(a);
+								boundingVertices.push_back(aForward);
 							}
 							else
 							{
-								boundingVertices.push_back(a);
 								boundingVertices.push_back(aForward);
+								boundingVertices.push_back(a);
 							}
-							previousDotValue = dotValue;
 						}
 						else if (isCoveredFromFront == false)
 						{
@@ -321,14 +320,77 @@ namespace MyCode
 						{
 							boundingVertices.push_back(a);
 						}
+
+						previousDotValue = dotValue;
 					}
-					return Polygon{ boundingVertices };
+					return Polygon{ std::forward<std::vector<glm::vec3>>(boundingVertices) };
+				}
+
+				float GetDotWithLastSideOfPolygon(const std::vector<glm::vec3>& polygon, const glm::vec3& direction)
+				{
+					const auto verticesCount = polygon.size();
+					const glm::vec3& z = polygon[verticesCount - 1];
+					const glm::vec3& a = polygon[0];
+					const glm::vec3 lastSide = a - z;
+					return glm::dot(lastSide, direction);
 				}
 
 				std::vector<Polygon> GetBoundingPath3D(const Polygon& target, const glm::vec3& destination)
 				{
-					return std::vector<Polygon>{};
+					const auto directionVector = destination - target.Center();
+
+					std::vector<Polygon> boundingFaces;
+
+					const auto& targetVertices = target.Vertices();
+					boundingFaces.emplace_back(std::vector<glm::vec3>(targetVertices.rbegin(), targetVertices.rend()));
+
+					Plane polygonPlane = VectorMath::GetPolygonPlane(targetVertices);
+					const size_t verticesCount = targetVertices.size();
+					for (size_t i = 0; i < verticesCount; ++i)
+					{
+						const glm::vec3& a = targetVertices[i];
+						const glm::vec3& b = targetVertices[(i + 1) % verticesCount];
+						boundingFaces.push_back(GetBoundingPolygonForLineSegment(a, b, 
+							polygonPlane.mNormalToPlane, directionVector));
+					}
+
+					std::vector<glm::vec3> topFaceVertices;
+					for (const auto& vertex : targetVertices)
+					{
+						topFaceVertices.push_back(vertex + directionVector);
+					}
+					boundingFaces.emplace_back(topFaceVertices);
+					return boundingFaces;
 				}
+
+				Polygon GetBoundingPolygonForLineSegment(const glm::vec3& a, const glm::vec3& b, 
+					const glm::vec3& upDirection, const glm::vec3& directionVector)
+				{
+					const glm::vec3 c = a + directionVector;
+					const glm::vec3 d = b + directionVector;
+					
+					std::vector<glm::vec3> bounding;
+
+					const float angleWithUpDirection = glm::dot(directionVector, upDirection);
+					const bool isDirectionVectorToLeft = (angleWithUpDirection >= 0);
+					if (isDirectionVectorToLeft)
+					{
+						bounding.push_back(a);
+						bounding.push_back(b);
+						bounding.push_back(d);
+						bounding.push_back(c);
+					}
+					else
+					{
+						bounding.push_back(a);
+						bounding.push_back(c);
+						bounding.push_back(d);
+						bounding.push_back(b);
+					}
+
+					return Polygon{ std::forward<std::vector<glm::vec3>>(bounding) };
+				}
+
 			}
 		}
 

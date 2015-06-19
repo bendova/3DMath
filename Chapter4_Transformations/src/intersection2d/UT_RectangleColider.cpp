@@ -399,7 +399,7 @@ namespace MyCode
 	std::pair<glm::vec3, glm::vec3> UT_RectangleColider::ProjectionToAxesTest::ProjectPointsToAxis(const std::vector<glm::vec3>& points, 
 		const glm::vec3& lineA, const glm::vec3& lineB)
 	{
-		using namespace PolygonIntersection::Detail::PolygonsIntersection;
+		using namespace PolygonIntersection::Detail::CoplanarPolygons;
 		return ProjectPolygonToAxis(points, lineA, lineB);
 	}
 
