@@ -10,7 +10,7 @@ namespace MyCode
 		using namespace CubeColliderHelpers;
 		using namespace TravelPathIntersection;
 		std::vector<const Cube*> sortedCubes = SortByDistanceFromPoint(mCubes, cube.Center());
-		for (const Cube* const c : sortedCubes)
+		for (const Cube* c : sortedCubes)
 		{
 			const Cube& obstacle = *c;
 			if (&obstacle != &cube)

@@ -2,8 +2,7 @@
 #include "CollisionAvoidance.h"
 #include "TravelPathBounding.h"
 #include "PolygonIntersection.h"
-#include "../framework/VectorMath.h"
-#include "../framework/Logging.h"
+#include "Logging.h"
 #include <algorithm>
 #include <cassert>
 #include <cfloat>
@@ -26,24 +25,24 @@ namespace MyCode
 		}
 	}
 
-	glm::vec3 RectangleColider::GetPositionThatAvoidsCollisions(const Rectangle& rectangle, glm::vec3 targetCenter) const
+	glm::vec3 RectangleColider::GetPositionThatAvoidsCollisions(const Rectangle& rectangle, glm::vec3 destination) const
 	{
 		using namespace Intersection2D;
 		using namespace RectangleColiderHelpers;
 
 		bool wasCollisionFound = false;
 		std::vector<const Rectangle*> sortedRectangles = SortByDistanceFromPoint(mRectangles, rectangle.Center());
-		for (const Rectangle* const r : sortedRectangles)
+		for (const Rectangle* r : sortedRectangles)
 		{
 			const Rectangle& obstacle = *r;
 			if (&rectangle != &obstacle)
 			{
-				const bool doesTravelPathCollide = TravelPathBounding::DoesTravelPathCollide(rectangle, targetCenter, obstacle);
+				const bool doesTravelPathCollide = TravelPathBounding::DoesTravelPathCollide(rectangle, destination, obstacle);
 				if (doesTravelPathCollide)
 				{
 					wasCollisionFound = true;
-					targetCenter = GetValidCenter(rectangle, obstacle, targetCenter);
-					CollisionSanityCheck(rectangle, targetCenter, obstacle);
+					destination = GetValidCenter(rectangle, obstacle, destination);
+					CollisionSanityCheck(rectangle, destination, obstacle);
 				}
 			}
 		}
@@ -51,10 +50,10 @@ namespace MyCode
 		if (wasCollisionFound == false)
 		{
 			/*Log("Starting from center = [%f, %f, %f]\n", rectangle.Center().x, rectangle.Center().y, rectangle.Center().z);
-			Log("No collision was found for targetCenter = [%f, %f, %f]\n", targetCenter.x, targetCenter.y, targetCenter.z);*/
+			Log("No collision was found for destination = [%f, %f, %f]\n", destination.x, destination.y, destination.z);*/
 		}
 
-		return targetCenter;
+		return destination;
 	}
 
 	namespace RectangleColiderHelpers
@@ -86,7 +85,7 @@ namespace MyCode
 			const glm::vec3& currentCenter{ rectangle.Center() };
 
 			glm::vec3 validCenter{ targetCenter };
-			if (PolygonIntersection::DoPolygonsIntersect2D(verticesOfR1, verticesOfR2))
+			if (PolygonIntersection::DoPolygonsIntersect2D(verticesOfR1, verticesOfR2, VectorMath::PointType::OPEN_ENDED))
 			{
 				const glm::vec3 directionVector{ targetCenter - currentCenter };
 				const glm::vec3 centersVector{ obstacle.Center() - currentCenter };

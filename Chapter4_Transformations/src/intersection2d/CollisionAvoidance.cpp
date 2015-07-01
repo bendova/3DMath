@@ -1,6 +1,8 @@
 #include "CollisionAvoidance.h"
-#include "../framework/VectorMath.h"
-#include "../framework/Logging.h"
+#include "vectormath/DataTypes.h"
+#include "vectormath/Projection.h"
+#include "vectormath/Intersection.h"
+#include "Logging.h"
 
 namespace MyCode
 {

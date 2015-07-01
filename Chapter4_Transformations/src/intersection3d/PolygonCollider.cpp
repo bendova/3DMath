@@ -1,8 +1,9 @@
 #include "PolygonCollider.h"
-#include "../framework/VectorMath.h"
-#include "../framework/Logging.h"
-#include "../intersection2d/PolygonIntersection.h"
+#include "Logging.h"
 #include <algorithm>
+#include "../intersection2d/PolygonIntersection.h"
+#include "vectormath/Intersection.h"
+#include "vectormath/Projection.h"
 
 namespace MyCode
 {
@@ -21,34 +22,39 @@ namespace MyCode
 		}
 	}
 
-	glm::vec3 PolygonCollider::GetPositionThatAvoidCollisions(const Polygon& target, glm::vec3 targetCenter) const
+	glm::vec3 PolygonCollider::GetPositionThatAvoidCollisions(const Polygon& source, glm::vec3 destination) const
 	{
 		using namespace Intersection3D;
 		using namespace PolygonColliderHelpers;
 
 		bool wasCollisionFound = false;
-		std::vector<const Polygon*> sortedPolygons = SortByDistanceFromPoint(mPolygons, target.Center());
+		std::vector<const Polygon*> sortedPolygons = SortByDistanceFromPoint(mPolygons, source.Center());
 		for (const Polygon* const r : sortedPolygons)
 		{
 			const Polygon& obstacle = *r;
-			if (&target != &obstacle)
+			if (&source != &obstacle)
 			{
-				if (CollisionDetection::DoesPathCollide(target, targetCenter, obstacle))
+				if (destination == source.Center())
+				{
+					break;
+				}
+
+				if (CollisionDetection::DoesPathCollide(source, destination, obstacle))
 				{
 					wasCollisionFound = true;
-					targetCenter = GetValidCenter(target, obstacle, targetCenter);
-					CollisionSanityCheck(target, targetCenter, obstacle);
+					destination = GetValidCenter(source, obstacle, destination);
+					CollisionSanityCheck(source, destination, obstacle);
 				}
 			}
 		}
 
 		if (wasCollisionFound == false)
 		{
-			Log("Starting from center = [%f, %f, %f]\n", target.Center().x, target.Center().y, target.Center().z);
-			Log("No collision was found for targetCenter = [%f, %f, %f]\n", targetCenter.x, targetCenter.y, targetCenter.z);
+			Log("Starting from center = [%f, %f, %f]\n", source.Center().x, source.Center().y, source.Center().z);
+			Log("No collision was found for destination = [%f, %f, %f]\n", destination.x, destination.y, destination.z);
 		}
 
-		return targetCenter;
+		return destination;
 	}
 
 	namespace PolygonColliderHelpers
@@ -161,7 +167,7 @@ namespace MyCode
 				{
 					const std::vector<glm::vec3> projectionA = GetPolygonProjectionToPlane(a, plane);
 					const std::vector<glm::vec3> projectionB = GetPolygonProjectionToPlane(b, plane);
-					doTheyIntersect = DoPolygonsIntersect2D(projectionA, projectionB);
+					doTheyIntersect = DoPolygonsIntersect2D(projectionA, projectionB, VectorMath::PointType::OPEN_ENDED);
 					if (doTheyIntersect == false)
 					{
 						break;
@@ -226,19 +232,44 @@ namespace MyCode
 				return doesItCollide;
 			}
 
-			bool DoesItCollide3D(const Polygon& target, const glm::vec3& destination, const Polygon& obstacle)
+			bool DoesItCollide3D(const Polygon& source, const glm::vec3& destination, const Polygon& obstacle)
 			{
 				using namespace PolygonIntersection;
 
-				const glm::vec3 directionVector = destination - target.Center();
-				std::vector<glm::vec3> boundingPath;
-				for (const auto& vertex : target.Vertices())
+				const glm::vec3 directionVector = destination - source.Center();
+
+				const Plane sourcePlane{ source.Center(), directionVector };
+				const Plane targetPlane{ source.Center() + directionVector, directionVector };
+
+				// FIXME We are still not done here.
+				// Doing these projections simplifies determining the collision,
+				// but for this to work correctly we will have to _trim_
+				// both the obstacle and the source polygons and that plane.
+				// For example, if part of the obstacle is beyond the targetPlane or
+				// before the sourcePlane, then that part should not be taken 
+				// into account for collision.
+				bool doesItCollide = false;
+				if (IsPolygonBetweenPlanes(obstacle, sourcePlane, targetPlane))
 				{
-					boundingPath.push_back(vertex + directionVector);
+					std::vector<glm::vec3> target;
+					for (const auto& vertex : source.Vertices())
+					{
+						target.push_back(vertex + directionVector);
+					}
+
+					const Plane targetPlane{ source.Center() + directionVector, directionVector };
+					const auto targetProjection = GetPolygonProjectionToPlane(target, targetPlane);
+					const auto obstacleProjection = GetPolygonProjectionToPlane(obstacle.Vertices(), targetPlane);
+					doesItCollide = Intersection2D::PolygonIntersection::DoPolygonsIntersect2D(targetProjection,
+						obstacleProjection, VectorMath::PointType::OPEN_ENDED);
 				}
-				const Plane boundingPathPlane = VectorMath::GetPolygonPlane(boundingPath);
-				const bool doesItCollide = DoPolygonsIntersect3D(boundingPath, obstacle.Vertices());
+				
 				return doesItCollide;
+			}
+
+			bool IsPolygonBetweenPlanes(const Polygon& polygon, const Plane& planeA, const Plane& planeB)
+			{
+				return false;
 			}
 		}
 

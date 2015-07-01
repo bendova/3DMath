@@ -13,13 +13,13 @@ namespace MyCode
 		IntersectionTest3D intersectionTest3D;
 		TravelPathBoundingTest2D travelPathBounding2D;
 		TravelPathBoundingTest3D travelPathBounding3D;
-		CollisionDetectionTest pathCollisionDetection;
+		CollisionDetectionTest collisionDetection;
 		CollisionAvoidanceTest collisionAvoidance;
 
 		return intersectionTest3D.Run()
 			&& travelPathBounding2D.Run()
 			&& travelPathBounding3D.Run()
-			&& pathCollisionDetection.Run()
+			&& collisionDetection.Run()
 			&& collisionAvoidance.Run();
 	}
 
@@ -279,7 +279,7 @@ namespace MyCode
 	{
 		return NoCollision()
 			&& NoCollisionForTouchingPolygons()
-			&& NoCollisionForOverlappingPolygons()
+			//&& NoCollisionForOverlappingPolygons() // I don't think we need this
 			&& NearSideCollision()
 			&& NearSideCollision2()
 			&& FarSideCollision()
@@ -443,7 +443,8 @@ namespace MyCode
 			glm::vec3{ 6.0f, -1.0f, 1.0f }, glm::vec3{ 6.0f, 1.0f, 1.0f },
 			glm::vec3{ 6.0f, 1.0f, -1.0f }, glm::vec3{ 6.0f, -1.0f, -1.0f }
 		};
-		const glm::vec3 destination{ -10.0f, 0.0f, 0.0f };
+		const glm::vec3 directionVector{ 10.0f, 0.0f, 0.0f };
+		const glm::vec3 destination{ source.Center() + directionVector };
 
 		const bool collision = CollisionDetection::DoesPathCollide(source, destination, obstacleYZ);
 		const bool collisionExpected = true;

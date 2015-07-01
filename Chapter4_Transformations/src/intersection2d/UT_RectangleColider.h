@@ -69,12 +69,14 @@ namespace MyCode
 			bool CollisionInOnePoint();
 			bool CollisionOnOneSide();
 			bool CompleteOverlap();
+			bool CollisionOfOverlappedRectangles();
 			bool CollisionOfRotatedRectangles();
 			bool NoCollisionOfRotatedRectangles();
 			bool NoIntersectionOfLineSegmentWithPolygon();
 			bool IntersectionOfLineSegmentWithPolygon();
 			bool IntersectionOfLineSegmentWithPolygon2();
 			bool NoIntersectionForLineTouchingPolygon();
+			bool IntersectionForLineInsidePolygon();
 		};
 
 		class BoundingPathTest
@@ -143,6 +145,16 @@ namespace MyCode
 			bool StepOutOfCollision2();
 			bool StepOutOfCollision3();
 			bool StepOutOfCollision4();
+		};
+
+		class SlidingRectanglesTest
+		{
+		public:
+			bool Run();
+		private:
+			bool SlideRectanglesUp();
+			bool SlideRectanglesDown();
+			bool SlideRectanglesWithinMarginError();
 		};
 	};
 }

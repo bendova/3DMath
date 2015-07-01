@@ -66,21 +66,21 @@ namespace MyCode
 			
 			const auto ad = d - a;
 			const float factorD = glm::dot(ab, ad) / abDot;
-			
+
 			std::vector<float> factors;
-			if ((factorA >= factorC) && (factorA <= factorD))
+			if (IsInInterval(factorA, factorC, factorD))
 			{
 				factors.push_back(factorA);
 			}
-			if ((factorB >= factorC) && (factorB <= factorD))
+			if (IsInInterval(factorB, factorC, factorD))
 			{
 				factors.push_back(factorB);
 			}
-			if ((factorC >= factorA) && (factorC <= factorB))
+			if (IsInInterval(factorC, factorA, factorB))
 			{
 				factors.push_back(factorC);
 			}
-			if ((factorD >= factorA) && (factorD <= factorB))
+			if (IsInInterval(factorD, factorA, factorB))
 			{
 				factors.push_back(factorD);
 			}
@@ -177,7 +177,7 @@ namespace MyCode
 			const std::vector<float> factorsCD = GetIntersectionFactor1D(c.mPoint, d.mPoint, a.mPoint, b.mPoint);
 			if ((factorsAB.empty() == false) && (factorsCD.empty() == false))
 			{
-				doTheyIntersect = AreColinearSegmentsEqual(factorsAB, factorsCD);
+				doTheyIntersect = DoColinearSegmentsOverlap(factorsAB, factorsCD);
 				if (doTheyIntersect == false)
 				{
 					const std::pair<float, bool> factorAbValid = GetValidFactor(factorsAB, a, b);
@@ -198,9 +198,9 @@ namespace MyCode
 			const std::vector<float> factorsCD = GetIntersectionFactor1D(c.mPoint, d.mPoint, a.mPoint, b.mPoint);
 			if ((factorsAB.empty() == false) && (factorsCD.empty() == false))
 			{
-				if (AreColinearSegmentsEqual(factorsAB, factorsCD))
+				if (DoColinearSegmentsOverlap(factorsAB, factorsCD))
 				{
-					intersection.first = a.mPoint + (b.mPoint - a.mPoint);
+					intersection.first = c.mPoint + factorsCD[0] * (d.mPoint - c.mPoint);
 					intersection.second = true;
 				}
 				else

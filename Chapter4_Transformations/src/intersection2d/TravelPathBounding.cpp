@@ -1,6 +1,7 @@
 #include "TravelPathBounding.h"
 #include "Rectangle.h"
 #include "PolygonIntersection.h"
+#include <algorithm>
 
 namespace MyCode
 {
@@ -12,7 +13,8 @@ namespace MyCode
 			{
 				const auto travelPathPolygon = TravelPathBounding::GetTravelPathBounding(rectangle, targetCenter);
 				const std::vector<glm::vec3> obstacleVertices{ obstacle.A(), obstacle.B(), obstacle.C(), obstacle.D() };
-				const bool doTheyOverlap = PolygonIntersection::DoPolygonsIntersect2D(travelPathPolygon, obstacleVertices);
+				const bool doTheyOverlap = PolygonIntersection::DoPolygonsIntersect2D(travelPathPolygon, 
+					obstacleVertices, VectorMath::PointType::OPEN_ENDED);
 				return doTheyOverlap;
 			}
 

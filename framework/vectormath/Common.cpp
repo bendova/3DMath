@@ -73,6 +73,11 @@ namespace MyCode
 			return std::abs(a - b) <= errorMargin;
 		}
 
+		bool IsInInterval(const float p, float a, float b)
+		{
+			return ((a <= p) && (p <= b));
+		}
+
 		float GetDistanceFromPointToLine(const glm::vec3& p, const glm::vec3& pointOnLine, const glm::vec3& lineDirection)
 		{
 			const float lineDirectionLength = glm::length(lineDirection);
@@ -218,6 +223,31 @@ namespace MyCode
 			const bool isFullSegmentAB = IsFullSegment(factorsAB);
 			const bool isFullSegmentCD = IsFullSegment(factorsCD);
 			return (isFullSegmentAB && isFullSegmentCD);
+		}
+
+		bool IsSegment(const std::vector<float>& factors)
+		{
+			bool isSegment = false;
+			if (factors.size() > 1)
+			{
+				const float factorA = factors[0];
+				for (size_t i = 1; i < factors.size(); ++i)
+				{
+					if (factors[i] != factorA)
+					{
+						isSegment = true;
+						break;
+					}
+				}
+			}
+			return isSegment;
+		}
+
+		bool DoColinearSegmentsOverlap(const std::vector<float>& factorsAB, const std::vector<float>& factorsCD)
+		{
+			const bool isSegmentAB = IsSegment(factorsAB);
+			const bool isSegmentCD = IsSegment(factorsCD);
+			return (isSegmentAB && isSegmentCD);
 		}
 	}
 }

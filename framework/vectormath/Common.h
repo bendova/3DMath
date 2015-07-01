@@ -23,6 +23,8 @@ namespace MyCode
 		void Floor(glm::vec4& v, const int precision = 5);
 		bool AreEqualWithMargin(const float a, const float b, const float errorMargin = 1e-5);
 
+		bool IsInInterval(const float p, float a, float b);
+
 		float GetDistanceFromPointToLine(const glm::vec3& p, const glm::vec3& pointOnLine, const glm::vec3& lineDirection);
 		
 		glm::vec3 GetProjectionPointOnPlane(const glm::vec3& pointToProject, const glm::vec3& pointInPlane, const glm::vec3& planeNormal);
@@ -48,6 +50,9 @@ namespace MyCode
 		
 		bool IsFullSegment(const std::vector<float>& factors);
 		bool AreColinearSegmentsEqual(const std::vector<float>& factorsAB, const std::vector<float>& factorsCD);
+
+		bool IsSegment(const std::vector<float>& factorsAB);
+		bool DoColinearSegmentsOverlap(const std::vector<float>& factorsAB, const std::vector<float>& factorsCD);
 
 		std::pair<float, float> GetMinMaxLengthsPair(const std::vector<glm::vec3>& points);
 	}

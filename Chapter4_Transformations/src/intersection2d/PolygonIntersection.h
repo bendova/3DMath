@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <glm/glm.hpp>
-#include "../framework/VectorMath.h"
+#include "vectormath/DataTypes.h"
 
 namespace MyCode
 {
@@ -33,24 +33,21 @@ namespace MyCode
 				bool DoLineSegmentsIntersection(const std::vector<glm::vec3>& collinearPointsA,
 					const std::vector<glm::vec3>& collinearPointsB, const VectorMath::PointType pointType);
 
-				namespace CoplanarPolygons
-				{
-					bool DoCoplanarPolygonsIntersect(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2,
-						const VectorMath::PointType pointType);
-					bool DoPolygonsSideIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2,
-						const VectorMath::PointType pointType);
+				bool DoCoplanarPolygonsIntersect(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2,
+					const VectorMath::PointType pointType);
+				bool DoPolygonsSideIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2,
+					const VectorMath::PointType pointType);
 
-					bool DoPolygonToAxisIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2,
-						const glm::vec3& axisA, const glm::vec3& axisB,
-						const VectorMath::PointType pointType);
+				bool DoPolygonToAxisIntersection(const std::vector<glm::vec3>& polygon1, const std::vector<glm::vec3>& polygon2,
+					const glm::vec3& axisA, const glm::vec3& axisB,
+					const VectorMath::PointType pointType);
 
-					std::pair<glm::vec3, glm::vec3> ProjectPolygonToAxis(const std::vector<glm::vec3>& polygon,
-						const glm::vec3& axisPointA, const glm::vec3& axisPointB);
-					bool DoColinearLineSegmentsIntersect(const float& factorA, const float& factorB,
-						const float& factorC, const float& factorD);
-					bool DoSegmentsIntersect(const float& factorA, const float& factorB,
-						const float& factorC, const float& factorD);
-				}
+				std::pair<glm::vec3, glm::vec3> ProjectPolygonToAxis(const std::vector<glm::vec3>& polygon,
+					const glm::vec3& axisPointA, const glm::vec3& axisPointB);
+				bool DoColinearLineSegmentsIntersect(const float& factorA, const float& factorB,
+					const float& factorC, const float& factorD);
+				bool DoSegmentsIntersect(const float& factorA, const float& factorB,
+					const float& factorC, const float& factorD);
 			}
 		}
 	}
