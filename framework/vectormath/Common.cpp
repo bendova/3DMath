@@ -1,4 +1,5 @@
-#include "VectorMath.h"
+#include "Common.h"
+#include "Intersection.h"
 
 namespace MyCode
 {
@@ -184,6 +185,39 @@ namespace MyCode
 			const glm::vec3 vectorBetweenPolygonPlanes = polygon2[0] - plane1.mPointInPlane;
 			const bool areCoplanar = AreEqualWithMargin(glm::dot(vectorBetweenPolygonPlanes, plane1.mNormalToPlane), 0.0f);
 			return areCoplanar;
+		}
+
+		bool IsFullSegment(const std::vector<float>& factors)
+		{
+			const float LEFT_MARGIN = 0.0f;
+			const float RIGHT_MARGIN = 1.0f;
+			bool isFullSegment = false;
+			bool hasLeftMargin = false;
+			bool hasRightMargin = false;
+			for (const auto& factor : factors)
+			{
+				if (factor == LEFT_MARGIN)
+				{
+					hasLeftMargin = true;
+				}
+				else if (factor == RIGHT_MARGIN)
+				{
+					hasRightMargin = true;
+				}
+				if (hasLeftMargin && hasRightMargin)
+				{
+					isFullSegment = true;
+					break;
+				}
+			}
+			return isFullSegment;
+		}
+
+		bool AreColinearSegmentsEqual(const std::vector<float>& factorsAB, const std::vector<float>& factorsCD)
+		{
+			const bool isFullSegmentAB = IsFullSegment(factorsAB);
+			const bool isFullSegmentCD = IsFullSegment(factorsCD);
+			return (isFullSegmentAB && isFullSegmentCD);
 		}
 	}
 }

@@ -1,6 +1,6 @@
 #include "IntersectionScene.h"
 #include "GL/freeglut.h"
-#include "../framework/MousePole.h"
+#include "MousePole.h"
 #include "glutil/MatrixStack.h"
 
 namespace MyCode

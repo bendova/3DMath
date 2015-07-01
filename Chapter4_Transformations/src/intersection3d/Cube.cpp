@@ -1,5 +1,5 @@
 #include "Cube.h"
-#include "../framework/VectorMath.h"
+#include "vectormath/Common.h"
 
 namespace MyCode
 {

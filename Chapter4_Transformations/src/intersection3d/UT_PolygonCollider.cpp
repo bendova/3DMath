@@ -1,7 +1,7 @@
 #include "UT_PolygonCollider.h"
-#include "../framework/UTUtil.h"
-#include "../framework/VectorMath.h"
+#include "UTUtil.h"
 #include <vector>
+#include "vectormath/Common.h"
 
 namespace MyCode
 {
@@ -62,14 +62,14 @@ namespace MyCode
 
 	bool UT_PolygonCollider::IntersectionTest3D::SamePlaneCollision()
 	{
-		const std::vector<glm::vec3> rectangleInXZ{
+		const std::vector<glm::vec3> rectangle1{
 			glm::vec3{ -1.0f, 0.0f, 1.0f }, glm::vec3{ 1.0f, 0.0f, 1.0f },
 			glm::vec3{ 1.0f, 0.0f, -1.0f }, glm::vec3{ -1.0f, 0.0f, -1.0f } };
-		const std::vector<glm::vec3> rectangleInXY{
+		const std::vector<glm::vec3> rectangle2{
 			glm::vec3{ -0.5f, 0.0f, 1.0f }, glm::vec3{ 1.5f, 0.0f, 1.0f },
 			glm::vec3{ 1.5f, 0.0f, -1.0f }, glm::vec3{ -0.5f, 0.0f, -1.0f } };
 
-		const bool collision = PolygonIntersection::DoPolygonsIntersect3D(rectangleInXZ, rectangleInXY);
+		const bool collision = PolygonIntersection::DoPolygonsIntersect3D(rectangle1, rectangle2);
 		const bool collisionExpected = true;
 
 		return CHECK_EQUALS(collision, collisionExpected);
@@ -394,7 +394,8 @@ namespace MyCode
 		const Polygon sourceYZ
 		{
 			glm::vec3{ 0.0f, -1.0f, -1.0f }, glm::vec3{ 0.0f, -1.0f, 1.0f },
-			glm::vec3{ 0.0f, 1.0f, 1.0f }, glm::vec3{ 0.0f, 1.0f, -1.0f } };
+			glm::vec3{ 0.0f, 1.0f, 1.0f }, glm::vec3{ 0.0f, 1.0f, -1.0f } 
+		};
 		const Polygon obstacleXZ
 		{
 			glm::vec3{ 4.0f, 0.0f, 1.0f }, glm::vec3{ 6.0f, 0.0f, 1.0f },

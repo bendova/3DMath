@@ -1,6 +1,9 @@
 #include "UT_RectangleColider.h"
 #include "../framework/UTUtil.h"
 #include "../framework/VectorMath.h"
+#include "CollisionAvoidance.h"
+#include "PolygonIntersection.h"
+#include "TravelPathBounding.h"
 
 namespace MyCode
 {
@@ -33,7 +36,11 @@ namespace MyCode
 			&& CollisionOnOneSide()
 			&& CompleteOverlap()
 			&& NoCollisionOfRotatedRectangles()
-			&& CollisionOfRotatedRectangles();
+			&& CollisionOfRotatedRectangles()
+			&& NoIntersectionOfLineSegmentWithPolygon()
+			&& IntersectionOfLineSegmentWithPolygon()
+			&& IntersectionOfLineSegmentWithPolygon2()
+			&& NoIntersectionForLineTouchingPolygon();
 	}
 
 	bool UT_RectangleColider::CollisionTest2D::NoCollision()
@@ -158,6 +165,66 @@ namespace MyCode
 		const bool collisionExpected = true;
 
 		return CHECK_EQUALS(collision, collisionExpected);
+	}
+
+	bool UT_RectangleColider::CollisionTest2D::NoIntersectionOfLineSegmentWithPolygon()
+	{
+		const std::vector<glm::vec3> line{
+			glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ 0.0f, 0.0f, 0.0f },
+			glm::vec3{ 1.0f, 0.0f, -1.0f }, glm::vec3{ 1.0f, 0.0f, -1.0f } };
+		const std::vector<glm::vec3> rectangle{
+			glm::vec3{ 2.0f, 0.0f, 0.0f }, glm::vec3{ 4.0f, 0.0f, 0.0f },
+			glm::vec3{ 4.0f, 0.0f, -1.0f }, glm::vec3{ 2.0f, 0.0f, -1.0f } };
+
+		const bool collision = PolygonIntersection::DoPolygonsIntersect2D(line, rectangle);
+		const bool expected = false;
+
+		return CHECK_EQUALS(collision, expected);
+	}
+
+	bool UT_RectangleColider::CollisionTest2D::IntersectionOfLineSegmentWithPolygon()
+	{
+		const std::vector<glm::vec3> line{
+			glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ 0.0f, 0.0f, 0.0f },
+			glm::vec3{ 3.0f, 0.0f, -1.0f }, glm::vec3{ 3.0f, 0.0f, -1.0f } };
+		const std::vector<glm::vec3> rectangle{
+			glm::vec3{ 2.0f, 0.0f, 0.0f }, glm::vec3{ 4.0f, 0.0f, 0.0f },
+			glm::vec3{ 4.0f, 0.0f, -1.0f }, glm::vec3{ 2.0f, 0.0f, -1.0f } };
+
+		const bool collision = PolygonIntersection::DoPolygonsIntersect2D(line, rectangle);
+		const bool expected = true;
+
+		return CHECK_EQUALS(collision, expected);
+	}
+
+	bool UT_RectangleColider::CollisionTest2D::IntersectionOfLineSegmentWithPolygon2()
+	{
+		const std::vector<glm::vec3> line{
+			glm::vec3{ -1.0f, 0.0f, 0.0f }, glm::vec3{ 1.0f, 0.0f, 0.0f },
+			glm::vec3{ 1.0f, 0.0f, 0.0f }, glm::vec3{ -1.0f, 0.0f, 0.0f } };
+		const std::vector<glm::vec3> rectangle{
+			glm::vec3{ -1.0f, 0.0f, 1.0f }, glm::vec3{ 1.0f, 0.0f, 1.0f },
+			glm::vec3{ 1.0f, 0.0f, -1.0f }, glm::vec3{ -1.0f, 0.0f, -1.0f } };
+
+		const bool collision = PolygonIntersection::DoPolygonsIntersect2D(line, rectangle);
+		const bool expected = true;
+
+		return CHECK_EQUALS(collision, expected);
+	}
+
+	bool UT_RectangleColider::CollisionTest2D::NoIntersectionForLineTouchingPolygon()
+	{
+		const std::vector<glm::vec3> line{
+			glm::vec3{ 0.0f, 0.0f, 0.0f }, glm::vec3{ 0.0f, 0.0f, 0.0f },
+			glm::vec3{ 3.0f, 0.0f, 0.0f }, glm::vec3{ 3.0f, 0.0f, 0.0f } };
+		const std::vector<glm::vec3> rectangle{
+			glm::vec3{ 2.0f, 0.0f, 0.0f }, glm::vec3{ 4.0f, 0.0f, 0.0f },
+			glm::vec3{ 4.0f, 0.0f, -1.0f }, glm::vec3{ 2.0f, 0.0f, -1.0f } };
+
+		const bool collision = PolygonIntersection::DoPolygonsIntersect2D(line, rectangle, VectorMath::PointType::OPEN_ENDED);
+		const bool expected = false;
+
+		return CHECK_EQUALS(collision, expected);
 	}
 
 	bool UT_RectangleColider::BoundingPathTest::Run()

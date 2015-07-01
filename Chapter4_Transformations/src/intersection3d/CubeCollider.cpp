@@ -1,6 +1,6 @@
 #include "CubeCollider.h"
-#include "../intersection2d/RectangleColider.h"
 #include <algorithm>
+#include "../intersection2d/RectangleColider.h"
 #include "PolygonCollider.h"
 
 namespace MyCode

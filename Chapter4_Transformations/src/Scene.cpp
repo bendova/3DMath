@@ -1,7 +1,7 @@
 #include "Scene.h"
 #include "GL/freeglut.h"
-#include "../framework/MousePole.h"
-#include "../framework/MathUtil.h"
+#include "MousePole.h"
+#include "MathUtil.h"
 #include "glutil/MatrixStack.h"
 #include <algorithm>
 

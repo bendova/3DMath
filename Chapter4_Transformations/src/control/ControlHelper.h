@@ -3,11 +3,12 @@
 
 #include <glm/glm.hpp>
 #include <utility>
-#include "../intersection2d/RectangleColider.h"
 #include "GL/freeglut.h"
 #include <cstdio>
 #include <cmath>
-#include "../framework/VectorMath.h"
+#include "../intersection2d/RectangleColider.h"
+#include "vectormath/Projection.h"
+#include "vectormath/Intersection.h"
 
 namespace MyCode
 {

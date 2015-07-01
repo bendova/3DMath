@@ -1,6 +1,6 @@
 #include "Polygon.h"
 #include <cassert>
-#include <../framework/VectorMath.h>
+#include "vectormath/Common.h"
 
 namespace MyCode
 {

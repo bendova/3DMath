@@ -5,7 +5,6 @@
 #include <initializer_list>
 #include <glm/glm.hpp>
 #include <cassert>
-#include <../framework/VectorMath.h>
 
 namespace MyCode
 {

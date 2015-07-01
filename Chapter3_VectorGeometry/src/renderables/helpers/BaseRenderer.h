@@ -4,7 +4,7 @@
 #include <glload/gl_3_3.h>
 #include <glm/glm.hpp>
 #include <vector>
-#include "../framework/VectorMath.h"
+#include "vectormath/DataTypes.h"
 #include "../../PolygonMath.h"
 
 

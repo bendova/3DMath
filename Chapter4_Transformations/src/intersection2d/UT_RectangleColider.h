@@ -71,6 +71,10 @@ namespace MyCode
 			bool CompleteOverlap();
 			bool CollisionOfRotatedRectangles();
 			bool NoCollisionOfRotatedRectangles();
+			bool NoIntersectionOfLineSegmentWithPolygon();
+			bool IntersectionOfLineSegmentWithPolygon();
+			bool IntersectionOfLineSegmentWithPolygon2();
+			bool NoIntersectionForLineTouchingPolygon();
 		};
 
 		class BoundingPathTest

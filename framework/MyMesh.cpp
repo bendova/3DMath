@@ -7,9 +7,9 @@
 #include <sstream>
 #include <utility>
 #include <type_traits>
-#include "../framework/framework.h"
-#include "../framework/rapidxml.hpp"
-#include "../framework/rapidxml_helpers.h"
+#include "framework.h"
+#include "rapidxml.hpp"
+#include "rapidxml_helpers.h"
 
 #define PARSE_ASSERT(cond, message) if(!cond) { throw new std::runtime_error(message); }
 

@@ -26,6 +26,8 @@ function SetupSolution(slnName)
 		files  "../framework/*.cpp"
 		files  "../framework/*.h"
 		files  "../framework/*.hpp"
+		files  "../framework/vectormath/*.cpp"
+		files  "../framework/vectormath/*.h"
 		excludes "../framework/empty.cpp"
 		
 		targetdir "../framework/lib"

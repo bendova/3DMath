@@ -1,7 +1,7 @@
 #include "BaseProgramData.h"
 
 #include <vector>
-#include "../framework/framework.h"
+#include "framework.h"
 
 namespace MyCode
 {

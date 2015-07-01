@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include <memory>
-#include "../framework/MathUtil.h"
+#include "MathUtil.h"
 #include "helpers/LineRenderer.h"
 #include "helpers/TriangleRenderer.h"
 #include "helpers/QuadIntersecter.h"

@@ -1,6 +1,6 @@
 #include "UT_CubeCollider.h"
-#include "../framework/UTUtil.h"
-#include "../framework/MathUtil.h"
+#include "UTUtil.h"
+#include "MathUtil.h"
 
 namespace MyCode
 {

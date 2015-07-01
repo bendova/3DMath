@@ -1,9 +1,9 @@
 #ifndef _MY_CODE_DEMO_TRIANGLE_INTERSECTION_H_
 #define _MY_CODE_DEMO_TRIANGLE_INTERSECTION_H_
 
-#include "../framework/MathUtil.h"
+#include "MathUtil.h"
 #include "../PolygonMath.h"
-#include "../framework/VectorMath.h"
+#include "vectormath/DataTypes.h"
 
 namespace MyCode
 {

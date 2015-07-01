@@ -2,7 +2,7 @@
 #define _MY_CODE_RENDERABLES_TRIANGLE_RENDERER_H
 
 #include "BaseRenderer.h"
-#include "../framework/MathUtil.h"
+#include "MathUtil.h"
 
 namespace MyCode
 {

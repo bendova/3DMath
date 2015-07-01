@@ -11,7 +11,7 @@
 #include "control/ControlHelper.h"
 #include "intersection2d/RectangleColider.h"
 #include "intersection3d/CubeCollider.h"
-#include "../framework/MyMesh.h"
+#include "MyMesh.h"
 
 namespace glutil
 {

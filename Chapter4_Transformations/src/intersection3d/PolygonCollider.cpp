@@ -1,7 +1,7 @@
 #include "PolygonCollider.h"
 #include "../framework/VectorMath.h"
 #include "../framework/Logging.h"
-#include "../intersection2d/RectangleColider.h"
+#include "../intersection2d/PolygonIntersection.h"
 #include <algorithm>
 
 namespace MyCode

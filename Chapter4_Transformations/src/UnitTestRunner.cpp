@@ -3,7 +3,7 @@
 #include "intersection2d/UT_RectangleColider.h"
 #include "intersection3d/UT_CubeCollider.h"
 #include "intersection3d/UT_PolygonCollider.h"
-#include "../framework/UT_VectorMath.h"
+#include "vectormath/UT_VectorMath.h"
 
 namespace MyCode
 {

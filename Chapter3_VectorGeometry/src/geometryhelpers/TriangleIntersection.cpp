@@ -1,7 +1,8 @@
 #include "TriangleIntersection.h"
 #include <float.h>
 #include <unordered_set>
-#include "../framework/VectorMath.h"
+#include "vectormath/DataTypes.h"
+#include "vectormath/Intersection.h"
 
 namespace MyCode
 {

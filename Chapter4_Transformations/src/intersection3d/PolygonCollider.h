@@ -47,6 +47,8 @@ namespace MyCode
 			bool DoesPathCollide(const Polygon& target, const glm::vec3& targetCenter, const Polygon& obstacle);
 			bool DoesItCollide2D(const Polygon& target, const glm::vec3& destination, const Polygon& obstacle);
 			bool DoesItCollide3D(const Polygon& target, const glm::vec3& destination, const Polygon& obstacle);
+
+			bool IsPolygonBetweenPlanes(const Polygon& polygon, const VectorMath::Plane& planeA, const VectorMath::Plane& planeB);
 		}
 
 		namespace TravelPathBounding

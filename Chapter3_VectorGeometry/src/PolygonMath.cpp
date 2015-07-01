@@ -1,5 +1,6 @@
 #include "PolygonMath.h"
-#include "../framework/VectorMath.h"
+#include "vectormath/Common.h"
+#include "vectormath/Projection.h"
 
 namespace MyCode
 {

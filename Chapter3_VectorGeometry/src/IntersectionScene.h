@@ -6,7 +6,7 @@
 #include <glm/glm.hpp>
 #include "Scene.h"
 #include "programs/PosColorProgram.h"
-#include "../framework/MyMesh.h"
+#include "MyMesh.h"
 #include "renderables/TrianglePainter.h"
 
 namespace glutil

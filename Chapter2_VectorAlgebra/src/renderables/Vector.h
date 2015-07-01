@@ -2,7 +2,7 @@
 #define _MY_CODE_SNOWFLAKE_VECTOR_H
 
 #include <cmath>
-#include "../framework/VectorMath.h"
+#include "vectormath/DataTypes.h"
 
 namespace MyCode
 {

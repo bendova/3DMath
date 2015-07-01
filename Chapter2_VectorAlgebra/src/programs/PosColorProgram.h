@@ -1,7 +1,7 @@
 #ifndef _MY_CODE_NO_LIGHTING_PROGRAM_H_
 #define _MY_CODE_NO_LIGHTING_PROGRAM_H_
 
-#include "../framework/BaseProgramData.h"
+#include "BaseProgramData.h"
 
 namespace MyCode
 {

@@ -35,13 +35,22 @@ namespace MyCode
 
 			bool NoIntersectionBetweenLines();
 			bool IntersectionBetweenLines();
+		};
 
-			bool NoIntersectionBetweenColinearLineSegments();
-			bool IntersectionBetweenColinearLineSegmentsA();
-			bool IntersectionBetweenColinearLineSegmentsB();
-			bool IntersectionBetweenColinearLineSegmentsC();
-			bool IntersectionBetweenColinearLineSegmentsD();
-			bool IntersectionBetweenColinearLineSegmentsWithMarginError();
+		class ColinearLineSegmentsIntersection
+		{
+		public:
+			bool Run();
+		private:
+			bool NoIntersection();
+			bool IntersectionInA();
+			bool IntersectionInB();
+			bool IntersectionInC();
+			bool IntersectionInD();
+			bool IntersectionWithMarginError();
+			bool IntersectionOpenEnded();
+			bool IntersectionOpenEndedOverlapped();
+			bool IntersectionOpenEndedOverlapped2();
 		};
 
 		class LineSegmentPolygonIntersection
