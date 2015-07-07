@@ -3,6 +3,12 @@
 
 namespace MyCode
 {
+	const int Cube::FRONT_FACE_INDEX = 0;
+	const int Cube::RIGHT_FACE_INDEX = 1;
+	const int Cube::BACK_FACE_INDEX = 2;
+	const int Cube::LEFT_FACE_INDEX = 3;
+	const int Cube::BOTTOM_FACE_INDEX = 4;
+	const int Cube::TOP_FACE_INDEX = 5;
 	const int Cube::FACES_COUNT = 6;
 
 	Cube::Cube(const glm::vec3& center,

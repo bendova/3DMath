@@ -34,8 +34,9 @@ namespace MyCode
 		const glm::vec3 pointToProject{ 1.0f, 1.0f, 1.0f };
 		const glm::vec3 pointInPlane{ 0.0f, 0.0f, 0.0f };
 		const glm::vec3 planeNormal{ 0.0f, 0.0f, 1.0f };
+		const VectorMath::Plane plane{ pointInPlane, planeNormal };
 
-		const glm::vec3 projectedPoint = GetProjectionPointOnPlane(pointToProject, pointInPlane, planeNormal);
+		const glm::vec3 projectedPoint = ProjectPointOnPlane(pointToProject, plane);
 		const glm::vec3 expectedPoint{ 1.0f, 1.0f, 0.0f };
 
 		return CHECK_EQUALS(projectedPoint, expectedPoint);
@@ -46,8 +47,9 @@ namespace MyCode
 		const glm::vec3 pointToProject{ -1.0f, -1.0f, 0.0f };
 		const glm::vec3 pointInPlane{ -1.0f, 0.0f, 1.0f };
 		const glm::vec3 planeNormal{ 0.0f, 4.0f, 0.0f };
+		const VectorMath::Plane plane{ pointInPlane, planeNormal };
 
-		const glm::vec3 projectedPoint = GetProjectionPointOnPlane(pointToProject, pointInPlane, planeNormal);
+		const glm::vec3 projectedPoint = ProjectPointOnPlane(pointToProject, plane);
 		const glm::vec3 expectedPoint{ -1.0f, 0.0f, 0.0f };
 
 		return CHECK_EQUALS(projectedPoint, expectedPoint);

@@ -13,6 +13,8 @@ namespace MyCode
 {
 	namespace VectorMath
 	{
+		glm::vec3 ProjectPointOnPlane(const glm::vec3& pointToProject, const VectorMath::Plane& plane);
+
 		template<typename T>
 		T GetProjectionPointOnLine(const T& linePointA, const T& linePointB, const T& pointToProject)
 		{

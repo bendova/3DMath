@@ -68,6 +68,7 @@ namespace MyCode
 			const float factorD = glm::dot(ab, ad) / abDot;
 
 			std::vector<float> factors;
+			factors.reserve(4);
 			if (IsInInterval(factorA, factorC, factorD))
 			{
 				factors.push_back(factorA);
@@ -237,9 +238,15 @@ namespace MyCode
 		std::pair<T, bool> GetLinesIntersection(const MarginPoint<T>& a, const MarginPoint<T>& b, 
 			const MarginPoint<T>& c, const MarginPoint<T>& d)
 		{
+			static std::vector<T> points{ glm::vec3{ 0.0f }, glm::vec3{ 0.0f }, glm::vec3{ 0.0f }, glm::vec3{ 0.0f } };
 			std::pair<T, bool> intersection{ T{ 0.0f }, false };
 
-			if (ArePointsCollinear(std::vector<T> { a.mPoint, b.mPoint, c.mPoint, d.mPoint }))
+			points[0] = a.mPoint;
+			points[1] = b.mPoint;
+			points[2] = c.mPoint;
+			points[3] = d.mPoint;
+
+			if (ArePointsCollinear(points))
 			{
 				intersection = GetCollinearLinesIntersection(a, b, c, d);
 			}

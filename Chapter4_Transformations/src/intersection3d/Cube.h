@@ -19,13 +19,6 @@ namespace MyCode
 
 		int FacesCount() const { return FACES_COUNT; }
 
-		const Polygon& FrontFace()	const { return mFaces[0]; }
-		const Polygon& RightFace()	const { return mFaces[1]; }
-		const Polygon& BackFace()	const { return mFaces[2]; }
-		const Polygon& LeftFace()	const { return mFaces[3]; }
-		const Polygon& BottomFace()	const { return mFaces[4]; }
-		const Polygon& TopFace()	const { return mFaces[5]; }
-
 		const Polygon& operator[](const int index) const
 		{
 			return mFaces[index];
@@ -33,12 +26,27 @@ namespace MyCode
 
 		float CircumbscribedCircleRadius() const;
 		float InscribedCircleRadius() const;
+
+		static const int FRONT_FACE_INDEX;
+		static const int RIGHT_FACE_INDEX;
+		static const int BACK_FACE_INDEX;
+		static const int LEFT_FACE_INDEX;
+		static const int BOTTOM_FACE_INDEX;
+		static const int TOP_FACE_INDEX;
+		static const int FACES_COUNT;
+
+		const Polygon& FrontFace()	const { return mFaces[FRONT_FACE_INDEX]; }
+		const Polygon& RightFace()	const { return mFaces[RIGHT_FACE_INDEX]; }
+		const Polygon& BackFace()	const { return mFaces[BACK_FACE_INDEX]; }
+		const Polygon& LeftFace()	const { return mFaces[LEFT_FACE_INDEX]; }
+		const Polygon& BottomFace()	const { return mFaces[BOTTOM_FACE_INDEX]; }
+		const Polygon& TopFace()	const { return mFaces[TOP_FACE_INDEX]; }
+
 	private:
 		void GenerateFaces();
 		void AddFace(const int indexA, const int indexB, const int indexC, const int indexD);
 		void UpdateBoundingRadiuses();
 
-		static const int FACES_COUNT;
 		glm::vec3 mCenter;
 		std::vector<Polygon> mFaces;
 		const std::vector<glm::vec3> mBottomTopFacesVectorsCCW;

@@ -21,13 +21,12 @@ namespace MyCode
 	namespace CubeColliderHelpers
 	{
 		std::vector<const Cube*> SortByDistanceFromPoint(std::vector<const Cube*> rectangles, const glm::vec3& point);
-		glm::vec3 GetValidPosition(const Cube& cube, const glm::vec3& targetCenter, const Cube& obstacle);
-		glm::vec3 AvoidPathCollision(const Cube& cube, const glm::vec3& targetCenter, const Cube& obstacle);
+		glm::vec3 GetValidPosition(const Cube& cube, glm::vec3 directionVector, const Cube& obstacle);
 	}
 
 	namespace TravelPathIntersection
 	{
-		bool DoesTravelPathCollide(const Cube& cube, const glm::vec3& targetCenter, const Cube& obstacle);
+		bool DoesTravelPathCollide(const Cube& cube, const glm::vec3& directionVector, const Cube& obstacle);
 		bool DoesTravelPathCollideCube(const Polygon& target, const glm::vec3& targetCenter, const Cube& obstacle);
 	}
 }

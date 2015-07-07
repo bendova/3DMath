@@ -1,6 +1,10 @@
 #include "CubeCollider.h"
 #include <algorithm>
 #include "../intersection2d/RectangleColider.h"
+#include "../intersection2d/PolygonIntersection.h"
+#include "../intersection3d/PolygonCollider.h"
+#include "vectormath/DataTypes.h"
+#include "vectormath/Projection.h"
 #include "PolygonCollider.h"
 
 namespace MyCode
@@ -9,20 +13,24 @@ namespace MyCode
 	{
 		using namespace CubeColliderHelpers;
 		using namespace TravelPathIntersection;
+
+		glm::vec3 directionVector = targetCenter - cube.Center();
+
 		std::vector<const Cube*> sortedCubes = SortByDistanceFromPoint(mCubes, cube.Center());
 		for (const Cube* c : sortedCubes)
 		{
 			const Cube& obstacle = *c;
 			if (&obstacle != &cube)
 			{
-				const bool doCubesCollide = DoesTravelPathCollide(cube, targetCenter, obstacle);
+				const bool doCubesCollide = DoesTravelPathCollide(cube, directionVector, obstacle);
 				if (doCubesCollide)
 				{
-					targetCenter = GetValidPosition(cube, targetCenter, obstacle);
+					directionVector = GetValidPosition(cube, directionVector, obstacle);
 				}
 			}
 		}
 
+		targetCenter = cube.Center() + directionVector;
 		return targetCenter;
 	}
 
@@ -41,20 +49,15 @@ namespace MyCode
 			return rectangles;
 		}
 
-		glm::vec3 GetValidPosition(const Cube& cube, const glm::vec3& targetCenter, const Cube& obstacle)
+		glm::vec3 GetValidPosition(const Cube& cube, glm::vec3 directionVector, const Cube& obstacle)
 		{
 			using namespace TravelPathIntersection;
 
-			const glm::vec3 validPosition{ AvoidPathCollision(cube, targetCenter, obstacle) };
-			return validPosition;
-		}
+			static const glm::vec3 ZERO_VECTOR{ 0.0f, 0.0f, 0.0f };
 
-		glm::vec3 AvoidPathCollision(const Cube& cube, const glm::vec3& targetCenter, const Cube& obstacle)
-		{
 			PolygonCollider polygonCollider;
 			polygonCollider.AddPolygons(obstacle.GetFaces());
 
-			glm::vec3 directionVector = targetCenter - cube.Center();
 			for (int i = 0; i < cube.FacesCount(); ++i)
 			{
 				const Polygon& face = cube[i];
@@ -63,44 +66,58 @@ namespace MyCode
 				if (validTargetCenter != faceTargetCenter)
 				{
 					directionVector = validTargetCenter - face.Center();
+					if (directionVector == ZERO_VECTOR)
+					{
+						break;
+					}
 				}
 			}
-			return cube.Center() + directionVector;
+			return directionVector;
 		}
 	}
 
 	namespace TravelPathIntersection
 	{
-		bool DoesTravelPathCollide(const Cube& cube, const glm::vec3& targetCenter, const Cube& obstacle)
+		bool DoesTravelPathCollide(const Cube& cube, const glm::vec3& directionVector, const Cube& obstacle)
 		{
-			bool doesItCollide = false;
-			const glm::vec3 directionVector = targetCenter - cube.Center();
-			
-			// FIXME Doing this is horribly expensive!
-			// We should apply the same logic used for 2D polygon intersection - 
-			// project the 3D objects and then check their shadows for intersection
-			for (int i = 0; i < cube.FacesCount(); ++i)
-			{
-				const Polygon& face = cube[i];
-				const glm::vec3 faceTargetCenter = face.Center() + directionVector;
-				doesItCollide = DoesTravelPathCollideCube(face, faceTargetCenter, obstacle);
-				if (doesItCollide)
-				{
-					break;
-				}
-			}
-			return doesItCollide;
-		}
+			// FIXME The implementation of this method would fail
+			// the cubes were rotated. 
 
-		bool DoesTravelPathCollideCube(const Polygon& target, const glm::vec3& targetCenter, const Cube& obstacle)
-		{
-			using namespace Intersection3D;
-			bool doesItCollide = false;
-			for (int i = 0; i < obstacle.FacesCount(); ++i)
+			using namespace VectorMath;
+			
+			typedef std::pair<Plane, int> PlaneFaceIndex;
+
+			static const glm::vec3 origin{ 0.0f, 0.0f, 0.0f };
+			static const Plane xyPlane{ origin, glm::vec3{ 0.0f, 0.0f, 1.0f } };
+			static const Plane xzPlane{ origin, glm::vec3{ 0.0f, 1.0f, 0.0f } };
+			static const Plane yzPlane{ origin, glm::vec3{ 1.0f, 0.0f, 0.0f } };
+			static const std::vector<PlaneFaceIndex> planeFaces
+			{ 
+				{ xyPlane, Cube::FRONT_FACE_INDEX },
+				{ xzPlane, Cube::BOTTOM_FACE_INDEX },
+				{ yzPlane, Cube::LEFT_FACE_INDEX }
+			};
+
+			bool doesItCollide = true;
+			for (const PlaneFaceIndex& planeFace : planeFaces)
 			{
-				const Polygon& obstacleFace = obstacle[i];
-				doesItCollide = CollisionDetection::DoesPathCollide(target, targetCenter, obstacleFace);
-				if (doesItCollide)
+				const auto& plane = planeFace.first;
+				const auto& cubeFace = cube[planeFace.second];
+				const auto& obstacleFace = obstacle[planeFace.second];
+				std::vector<glm::vec3> sourceProjection = Intersection3D::PolygonIntersection::GetPolygonProjectionToPlane(cubeFace.Vertices(), plane);
+				if (Intersection2D::PolygonIntersection::Detail::IsLineSegment(sourceProjection))
+				{
+					const auto lineSegment = Intersection2D::PolygonIntersection::Detail::GetLineSegmentFromCollinearPoints(sourceProjection);
+					sourceProjection.clear();
+					sourceProjection.push_back(lineSegment.first);
+					sourceProjection.push_back(lineSegment.second);
+				}
+				const glm::vec3 directionVectorProjection = ProjectPointOnPlane(directionVector, plane);
+				const std::vector<glm::vec3> boundingPath = Intersection3D::TravelPathBounding::GetBoundingPath(sourceProjection, directionVectorProjection);
+				const auto& obstacleProjection = Intersection3D::PolygonIntersection::GetPolygonProjectionToPlane(obstacleFace.Vertices(), plane);
+				doesItCollide = Intersection2D::PolygonIntersection::DoPolygonsIntersect2D(boundingPath,
+					obstacleProjection, VectorMath::PointType::OPEN_ENDED);
+				if (doesItCollide == false)
 				{
 					break;
 				}

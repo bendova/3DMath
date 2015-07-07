@@ -92,17 +92,15 @@ namespace MyCode
 			glm::vec3{ 1.0f, 0.0f, 0.0f }, glm::vec3{ 2.0f, 0.0f, 0.0f }
 		};
 		const glm::vec3 directionVector{ 0.0f, 0.0f, 2.0f };
-		const glm::vec3 destination{ triangle.Center() + directionVector };
-		const std::vector<Polygon> bounding = TravelPathBounding::GetBoundingPath(triangle, destination);
+		const std::vector<glm::vec3> bounding = TravelPathBounding::GetBoundingPath(triangle.Vertices(), directionVector);
 
-		const Polygon expected
+		const std::vector<glm::vec3> expected
 		{
 			glm::vec3{ 1.0f, 0.0f, -1.0f }, glm::vec3{ 1.0f, 0.0f, 2.0f },
 			glm::vec3{ 2.0f, 0.0f, 2.0f }, glm::vec3{ 2.0f, 0.0f, 0.0f }
 		};
 
-		return CHECK_IS_TRUE(bounding.size() == 1)
-			&& CHECK_EQUALS(bounding[0], expected);
+		return CHECK_EQUALS(bounding, expected);
 	}
 
 	bool UT_PolygonCollider::TravelPathBoundingTest2D::BoundingPathForRectangle()
@@ -112,17 +110,16 @@ namespace MyCode
 			glm::vec3{ -1.0f, 0.0f, 1.0f }, glm::vec3{ 1.0f, 0.0f, 1.0f },
 			glm::vec3{ 1.0f, 0.0f, -1.0f }, glm::vec3{ -1.0f, 0.0f, -1.0f } 
 		};
-		const glm::vec3 destination{0.0f, 0.0f, 2.0f};
-		const std::vector<Polygon> bounding = TravelPathBounding::GetBoundingPath(polygonXZ, destination);
+		const glm::vec3 directionVector{0.0f, 0.0f, 2.0f};
+		const std::vector<glm::vec3> bounding = TravelPathBounding::GetBoundingPath(polygonXZ.Vertices(), directionVector);
 
-		const Polygon expected
+		const std::vector<glm::vec3> expected
 		{
 			glm::vec3{ -1.0f, 0.0f, 3.0f }, glm::vec3{ 1.0f, 0.0f, 3.0f },
 			glm::vec3{ 1.0f, 0.0f, -1.0f }, glm::vec3{ -1.0f, 0.0f, -1.0f }
 		};
 
-		return CHECK_IS_TRUE(bounding.size() == 1) 
-			&& CHECK_EQUALS(bounding[0], expected);
+		return CHECK_EQUALS(bounding, expected);
 	}
 
 	bool UT_PolygonCollider::TravelPathBoundingTest2D::BoundingPathForRotatedRectangle()
@@ -132,18 +129,17 @@ namespace MyCode
 			glm::vec3{ 0.0f, 0.0f, 1.0f }, glm::vec3{ 1.0f, 0.0f, 0.0f },
 			glm::vec3{ 0.0f, 0.0f, -1.0f }, glm::vec3{ -1.0f, 0.0f, 0.0f }
 		};
-		const glm::vec3 destination{ 0.0f, 0.0f, 3.0f };
-		const std::vector<Polygon> bounding = TravelPathBounding::GetBoundingPath(polygonXZ, destination);
+		const glm::vec3 directionVector{ 0.0f, 0.0f, 3.0f };
+		const std::vector<glm::vec3> bounding = TravelPathBounding::GetBoundingPath(polygonXZ.Vertices(), directionVector);
 
-		const Polygon expected
+		const std::vector<glm::vec3> expected
 		{
 			glm::vec3{ 0.0f, 0.0f, 4.0f }, glm::vec3{ 1.0f, 0.0f, 3.0f },
 			glm::vec3{ 1.0f, 0.0f, 0.0f }, glm::vec3{ 0.0f, 0.0f, -1.0f }, 
 			glm::vec3{ -1.0f, 0.0f, 0.0f }, glm::vec3{ -1.0f, 0.0f, 3.0f }
 		};
 
-		return CHECK_IS_TRUE(bounding.size() == 1)
-			&& CHECK_EQUALS(bounding[0], expected);
+		return CHECK_EQUALS(bounding, expected);
 	}
 
 	bool UT_PolygonCollider::TravelPathBoundingTest2D::BoundingPathFoParalelogram()
@@ -154,18 +150,16 @@ namespace MyCode
 			glm::vec3{ 4.0f, 0.0f, -1.0f }, glm::vec3{ 2.0f, 0.0f, -1.0f }
 		};
 		const glm::vec3 directionVector{ 0.0f, 0.0f, 2.0f };
-		const glm::vec3 destination{paralelogram.Center() + directionVector};
-		const std::vector<Polygon> bounding = TravelPathBounding::GetBoundingPath(paralelogram, destination);
+		const std::vector<glm::vec3> bounding = TravelPathBounding::GetBoundingPath(paralelogram.Vertices(), directionVector);
 
-		const Polygon expected
+		const std::vector<glm::vec3> expected
 		{
 			glm::vec3{ 1.0f, 0.0f, 0.0f }, glm::vec3{ 1.0f, 0.0f, 2.0f },
 			glm::vec3{ 3.0f, 0.0f, 2.0f }, glm::vec3{ 4.0f, 0.0f, 1.0f },
 			glm::vec3{ 4.0f, 0.0f, -1.0f }, glm::vec3{ 2.0f, 0.0f, -1.0f }
 		};
 
-		return CHECK_IS_TRUE(bounding.size() == 1)
-			&& CHECK_EQUALS(bounding[0], expected);
+		return CHECK_EQUALS(bounding, expected);
 	}
 
 	bool UT_PolygonCollider::TravelPathBoundingTest2D::BoundingPathForConvexIrregularPolygon()
@@ -178,10 +172,9 @@ namespace MyCode
 			glm::vec3{ -4.0f, 0.0f, -2.0f }, glm::vec3{ -4.0f, 0.0f, 0.0f },
 		};
 		const glm::vec3 directionVector{ 10.0f, 0.0f, 0.0f };
-		const glm::vec3 destination{ polygon.Center() + directionVector };
-		const std::vector<Polygon> bounding = TravelPathBounding::GetBoundingPath(polygon, destination);
+		const std::vector<glm::vec3> bounding = TravelPathBounding::GetBoundingPath(polygon.Vertices(), directionVector);
 
-		const Polygon expected
+		const std::vector<glm::vec3> expected
 		{
 			glm::vec3{ -3.0f, 0.0f, 4.0f }, glm::vec3{ 11.0f, 0.0f, 4.0f },
 			glm::vec3{ 13.0f, 0.0f, 0.0f }, glm::vec3{ 13.0f, 0.0f, -1.0f },
@@ -190,8 +183,7 @@ namespace MyCode
 			glm::vec3{ -4.0f, 0.0f, 0.0f },
 		};
 
-		return CHECK_IS_TRUE(bounding.size() == 1)
-			&& CHECK_EQUALS(bounding[0], expected);
+		return CHECK_EQUALS(bounding, expected);
 	}
 
 	bool UT_PolygonCollider::TravelPathBoundingTest3D::Run()
@@ -245,7 +237,7 @@ namespace MyCode
 
 		const Polygon triangle{ a, b, c };
 		const glm::vec3 destination{ triangle.Center() + directionVector };
-		const std::vector<Polygon> bounding = TravelPathBounding::GetBoundingPath(triangle, destination);
+		const std::vector<Polygon> bounding = TravelPathBounding::Detail::GetBoundingPath3D(triangle, destination);
 
 		const Polygon expectedFaceBottom { c, b, a };
 		const Polygon expectedFaceAB { a, b, e, d };
@@ -295,9 +287,9 @@ namespace MyCode
 		const Polygon obstacle{
 			glm::vec3{ 4.0f, -1.0f, 0.0f }, glm::vec3{ 6.0f, -1.0f, 0.0f },
 			glm::vec3{ 6.0f, 1.0f, 0.0f }, glm::vec3{ 4.0f, 1.0f, 0.0f } };
-		const glm::vec3 destination{0.0f, 0.0f, 10.0f};
+		const glm::vec3 directionVector{0.0f, 0.0f, 10.0f};
 
-		const bool collision = CollisionDetection::DoesPathCollide(target, destination, obstacle);
+		const bool collision = CollisionDetection::DoesPathCollide(target, directionVector, obstacle);
 		const bool collisionExpected = false;
 
 		return CHECK_EQUALS(collision, collisionExpected);
@@ -316,9 +308,8 @@ namespace MyCode
 			glm::vec3{ 0.0f, 1.0f, 1.0f }, glm::vec3{ 0.0f, 1.0f, -1.0f }
 		};
 		const glm::vec3 directionVector{ -4.0f, 0.0f, 0.0f };
-		const glm::vec3 destination{ sourceXZ.Center() + directionVector};
 
-		const bool collision = CollisionDetection::DoesPathCollide(sourceXZ, destination, obstacleYZ);
+		const bool collision = CollisionDetection::DoesPathCollide(sourceXZ, directionVector, obstacleYZ);
 		const bool collisionExpected = false;
 
 		return CHECK_EQUALS(collision, collisionExpected);
@@ -337,11 +328,10 @@ namespace MyCode
 		const Polygon obstacleYZ{ verticesYZ };
 
 		const glm::vec3 directionVector{ 0.0f, 0.0f, -10.0f };
-		const glm::vec3 destination{ sourceYZ.Center() + directionVector };
 
 		// FIXME I have a feeling we might need to revisit this part of the algorithm.
 		// This will cause a failure to detect the collision of 2 completely overlapped polyhedrons.
-		const bool collision = CollisionDetection::DoesPathCollide(sourceYZ, destination, obstacleYZ);
+		const bool collision = CollisionDetection::DoesPathCollide(sourceYZ, directionVector, obstacleYZ);
 		const bool collisionExpected = false;
 
 		return CHECK_EQUALS(collision, collisionExpected);
@@ -360,9 +350,8 @@ namespace MyCode
 			glm::vec3{ 0.0f, 1.0f, 1.0f }, glm::vec3{ 0.0f, 1.0f, -1.0f }
 		};
 		const glm::vec3 directionVector{ -5.0f, 0.0f, 0.0f };
-		const glm::vec3 destination{ sourceXZ.Center() + directionVector };
 
-		const bool collision = CollisionDetection::DoesPathCollide(sourceXZ, destination, obstacleYZ);
+		const bool collision = CollisionDetection::DoesPathCollide(sourceXZ, directionVector, obstacleYZ);
 		const bool collisionExpected = true;
 
 		return CHECK_EQUALS(collision, collisionExpected);
@@ -381,9 +370,8 @@ namespace MyCode
 			glm::vec3{ 6.0f, 0.0f, -1.0f }, glm::vec3{ 4.0f, 0.0f, -1.0f } 
 		};
 		const glm::vec3 directionVector{ 5.0f, 0.0f, 0.0f };
-		const glm::vec3 destination{ sourceYZ.Center() + directionVector };
 
-		const bool collision = CollisionDetection::DoesPathCollide(sourceYZ, destination, obstacleXZ);
+		const bool collision = CollisionDetection::DoesPathCollide(sourceYZ, directionVector, obstacleXZ);
 		const bool collisionExpected = true;
 
 		return CHECK_EQUALS(collision, collisionExpected);
@@ -402,9 +390,8 @@ namespace MyCode
 			glm::vec3{ 6.0f, 0.0f, -1.0f }, glm::vec3{ 4.0f, 0.0f, -1.0f } 
 		};
 		const glm::vec3 directionVector{ 10.0f, 0.0f, 0.0f };
-		const glm::vec3 destination{ sourceYZ.Center() + directionVector };
 
-		const bool collision = CollisionDetection::DoesPathCollide(sourceYZ, destination, obstacleXZ);
+		const bool collision = CollisionDetection::DoesPathCollide(sourceYZ, directionVector, obstacleXZ);
 		const bool collisionExpected = true;
 
 		return CHECK_EQUALS(collision, collisionExpected);
@@ -423,9 +410,8 @@ namespace MyCode
 			glm::vec3{ 6.0f, 1.0f, 0.0f }, glm::vec3{ 4.0f, 1.0f, 0.0f }
 		};
 		const glm::vec3 directionVector{ 10.0f, 0.0f, 0.0f };
-		const glm::vec3 destination{ sourceYZ.Center() + directionVector };
 
-		const bool collision = CollisionDetection::DoesPathCollide(sourceYZ, destination, obstacleXY);
+		const bool collision = CollisionDetection::DoesPathCollide(sourceYZ, directionVector, obstacleXY);
 		const bool collisionExpected = false;
 
 		return CHECK_EQUALS(collision, collisionExpected);
@@ -444,9 +430,8 @@ namespace MyCode
 			glm::vec3{ 6.0f, 1.0f, -1.0f }, glm::vec3{ 6.0f, -1.0f, -1.0f }
 		};
 		const glm::vec3 directionVector{ 10.0f, 0.0f, 0.0f };
-		const glm::vec3 destination{ source.Center() + directionVector };
 
-		const bool collision = CollisionDetection::DoesPathCollide(source, destination, obstacleYZ);
+		const bool collision = CollisionDetection::DoesPathCollide(source, directionVector, obstacleYZ);
 		const bool collisionExpected = true;
 
 		return CHECK_EQUALS(collision, collisionExpected);

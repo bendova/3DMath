@@ -90,14 +90,6 @@ namespace MyCode
 			return distanceToLine;
 		}
 
-		glm::vec3 GetProjectionPointOnPlane(const glm::vec3& pointToProject, const glm::vec3& pointInPlane, const glm::vec3& planeNormal)
-		{
-			const float distance = GetDistanceBetweenPointAndPlane(pointToProject, pointInPlane, planeNormal);
-			const float factor = (distance / glm::length(planeNormal));
-			const glm::vec3 projectedPoint = pointToProject + factor * planeNormal;
-			return projectedPoint;
-		}
-
 		float GetDistanceBetweenPointAndPlane(const glm::vec3& pointToProject, const glm::vec3& pointInPlane, const glm::vec3& planeNormal)
 		{
 			const glm::vec3 vectorFromPlaneToPoint = pointToProject - pointInPlane;
