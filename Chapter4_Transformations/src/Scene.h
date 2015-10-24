@@ -88,7 +88,7 @@ namespace MyCode
 		void UpdateControl(ControlledMesh<Bounding, Collider>& controlledMesh)
 		{
 			controlledMesh.mControl.SetCameraToClipTransfrom(mCameraToClipMatrix);
-			controlledMesh.mControl.SetClipNearZ(mNearZ);
+			controlledMesh.mControl.SetClipNearZ(NEAR_Z);
 			controlledMesh.mControl.SetScreenDimensions(mScreenWidth, mScreenHeight);
 		}
 		void UpdateCameraToClipMatrix();

@@ -20,6 +20,11 @@ namespace MyCode
 	protected:
 		void InitUniform(GLint& uniform, const char* uniformName);
 		void InitAttribute(GLint& attribute, const char* attributeName);
+		
+		GLint GetUniform(const char* uniformName) const { return glGetUniformLocation(mProgramID, uniformName); }
+		GLint GetAttribute(const char* attributeName) const { return glGetAttribLocation(mProgramID, attributeName); }
+		GLint GetUniformBlockIndex(const char* blockName) const { return glGetUniformBlockIndex(mProgramID, blockName); }
+
 		GLuint mProgramID;
 
 	private:

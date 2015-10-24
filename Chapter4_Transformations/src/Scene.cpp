@@ -155,7 +155,7 @@ namespace MyCode
 
 		const float startX = 0.0f;
 		const float incX = 2.0f;
-		const int cubesCount = 2;
+		const int cubesCount = 6;
 		for (int i = 0; i < cubesCount; ++i)
 		{
 			const float x = startX + i * incX;

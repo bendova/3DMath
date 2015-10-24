@@ -1,11 +1,12 @@
 #include "CubeCollider.h"
-#include <algorithm>
 #include "../intersection2d/RectangleColider.h"
 #include "../intersection2d/PolygonIntersection.h"
 #include "../intersection3d/PolygonCollider.h"
 #include "vectormath/DataTypes.h"
 #include "vectormath/Projection.h"
 #include "PolygonCollider.h"
+
+#include <algorithm>
 
 namespace MyCode
 {
