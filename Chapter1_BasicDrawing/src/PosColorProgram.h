@@ -11,12 +11,16 @@ namespace MyCode
 		PosColorProgram(const std::string& vertexShader, const std::string& fragmentShader);
 		virtual ~PosColorProgram();
 
-		GLuint GetModelToCameraUniform() const { return m_modelToCameraUniform; }
-		GLuint GetCameraToClipUniform() const { return m_cameraToClipUniform; }
+		GLint GetPositionAttrib() const { return m_positionAttrib; }
+		GLint GetColorAttrib() const { return m_colorAttrib; }
+		GLint GetModelToCameraUniform() const { return m_modelToCameraUniform; }
+		GLint GetCameraToClipUniform() const { return m_cameraToClipUniform; }
 
 	private:
-		GLuint m_modelToCameraUniform;
-		GLuint m_cameraToClipUniform;
+		GLint m_positionAttrib;
+		GLint m_colorAttrib;
+		GLint m_modelToCameraUniform;
+		GLint m_cameraToClipUniform;
 	};
 }
 

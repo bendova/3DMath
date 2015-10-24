@@ -34,9 +34,19 @@ namespace MyCode
 		void ApplyPerspectiveTransform(glutil::MatrixStack& matrixStack, const int width, const int height);
 		void UploadCameraToClip(const glm::mat4& cameraToClip);
 		void UploadModelToCamera(const GLuint modelToCameraUniform);
+		void DrawCubeFromMesh();
+		void DrawCubeFromData();
+		void InitCubeData();
+		void InitVertexBuffer();
+		void InitIndexBuffer();
+		void InitVertexArrayObject();
 	private:
+
 		MeshPtr m_Cube;
 		ProgramPtr m_Program;
+		GLuint m_vertexArrayBuffer;
+		GLuint m_indexArrayBuffer;
+		GLuint m_vertexArrayObject;
 	};
 }
 
