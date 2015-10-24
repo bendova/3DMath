@@ -10,6 +10,6 @@ out vec4 fragColor;
 
 void main()
 {
-	gl_Position = cameraToClip * modelToCamera * vec4(position, 1.0f);
+	gl_Position = cameraToClip * modelToCamera * vec4(position, 1.0);
 	fragColor = color;
 }

@@ -1,37 +1,30 @@
 #include <glload/gl_3_3.h>
-#include "GL/freeglut.h"
-#include "DrawingScene.h"
+#include <GL/freeglut.h>
 #include <memory>
 
-std::unique_ptr<MyCode::DrawingScene> gScene = nullptr;
+#include "Scene.h"
+
+std::unique_ptr<MyCode::Scene> g_scene;
 
 void init()
 {
-	gScene = std::make_unique<MyCode::DrawingScene>();
+	g_scene = std::make_unique<MyCode::Scene>();
 }
 
 void display()
 {
-	gScene->Render();
+	g_scene->Render();
 }
 
 void reshape(int w, int h)
 {
 	glViewport(0, 0, w, h);
-	gScene->Resize(w, h);
+	g_scene->Resize(w, h);
 }
 
 void keyboard(unsigned char key, int x, int y)
 {
-	switch (key)
-	{
-	case 27:
-		glutLeaveMainLoop();
-		break;
-	default:
-		gScene->HandleInput(key, x, y);
-		break;
-	}
+	g_scene->HandleKeyboard(key);
 }
 
 unsigned int defaults(unsigned int displayMode, int& width, int& height)
