@@ -4,11 +4,7 @@ layout(std140) uniform;
 
 out vec2 mapping;
 
-uniform Projection
-{
-	mat4 cameraToClipMatrix;
-};
-
+uniform mat4 cameraToClip;
 uniform float sphereRadius;
 uniform vec3 cameraSpherePos;
 
@@ -42,5 +38,5 @@ void main()
 	vec4 cameraCornerPos = vec4(cameraSpherePos, 1.0);
 	cameraCornerPos.xy += offset;
 
-	gl_Position = cameraToClipMatrix * cameraCornerPos;
+	gl_Position = cameraToClip * cameraCornerPos;
 }

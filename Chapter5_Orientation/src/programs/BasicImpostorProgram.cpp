@@ -8,7 +8,7 @@ namespace MyCode
 		, mCameraSpherePosUniform(GetUniform("cameraSpherePos"))
 		, mMaterialBlockIndex(GetUniformBlockIndex("Material"))
 		, mLightBlockIndex(GetUniformBlockIndex("Light"))
-		, mProjectionBlockIndex(GetUniformBlockIndex("Projection"))
+		, mCameraToClipUniform(GetUniform("cameraToClip"))
 	{}
 
 	BasicImpostorProgram::~BasicImpostorProgram()
@@ -24,8 +24,8 @@ namespace MyCode
 	{
 		glUniformBlockBinding(mProgramID, mLightBlockIndex, index);
 	}
-	void BasicImpostorProgram::BindUniformBlockProjection(const int index)
+	/*void BasicImpostorProgram::BindUniformBlockProjection(const int index)
 	{
 		glUniformBlockBinding(mProgramID, mProjectionBlockIndex, index);
-	}
+	}*/
 }

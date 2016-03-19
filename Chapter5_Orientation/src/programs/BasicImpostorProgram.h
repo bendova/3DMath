@@ -32,9 +32,9 @@ namespace MyCode
 		{ 
 			return mLightBlockIndex;
 		}
-		GLint GetProjectionBlockIndex()	const
+		GLint GetCameraToClipUniform() const
 		{
-			return mProjectionBlockIndex;
+			return mCameraToClipUniform;
 		}
 
 	private:
@@ -42,7 +42,7 @@ namespace MyCode
 		GLint mCameraSpherePosUniform;
 		GLint mMaterialBlockIndex;
 		GLint mLightBlockIndex;
-		GLint mProjectionBlockIndex;
+		GLint mCameraToClipUniform;
 	};
 }
 

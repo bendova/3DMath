@@ -31,12 +31,7 @@ uniform Light
 	PerLight lights[numberOfLights];
 } Lgt;
 
-uniform Projection
-{
-	mat4 cameraToClipMatrix;
-};
 
-/*
 float CalcAttenuation(in vec3 cameraSpacePosition,
 	in vec3 cameraSpaceLightPos,
 	out vec3 lightDirection)
@@ -93,11 +88,11 @@ void Impostor(out vec3 cameraPos, out vec3 cameraNormal)
 		
 	cameraNormal = vec3(mapping, sqrt(1.0 - lensqr));
 	cameraPos = (cameraNormal * sphereRadius) + cameraSpherePos;
-}*/
+}
 
 void main()
 {
-	/*vec3 cameraPos;
+	vec3 cameraPos;
 	vec3 cameraNormal;
 	
 	Impostor(cameraPos, cameraNormal);
@@ -107,7 +102,7 @@ void main()
 	{
 		accumLighting += ComputeLighting(Lgt.lights[light],
 			cameraPos, cameraNormal);
-	}*/
+	}
 	
-	outputColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);//sqrt(accumLighting); //2.0 gamma correction
+	outputColor = sqrt(accumLighting); //2.0 gamma correction
 }

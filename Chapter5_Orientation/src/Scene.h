@@ -78,11 +78,13 @@ namespace MyCode
 		void UpdateControls();
 
 		void UpdateCameraToClipMatrix();
-		void UploadCameraToClipToOpenGL();
+		void UploadCameraToClipToOpenGL(const glm::mat4& cameraToClipMatrix);
+
+		void UpdateLightData(const glm::mat4& modelToCamera);
 
 		void RenderPlane(glutil::MatrixStack& modelMatrix);
 		void Scene::DrawSphere(glutil::MatrixStack &modelMatrix,
-			const glm::vec3 &position, float radius, MaterialNames material);
+			const glm::vec3 &position, const float radius, const MaterialNames material);
 
 		void InitUniformBuffers();
 		void CreateMaterials();
@@ -106,7 +108,6 @@ namespace MyCode
 		Mesh dPlaneMesh;
 		GLint mScreenWidth;
 		GLint mScreenHeight;
-		glm::mat4 mCameraToClipMatrix;
 		GLuint mLightUniformBuffer;
 		GLuint mProjectionUniformBuffer;
 		GLuint mImpostorVao;

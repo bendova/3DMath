@@ -51,8 +51,8 @@ namespace MyCode
 		}
 	}
 
-	const float mNearZ = 0.1f;
-	const float mFarZ = 1000.0f;
+	const float Scene::mNearZ = 0.1f;
+	const float Scene::mFarZ = 1000.0f;
 
 	Scene* Scene::mInstance = NULL;
 	Scene::Scene()

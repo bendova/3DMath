@@ -66,12 +66,10 @@ namespace MyCode
 		, dPlaneMesh("LargePlane.xml")
 		, mScreenWidth(0)
 		, mScreenHeight(0)
-		, mCameraToClipMatrix()
 	{
 		mInstance = this;
 		mImpostorProgram.BindUniformBlockMaterial(MATERIAL_BLOCK_INDEX);
 		mImpostorProgram.BindUniformBlockLight(LIGHT_BLOCK_INDEX);
-		mImpostorProgram.BindUniformBlockProjection(PROJECTION_BLOCK_INDEX);
 
 		ConfigureOpenGL();
 		InitUniformBuffers();
@@ -111,7 +109,6 @@ namespace MyCode
 		glBufferData(GL_UNIFORM_BUFFER, sizeof(ProjectionBlock), NULL, GL_DYNAMIC_DRAW);
 
 		glBindBufferRange(GL_UNIFORM_BUFFER, LIGHT_BLOCK_INDEX, mLightUniformBuffer, 0, sizeof(LightBlock));
-		glBindBufferRange(GL_UNIFORM_BUFFER, PROJECTION_BLOCK_INDEX, mProjectionUniformBuffer, 0, sizeof(ProjectionBlock));
 
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
@@ -166,57 +163,59 @@ namespace MyCode
 		glutil::MatrixStack modelToCameraTransform;
 		modelToCameraTransform.ApplyMatrix(gViewPole.CalcMatrix());
 		
+		UpdateLightData(modelToCameraTransform.Top());
+		RenderPlane(modelToCameraTransform);
+		DrawSphere(modelToCameraTransform, glm::vec3(0.0f, 0.0f, -10.0f), 4.0f, MTL_BLUE_SHINY);
+
+		glutSwapBuffers();
+		glutPostRedisplay();
+	}
+
+	void Scene::UpdateLightData(const glm::mat4& modelToCamera)
+	{
 		LightBlock lightData;
 
 		lightData.mAmbientIntensity = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f);
 		lightData.mLightAttenuation = LIGHT_ATTENUATION;
 
-		lightData.mLights[0].mCameraSpaceLightPos = modelToCameraTransform.Top() * glm::vec4(0.707f, 0.707f, 0.0f, 0.0f);
+		lightData.mLights[0].mCameraSpaceLightPos = modelToCamera * glm::vec4(0.707f, 0.707f, 0.0f, 0.0f);
 		lightData.mLights[0].mLightIntensity = glm::vec4(0.6f, 0.6f, 0.6f, 1.0f);
 
-		lightData.mLights[1].mCameraSpaceLightPos = modelToCameraTransform.Top() * glm::vec4(0.0f, 20.0f, 0.0f, 1.0f);
+		lightData.mLights[1].mCameraSpaceLightPos = modelToCamera * glm::vec4(0.0f, 20.0f, 0.0f, 1.0f);
 		lightData.mLights[1].mLightIntensity = glm::vec4(0.4f, 0.4f, 0.4f, 1.0f);
 
 		glBindBuffer(GL_UNIFORM_BUFFER, mLightUniformBuffer);
 		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(lightData), &lightData);
 		glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-		glUseProgram(mPosColorProgram.GetProgramID());
-		RenderPlane(modelToCameraTransform);
-		glUseProgram(GL_NONE);
-
-		DrawSphere(modelToCameraTransform, glm::vec3(0.0f, 10.0f, 0.0f), 4.0f, MTL_BLUE_SHINY);
-
-		glutSwapBuffers();
-		glutPostRedisplay();
 	}
 
 	void Scene::RenderPlane(glutil::MatrixStack& modelMatrix)
 	{
 		glutil::PushStack push(modelMatrix);
 
-		//modelMatrix.Scale(glm::vec3{ 1.0f / 2.0f, 0.0f, 1.0f / 2.0f });
+		glUseProgram(mPosColorProgram.GetProgramID());
 		glUniformMatrix4fv(mPosColorProgram.GetModelToCameraTransformUniform(),
 			1, GL_FALSE, glm::value_ptr(modelMatrix.Top()));
 		dPlaneMesh.Render();
+		glUseProgram(GL_NONE);
 	}
 
 	void Scene::DrawSphere(glutil::MatrixStack &modelMatrix,
-		const glm::vec3 &position, float radius, MaterialNames material)
+		const glm::vec3& position, const float radius, const MaterialNames material)
 	{
 		glBindBufferRange(GL_UNIFORM_BUFFER, mImpostorProgram.GetMaterialBlockIndex(), mMaterialUniformBuffer,
 			material * mMaterialBlockOffset, sizeof(MaterialBlock));
 
 		glm::vec4 cameraSpherePos = modelMatrix.Top() * glm::vec4(position, 1.0f);
+		
 		glUseProgram(mImpostorProgram.GetProgramID());
 		glUniform3fv(mImpostorProgram.GetCameraSpherePosUniform(), 1, glm::value_ptr(cameraSpherePos));
 		glUniform1f(mImpostorProgram.GetSphereRadiusUniform(), radius);
-
+		
 		glBindVertexArray(mImpostorVao);
-
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
 		glBindVertexArray(GL_NONE);
+		
 		glUseProgram(GL_NONE);
 
 		glBindBufferBase(GL_UNIFORM_BUFFER, mImpostorProgram.GetMaterialBlockIndex(), 0);
@@ -236,22 +235,19 @@ namespace MyCode
 		glutil::MatrixStack cameraToClipTransform;
 		cameraToClipTransform.Perspective(FOV_ANGLE, aspectRatio, NEAR_Z, FAR_Z);
 		
-		mCameraToClipMatrix = cameraToClipTransform.Top();
-		
-		UploadCameraToClipToOpenGL();
+		UploadCameraToClipToOpenGL(cameraToClipTransform.Top());
 	}
 
-	void Scene::UploadCameraToClipToOpenGL()
+	void Scene::UploadCameraToClipToOpenGL(const glm::mat4& cameraToClipMatrix)
 	{
-		ProjectionBlock projData;
-		projData.mCameraToClipMatrix = mCameraToClipMatrix;
-		glBindBuffer(GL_UNIFORM_BUFFER, mProjectionUniformBuffer);
-		glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(ProjectionBlock), &projData);
-		glBindBuffer(GL_UNIFORM_BUFFER, 0);
+		glUseProgram(mImpostorProgram.GetProgramID());
+		glUniformMatrix4fv(mImpostorProgram.GetCameraToClipUniform(),
+			1, GL_FALSE, glm::value_ptr(cameraToClipMatrix));
+		glUseProgram(GL_NONE);
 
 		glUseProgram(mPosColorProgram.GetProgramID());
 		glUniformMatrix4fv(mPosColorProgram.GetCameraToClipTransformUniform(),
-			1, GL_FALSE, glm::value_ptr(mCameraToClipMatrix));
+			1, GL_FALSE, glm::value_ptr(cameraToClipMatrix));
 		glUseProgram(GL_NONE);
 	}
 

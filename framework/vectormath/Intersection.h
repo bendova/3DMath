@@ -238,13 +238,13 @@ namespace MyCode
 		std::pair<T, bool> GetLinesIntersection(const MarginPoint<T>& a, const MarginPoint<T>& b, 
 			const MarginPoint<T>& c, const MarginPoint<T>& d)
 		{
-			static std::vector<T> points{ glm::vec3{ 0.0f }, glm::vec3{ 0.0f }, glm::vec3{ 0.0f }, glm::vec3{ 0.0f } };
 			std::pair<T, bool> intersection{ T{ 0.0f }, false };
 
-			points[0] = a.mPoint;
-			points[1] = b.mPoint;
-			points[2] = c.mPoint;
-			points[3] = d.mPoint;
+			std::vector<T> points;
+			points.push_back(a.mPoint);
+			points.push_back(b.mPoint);
+			points.push_back(c.mPoint);
+			points.push_back(d.mPoint);
 
 			if (ArePointsCollinear(points))
 			{

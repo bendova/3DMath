@@ -88,7 +88,7 @@ namespace MyCode
 		void UpdateControl(ControlledMesh<Bounding, Collider>& controlledMesh)
 		{
 			controlledMesh.mControl.SetCameraToClipTransfrom(mCameraToClipMatrix);
-			controlledMesh.mControl.SetClipNearZ(NEAR_Z);
+			controlledMesh.mControl.SetClipNearZ(mNearZ);
 			controlledMesh.mControl.SetScreenDimensions(mScreenWidth, mScreenHeight);
 		}
 		void UpdateCameraToClipMatrix();
@@ -148,7 +148,12 @@ namespace MyCode
 			return isHandled;
 		}
 
+
+		static const float mNearZ;
+		static const float mFarZ;
+
 		static Scene* mInstance;
+
 		PosColorProgram mPosColorProgram;
 		Mesh dPlaneMesh;
 		GLint mScreenWidth;
