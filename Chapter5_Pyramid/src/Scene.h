@@ -7,7 +7,6 @@
 #include "Scene.h"
 #include "programs/PosColorProgram.h"
 #include "MyMesh.h"
-#include "renderables/TrianglePainter.h"
 
 namespace glutil
 {
@@ -16,24 +15,25 @@ namespace glutil
 
 namespace MyCode
 {
-	class IntersectionScene
+	class Scene
 	{
 	public:
-		IntersectionScene();
-		~IntersectionScene();
+		Scene();
+		~Scene();
 
 		void Render();
 		void Reshape(GLint width, GLint height);
 
 		void HandleInput(unsigned char key, int x, int y);
+		bool HandlePyramidInput(unsigned char key);
 		void OnMouseClick(int button, int state, int x, int y);
 		void OnMouseMoved(int x, int y);
 
-		static IntersectionScene* GetInstance() { return mInstance; }
+		static Scene* GetInstance() { return mInstance; }
 	private:
 		void RenderPlane(glutil::MatrixStack& modelMatrix);
 		void RenderCube(glutil::MatrixStack& modelMatrix);
-		void RenderTrianglePainter(glutil::MatrixStack& modelMatrix);
+		void RenderPyramid(glutil::MatrixStack& modelMatrix);
 
 		void TestPointProjection(const glm::mat4& modelToCamera);
 
@@ -44,13 +44,18 @@ namespace MyCode
 		void UploadCameraToClipToOpenGL();
 		void UpdateTrianglePainter();
 
-		static IntersectionScene* mInstance;
+	private:
+		static Scene* mInstance;
 		PosColorProgram mPosColorProgram;
 		Mesh dPlaneMesh;
 		Mesh dCubeMesh;
-		TrianglePainter dTrianglePainter;
+		Mesh dPyramidMesh;
 		GLint mScreenWidth;
 		GLint mScreenHeight;
+
+		float mPyramidWidth;
+		float mPyramidHeight;
+
 		glm::mat4 mCameraToClipMatrix;
 		bool mDrawLinesMode;
 	};

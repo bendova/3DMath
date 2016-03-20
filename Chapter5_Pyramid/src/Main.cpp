@@ -1,13 +1,13 @@
 #include <glload/gl_3_3.h>
 #include "GL/freeglut.h"
-#include "IntersectionScene.h"
+#include "Scene.h"
 #include <memory>
 
-std::unique_ptr<MyCode::IntersectionScene> gIntersectionScene;
+std::unique_ptr<MyCode::Scene> gIntersectionScene;
 
 void init()
 {
-	gIntersectionScene = std::unique_ptr<MyCode::IntersectionScene>(new MyCode::IntersectionScene());
+	gIntersectionScene = std::unique_ptr<MyCode::Scene>(new MyCode::Scene());
 }
 
 void display()
